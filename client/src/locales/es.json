@@ -1,5 +1,7 @@
 {
   "family": {
+    "reactionsBy": "Les gusta a {names}",
+    "reactionsCount": "Les gusta a {count} familiares",
     "title": "Acceso familiar",
     "description": "Invita a personas por nombre con un enlace privado de un solo uso, sin contraseña propia.",
     "protectFirst": "Configura primero una contraseña de administrador y desactiva el modo público.",

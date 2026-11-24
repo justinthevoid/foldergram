@@ -299,8 +299,8 @@ watch(
 );
 
 watch(
-  () => [authStore.accessGranted, authStore.likesMode] as const,
-  async ([accessGranted, likesMode], previous) => {
+  () => [authStore.accessGranted, authStore.likesMode, authStore.familyMember?.id] as const,
+  async ([accessGranted, likesMode, memberId], previous) => {
     const hadAccess = previous?.[0] ?? false;
     const previousLikesMode = previous?.[1] ?? null;
 
@@ -309,7 +309,9 @@ watch(
       return;
     }
 
-    if (!hadAccess || !appStore.stats || likesMode !== previousLikesMode) {
+    const identityChanged = memberId !== previous?.[2];
+    if (identityChanged) likesStore.resetForRebuild();
+    if (!hadAccess || !appStore.stats || likesMode !== previousLikesMode || identityChanged) {
       sourcesStore.start();
       await loadProtectedState(Boolean(hadAccess));
       if (authStore.accessGranted && !route.meta.publicShare) appStore.startStatsPolling();

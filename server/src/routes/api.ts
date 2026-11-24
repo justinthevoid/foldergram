@@ -1,6 +1,6 @@
 import { authorizedImage, imageFolderIds, serveRemoteMedia } from '../immich/media.js';
 import { isImmichSource, isSourceVisible, isLocalOriginalUnavailable } from '../sources/local-source.js';
-import { appSettingsRepository, imageRepository, folderRepository, postRepository, scanRunRepository } from '../db/repositories.js';
+import { appSettingsRepository, imageRepository, folderRepository, postRepository, scanRunRepository, familyReactionRepository } from '../db/repositories.js';
 import { HEIC_IMPORT_ENABLED_SETTING_KEY } from '../constants/app-setting-keys.js';
 import { getHeicImportSetting } from '../services/heic/import-setting.js';
 import express from 'express';
@@ -1132,6 +1132,41 @@ router.get('/folders/:slug/stories/:id', (request, response) => {
   response.json(payload);
 });
 
+const familyLikesQuery = z.object({
+  page: z.coerce.number().int().min(1).max(100000).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(200)
+}).strict();
+
+router.get('/family/likes', (request, response) => {
+  const identity = authService.getRequestAuthContext(request).familyMember;
+  if (!identity) return response.status(403).json({ message: 'Named family access required.' });
+  const { page, limit } = familyLikesQuery.parse(request.query);
+  return response.json(galleryService.getLikes(identity.id, page, limit));
+});
+
+router.put('/family/posts/:id/like', (request, response) => {
+  const identity = authService.getRequestAuthContext(request).familyMember;
+  if (!identity) return response.status(403).json({ message: 'Named family access required.' });
+  const { id } = imageIdSchema.parse(request.params);
+  const { liked } = z.object({ liked: z.boolean() }).strict().parse(request.body);
+  if (!familyReactionRepository.visiblePost(id)) return response.status(404).json({ message: 'Post not found' });
+  familyReactionRepository.set(id, identity.id, liked);
+  return response.json({ id, liked });
+});
+
+router.get('/admin/family/reactions', requireCapability('canAccessSettings', 'Admin access is required.'), (request, response) => {
+  // Do not expose identities in open-admin mode or on a public gallery.
+  if (!authService.getFamilyGeneration()) return response.status(403).json({ message: 'Private password protection required.' });
+  const query = z.object({ ids: z.string().max(1800).regex(/^\d+(?:,\d+)*$/) }).strict().parse(request.query);
+  const ids = z.array(z.number().int().positive().safe()).max(60).parse([...new Set(query.ids.split(',').map(Number))]);
+  const names = new Map(listFamilyMembers(null).map(member => [member.id, member.name]));
+  const result: Record<string, string[]> = Object.fromEntries(ids.map(id => [String(id), []]));
+  for (const row of familyReactionRepository.listForPosts(ids)) {
+    const name = names.get(row.member_id);
+    if (name) result[String(row.post_id)]!.push(name);
+  }
+  return response.json({ items: result });
+});
 router.get('/likes', requireCapability('canUseSharedLikes', 'Authentication required.'), (_request, response) => {
   response.json(galleryService.getLikes());
 });

@@ -1,5 +1,7 @@
 {
   "family": {
+    "reactionsBy": "{names} 赞了这张照片",
+    "reactionsCount": "{count} 位家庭成员点赞",
     "title": "家庭访问",
     "description": "通过一次性私密链接邀请家庭成员，无需为他们设置密码。",
     "protectFirst": "请先设置管理员密码，并关闭公开浏览模式。",

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 
 import { fetchLikes, likeImage, unlikeImage } from '../api/gallery';
 import { i18n } from '../locales';
+import { requestJson } from '../api/http';
 import type { FeedItem, LikesMode } from '../types/api';
 import { updateCaptionInItems } from '../utils/caption';
 import { useAuthStore } from './auth';
@@ -190,7 +191,18 @@ export const useLikesStore = defineStore('likes', {
 
       const request = (async () => {
         try {
-          if (mode === 'shared') {
+          if (mode === 'family') {
+            const memberId = authStore.familyMember?.id;
+            if (!memberId) return;
+            const items: FeedItem[] = [];
+            for (let page = 1; page <= 100000; page++) {
+              const payload = await requestJson<{ items: FeedItem[] }>('/api/family/likes?page=' + page + '&limit=200');
+              if (generation !== this.generation || authStore.likesMode !== mode || authStore.familyMember?.id !== memberId) return;
+              items.push(...payload.items);
+              if (payload.items.length < 200) break;
+            }
+            this.syncFromItems(items, mode);
+          } else if (mode === 'shared') {
             const payload = await fetchLikes();
             if (generation !== this.generation || mode !== authStore.likesMode || !authStore.canUseSavedItems) return;
             this.syncFromItems(payload.items, mode);
@@ -238,6 +250,9 @@ export const useLikesStore = defineStore('likes', {
       }
 
       const mode = authStore.likesMode;
+      const generation = this.generation;
+      const memberId = authStore.familyMember?.id;
+      const sameSession = () => generation === this.generation && mode === authStore.likesMode && memberId === authStore.familyMember?.id;
       const wasLiked = this.likedIds.includes(item.id);
       this.mode = mode;
       this.pendingIds.push(item.id);
@@ -255,12 +270,17 @@ export const useLikesStore = defineStore('likes', {
         if (mode === 'local') {
           writeLocalFavorites(this.items);
           this.initialized = true;
+        } else if (mode === 'family') {
+          await requestJson('/api/family/posts/' + item.id + '/like', {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ liked: !wasLiked })
+          });
         } else if (wasLiked) {
           await unlikeImage(item.id);
         } else {
           await likeImage(item.id);
         }
       } catch (error) {
+        if (!sameSession()) return;
         if (wasLiked) {
           this.likedIds = [item.id, ...this.likedIds.filter((id) => id !== item.id)];
           this.items = [item, ...this.items.filter((entry) => entry.id !== item.id)];
@@ -275,11 +295,10 @@ export const useLikesStore = defineStore('likes', {
             ? i18n.global.t('likes.errors.updateLocal')
             : i18n.global.t('likes.errors.updateShared');
       } finally {
-        if (mode === 'local') {
-          writeLocalFavorites(this.items);
+        if (sameSession()) {
+          if (mode === 'local') writeLocalFavorites(this.items);
+          this.pendingIds = this.pendingIds.filter((id) => id !== item.id);
         }
-
-        this.pendingIds = this.pendingIds.filter((id) => id !== item.id);
       }
     },
 

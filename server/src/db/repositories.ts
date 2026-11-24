@@ -3357,6 +3357,34 @@ export const imageRepository = {
   }
 };
 
+export const familyReactionRepository = {
+  visiblePost(postId: number): boolean {
+    return Boolean(database.prepare(`
+      SELECT 1 FROM posts JOIN folders ON folders.id = posts.folder_id
+      WHERE posts.id = ? AND ${VISIBLE_POST_WHERE_SQL}
+    `).get(postId));
+  },
+
+  set(postId: number, memberId: string, liked: boolean): void {
+    if (liked) {
+      database.prepare('INSERT INTO family_reactions (post_id, member_id) VALUES (?, ?) ON CONFLICT(post_id, member_id) DO NOTHING').run(postId, memberId);
+    } else {
+      database.prepare('DELETE FROM family_reactions WHERE post_id = ? AND member_id = ?').run(postId, memberId);
+    }
+  },
+
+  listForPosts(ids: number[]): Array<{ post_id: number; member_id: string }> {
+    if (!ids.length) return [];
+    return database.prepare(`
+      SELECT family_reactions.post_id, family_reactions.member_id
+      FROM family_reactions
+      JOIN posts ON posts.id = family_reactions.post_id
+      JOIN folders ON folders.id = posts.folder_id
+      WHERE posts.id IN (${ids.map(() => '?').join(',')}) AND ${VISIBLE_POST_WHERE_SQL}
+      ORDER BY family_reactions.created_at, family_reactions.member_id
+    `).all(...ids) as Array<{ post_id: number; member_id: string }>;
+  }
+};
 export const likeRepository = {
   listAll(): LikeRecord[] {
     return database.prepare('SELECT post_id, post_id AS image_id, created_at FROM likes ORDER BY created_at DESC, post_id DESC').all() as unknown as LikeRecord[];
@@ -3394,8 +3422,9 @@ export const likeRepository = {
     );
   },
 
-  listLikedImages(page: number = 1, limit: number = 1000): FeedImage[] {
+  listLikedImages(page: number = 1, limit: number = 1000, memberId?: string): FeedImage[] {
     const offset = (page - 1) * limit;
+    const family = memberId !== undefined;
     const posts = database.prepare(
       `
       SELECT
@@ -3420,23 +3449,23 @@ export const likeRepository = {
         images.video_delivery_policy AS videoDeliveryPolicy,
         posts.sort_timestamp AS sortTimestamp,
         posts.taken_at AS takenAt,
-        1 AS isSaved,
+        ${family ? 0 : 1} AS isSaved,
         places.id AS placeId,
         places.slug AS placeSlug,
         places.display_name AS placeName,
         places.kind AS placeKind,
         places.is_approximate AS placeIsApproximate
-      FROM likes
+      FROM ${family ? 'family_reactions' : 'likes'} AS likes
       INNER JOIN posts ON posts.id = likes.post_id
       INNER JOIN folders ON folders.id = posts.folder_id
       JOIN post_items ON post_items.post_id = posts.id AND post_items.position = 1
       JOIN images ON images.id = post_items.image_id
       LEFT JOIN places ON places.id = posts.place_id
-      WHERE ${VISIBLE_POST_WHERE_SQL}
+      WHERE ${VISIBLE_POST_WHERE_SQL}${family ? ' AND likes.member_id = ?' : ''}
       ORDER BY likes.created_at DESC, likes.post_id DESC
       LIMIT ? OFFSET ?
       `
-    ).all(limit, offset) as unknown as FeedPost[];
+    ).all(...(family ? [memberId, limit, offset] : [limit, offset])) as unknown as FeedPost[];
 
     return postRepository.hydratePostItems(posts);
   },

@@ -2317,7 +2317,7 @@ export const galleryService = {
     };
   },
 
-  getLikes() {
+  getLikes(memberId?: string, page = 1, limit = 1000) {
     if (!mediaIndexAvailable()) {
       return {
         items: []
@@ -2325,7 +2325,7 @@ export const galleryService = {
     }
 
     return {
-      items: mapFeedItems(likeRepository.listLikedImages())
+      items: mapFeedItems(likeRepository.listLikedImages(page, limit, memberId))
     };
   },
 

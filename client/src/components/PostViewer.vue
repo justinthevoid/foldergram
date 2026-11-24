@@ -447,6 +447,8 @@
           </div>
         </dl>
 
+        <FamilyReactionSummary :post-id="image.id" class="px-5 pt-3" />
+
         <!-- Actions -->
         <div
           class="viewer__sidebar-actions flex items-center justify-between gap-3 px-5 pt-[0.7rem] pb-5 mt-auto"
@@ -624,6 +626,7 @@
   import Avatar from "./Avatar.vue"
   import CarouselMediaStage from "./CarouselMediaStage.vue"
   import CollectionBookmark from "./CollectionBookmark.vue"
+  import FamilyReactionSummary from "./FamilyReactionSummary.vue"
   import PostCaptionModal from "./PostCaptionModal.vue"
   import ResilientImage from "./ResilientImage.vue"
   import { useLocalVideoPlayback } from "../composables/useLocalVideoPlayback"

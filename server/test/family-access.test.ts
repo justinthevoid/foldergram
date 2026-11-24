@@ -63,8 +63,8 @@ describe.sequential('family invitation access', () => {
     const accepted = await requestTestApp(app, 'POST', redeem, { ...intent, 'x-forwarded-proto': 'https' }, { token: renewed.body.token });
     expect(accepted.status).toBe(200);
     expect(accepted.body.auth).toMatchObject({
-      authenticated: true, role: 'viewer', likesMode: 'local', familyMember: { id: member.id, name: 'Example' },
-      capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false, canUseSharedLikes: false, canUseLocalFavorites: true }
+      authenticated: true, role: 'viewer', likesMode: 'family', familyMember: { id: member.id, name: 'Example' },
+      capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false, canUseSharedLikes: false, canUseLocalFavorites: false }
     });
     const cookie = accepted.headers.get('set-cookie')!;
     expect(cookie).toContain('HttpOnly');

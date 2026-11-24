@@ -1,5 +1,7 @@
 {
   "family": {
+    "reactionsBy": "Gefällt {names}",
+    "reactionsCount": "Gefällt {count} Familienmitgliedern",
     "title": "Familienzugang",
     "description": "Lade Personen mit einem privaten Einmallink ein. Sie benötigen kein eigenes Passwort.",
     "protectFirst": "Lege zuerst ein Administratorpasswort fest und deaktiviere den öffentlichen Modus.",

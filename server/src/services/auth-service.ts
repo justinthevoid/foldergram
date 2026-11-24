@@ -19,7 +19,7 @@ import { getFamilyIdentity, type FamilyIdentity } from './family-service.js';
 export type AuthRole = 'admin' | 'viewer' | 'anonymous';
 export type SessionRole = Exclude<AuthRole, 'anonymous'>;
 export type ViewerAccessMode = 'off' | 'password' | 'public';
-export type LikesMode = 'shared' | 'local';
+export type LikesMode = 'shared' | 'local' | 'family';
 type SupportedLocale = 'en' | 'es' | 'zh' | 'de';
 
 export interface AuthCapabilities {
@@ -369,10 +369,10 @@ export const authService = {
       ...status.capabilities,
       canUseSharedLikes: false,
       canUseSharedCollections: false,
-      canUseLocalFavorites: true,
+      canUseLocalFavorites: false,
       canUseLocalCollections: true
     };
-    return { ...status, likesMode: 'local', familyMember: identity };
+    return { ...status, likesMode: 'family', familyMember: identity };
   },
   getAuthenticatedStatus(role: SessionRole = 'admin'): AuthStatus {
     return createAuthenticatedStatus(role);

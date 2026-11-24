@@ -8,9 +8,9 @@ vi.mock('../api/http', () => ({ requestJson: vi.fn() }));
 
 const identity = { id: '00000000-0000-4000-8000-000000000001', name: 'Example' };
 const status: AuthStatus = {
-  enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'local',
+  enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
   defaultLocale: null, familyMember: identity, publicDemoMode: false,
-  capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false, canUseSharedLikes: false, canUseLocalFavorites: true, canUseSharedCollections: false, canUseLocalCollections: true }
+  capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false, canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
 };
 
 describe('named family sessions', () => {

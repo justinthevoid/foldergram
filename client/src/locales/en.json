@@ -1,5 +1,7 @@
 {
   "family": {
+    "reactionsBy": "Liked by {names}",
+    "reactionsCount": "Liked by {count} family members",
     "title": "Family access",
     "description": "Invite people by name with a private, one-time link. No password to remember.",
     "protectFirst": "Set an administrator password and keep public browse mode off before inviting family.",

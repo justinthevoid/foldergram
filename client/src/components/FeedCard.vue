@@ -316,6 +316,7 @@
         </div>
       </div>
 
+      <FamilyReactionSummary :post-id="item.id" />
       <p class="m-0 text-[0.88rem]">
         <strong class="mr-[0.35rem]">{{ displayFolderTitle }}</strong>
         {{ caption }}
@@ -471,6 +472,7 @@ import { applyVideoMutePreference, createVideoMuteStorage } from '../utils/video
 import Avatar from './Avatar.vue';
 import CarouselMediaStage from './CarouselMediaStage.vue';
 import CollectionBookmark from './CollectionBookmark.vue';
+import FamilyReactionSummary from './FamilyReactionSummary.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 import PostCaptionModal from './PostCaptionModal.vue';
 import LocalVideoFeedback from './LocalVideoFeedback.vue';

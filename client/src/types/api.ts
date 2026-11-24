@@ -685,7 +685,7 @@ export interface AppStats extends AppStatus {
 
 export type AuthRole = 'admin' | 'viewer' | 'anonymous';
 export type ViewerAccessMode = 'off' | 'password' | 'public';
-export type LikesMode = 'shared' | 'local';
+export type LikesMode = 'shared' | 'local' | 'family';
 
 export interface AuthCapabilities {
   canManageLibrary: boolean;
