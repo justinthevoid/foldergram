@@ -7,6 +7,7 @@ import { appConfig } from '../config/env.js';
 import { decryptCredential, encryptCredential } from './credentials.js';
 import { ImmichClient, ImmichError, albumSchema, type ImmichAsset, type ImmichAlbum, validateServerUrl } from './client.js';
 import { placeResolutionService } from '../services/place-service.js';
+import { parseImmichExposureTime } from './exposure-time.js';
 const remoteId = z.string().regex(/^[a-zA-Z0-9-]+$/).max(100);
 export const selectionSchema = z.object({
     mode: z.enum(['folders', 'albums', 'both']).default('folders'),
@@ -409,7 +410,7 @@ function commitIndex(source: SourceRecord, assets: Map<string, ImmichAsset>, gro
             const relative = `immich/${source.id}/assets/${asset.id}`;
             const taken = timestamp(typeof asset.exifInfo?.dateTimeOriginal === 'string' ? asset.exifInfo.dateTimeOriginal : asset.fileCreatedAt, timestamp(asset.fileCreatedAt, 0));
             const exif = asset.exifInfo ?? {};
-            const exifJson = JSON.stringify({ latitude: exif.latitude, longitude: exif.longitude, cameraMake: exif.make, cameraModel: exif.model, lensModel: exif.lensModel, iso: exif.iso, fNumber: exif.fNumber, focalLengthMm: exif.focalLength });
+            const exifJson = JSON.stringify({ latitude: exif.latitude, longitude: exif.longitude, cameraMake: exif.make, cameraModel: exif.model, lensModel: exif.lensModel, iso: exif.iso, fNumber: exif.fNumber, exposureTimeSeconds: parseImmichExposureTime(exif.exposureTime), focalLengthMm: exif.focalLength });
             const version = `${asset.updatedAt ?? ''}:${asset.thumbhash ?? ''}:${asset.checksum ?? ''}`;
             connection.prepare(`INSERT INTO images(folder_id,source_id,external_asset_id,remote_version,sync_generation,filename,extension,relative_path,absolute_path,file_size,width,height,media_type,mime_type,duration_ms,checksum_or_fingerprint,mtime_ms,first_seen_at,sort_timestamp,taken_at,taken_at_source,exif_json,thumbnail_path,preview_path,playback_strategy)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'preview')

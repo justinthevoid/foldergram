@@ -241,6 +241,17 @@ describe('PostViewer', () => {
     }
   });
 
+  it('pairs short capture settings and keeps longer camera metadata full width', () => {
+    const image = createImageDetail(31, { previousImageId: null, nextImageId: null });
+    image.exif = { cameraMake: 'Nikon', cameraModel: 'Z f', lensModel: '40mm', fNumber: 2.8, exposureTimeSeconds: 0.004, iso: 100, focalLengthMm: 40 };
+    const wrapper = mount(PostViewer, { props: { image }, global: { stubs: globalStubs } });
+    const capture = wrapper.findAll('.viewer__sidebar-metadata-item--capture').map(item => item.text());
+    expect(capture).toHaveLength(4);
+    expect(capture.join(' ')).toContain('1/250 s');
+    expect(capture.join(' ')).toContain('f/2.8');
+    expect(capture.join(' ')).toContain('40 mm');
+    expect(wrapper.get('.viewer__sidebar-metadata').text()).toContain('Nikon Z f');
+  });
   it('restores shared mute on source initialization and persists explicit sound requests', async () => {
     const appStore = useAppStore();
     appStore.setVideoMuted(true);

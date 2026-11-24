@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestTestApp as requestNative } from './http-test-utils.js';
 const requestTestApp: typeof requestNative = (app, method, url, headers = {}, body) => requestNative(app, method, url, { Connection: 'close', ...headers }, body);
-const photo = (id: string, parent = '/photos/Trips', libraryId: string | null = 'lib-one', type = 'IMAGE') => ({ id, type, libraryId, originalPath: `${parent}/${id}.jpg`, originalFileName: id === 'cover' ? 'cover.jpg' : `${id}.jpg`, originalMimeType: type === 'VIDEO' ? 'video/mp4' : 'image/jpeg', fileCreatedAt: '2025-01-01T00:00:00Z', fileModifiedAt: '2025-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', width: 800, height: 600, duration: type === 'VIDEO' ? 12000 : null, visibility: 'timeline', exifInfo: { fileSizeInByte: 1000, latitude: 34.9, longitude: -83.4 } });
+const photo = (id: string, parent = '/photos/Trips', libraryId: string | null = 'lib-one', type = 'IMAGE') => ({ id, type, libraryId, originalPath: `${parent}/${id}.jpg`, originalFileName: id === 'cover' ? 'cover.jpg' : `${id}.jpg`, originalMimeType: type === 'VIDEO' ? 'video/mp4' : 'image/jpeg', fileCreatedAt: '2025-01-01T00:00:00Z', fileModifiedAt: '2025-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z', width: 800, height: 600, duration: type === 'VIDEO' ? 12000 : null, visibility: 'timeline', exifInfo: { fileSizeInByte: 1000, latitude: 34.9, longitude: -83.4, make: 'Nikon', model: 'Z f', lensModel: '40mm', exposureTime: '1/250', fNumber: 2.8, iso: 100, focalLength: 40 } });
 describe.sequential('optional Immich sources', () => {
     let temp: string, base: string, server: http.Server;
     let data: any[], albums: any[], members: Record<string, string[]>, failCursor: boolean, librariesForbidden: boolean, permissionDenied: boolean, mediaFailure: number, searchCalls: number, mediaCalls: number, retryFailures: number;
@@ -626,6 +626,7 @@ describe.sequential('optional Immich sources', () => {
         const response = await requestTestApp(app, 'GET', `/api/posts/${post.id}?folder=${favorite.slug}`);
         expect(response.status).toBe(200);
         expect(response.body.folderSlug).toBe(favorite.slug);
+        expect(response.body.exif).toMatchObject({ cameraMake: 'Nikon', cameraModel: 'Z f', lensModel: '40mm', exposureTimeSeconds: 0.004, fNumber: 2.8, iso: 100, focalLengthMm: 40 });
         const memberIds = new Set(gallery.galleryService.getFolderImages(favorite.slug, 1, 60)!.items.map(p => p.id));
         for (const neighbor of [response.body.nextImageId, response.body.previousImageId])
             if (neighbor !== null)

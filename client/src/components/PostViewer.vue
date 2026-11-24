@@ -436,6 +436,7 @@
             v-for="detail in exifDetails"
             :key="detail.label"
             class="viewer__sidebar-metadata-item"
+            :class="{ 'viewer__sidebar-metadata-item--capture': detail.capture }"
           >
             <dt class="viewer__sidebar-metadata-label">
               {{ detail.label }}
@@ -710,6 +711,7 @@
   type MetadataDetail = {
     label: string
     value: string
+    capture?: boolean
   }
 
   let pendingVideoRestore: { currentTime: number; wasPaused: boolean } | null = null
@@ -888,6 +890,7 @@
     if (aperture) {
       details.push({
         label: t('post.viewer.metadata.aperture'),
+        capture: true,
         value: aperture,
       })
     }
@@ -895,6 +898,7 @@
     if (shutter) {
       details.push({
         label: t('post.viewer.metadata.shutter'),
+        capture: true,
         value: shutter,
       })
     }
@@ -902,6 +906,7 @@
     if (iso) {
       details.push({
         label: t('post.viewer.metadata.iso'),
+        capture: true,
         value: iso,
       })
     }
@@ -909,6 +914,7 @@
     if (focalLength) {
       details.push({
         label: t('post.viewer.metadata.focalLength'),
+        capture: true,
         value: focalLength,
       })
     }

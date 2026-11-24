@@ -2158,3 +2158,17 @@ img[data-loaded="true"] {
     opacity: 0.92;
   }
 }
+
+/* Keep long camera/lens/location values readable; pair the short exposure settings. */
+.viewer__sidebar-metadata {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.viewer__sidebar-metadata-item {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.viewer__sidebar-metadata-item--capture {
+  grid-column: auto;
+}
