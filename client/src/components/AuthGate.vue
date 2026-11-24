@@ -7,7 +7,7 @@
         </div>
         <div>
           <p class="m-0 text-[0.74rem] font-bold uppercase tracking-[0.08em] text-accent-strong">{{ t('auth.gate.eyebrow') }}</p>
-          <h1 class="m-0 text-[1.5rem] font-semibold tracking-[-0.04em]">{{ t('auth.gate.title') }}</h1>
+          <h1 class="m-0 text-[1.5rem] font-semibold tracking-[-0.04em]">{{ branding.value.name === 'Foldergram' ? t('auth.gate.title') : branding.value.name }}</h1>
         </div>
       </div>
 
@@ -45,7 +45,10 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import BrandMark from './BrandMark.vue';
+import { useBrandingStore } from '../stores/branding';
 import { useAuthStore } from '../stores/auth';
+
+const branding = useBrandingStore();
 
 const { t } = useI18n();
 const authStore = useAuthStore();

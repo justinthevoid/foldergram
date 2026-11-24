@@ -6,6 +6,7 @@ import { i18n } from './locales';
 import { canAccessRoute, router } from './router';
 import { useAppStore } from './stores/app';
 import { useAppearanceStore } from './stores/appearance';
+import { useBrandingStore } from './stores/branding';
 import { useAuthStore } from './stores/auth';
 import { pinia } from './stores/pinia';
 import './styles/base.css';
@@ -58,6 +59,12 @@ async function bootstrap() {
   appStore.initializeLocale();
   const appearance = useAppearanceStore(pinia);
   appearance.initialize();
+  const branding = useBrandingStore(pinia);
+  void branding.loadPublic();
+  watch(() => authStore.ready && authStore.accessGranted, (granted) => {
+    if (granted) void branding.loadProfile();
+    else branding.clearProfile();
+  }, { immediate: true });
   watch(() => authStore.canWriteAppearance, (writable) => {
     appearance.render();
     if (writable) void appearance.load();

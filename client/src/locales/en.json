@@ -1,4 +1,20 @@
 {
+  "branding": {
+    "title": "Gallery identity",
+    "description": "Give your gallery a name, a personal logo and a photographer profile.",
+    "logo": "Gallery logo",
+    "removeLogo": "Remove logo",
+    "publicHelp": "Your gallery name and logo are visible on the sign-in screen. Use a logo you are comfortable sharing.",
+    "name": "Gallery name",
+    "photographer": "Photographer name",
+    "bio": "About the photographer",
+    "profileHelp": "The photographer profile appears inside the gallery. Public browse mode also makes the profile public.",
+    "saved": "Gallery identity saved.",
+    "saving": "Saving…",
+    "save": "Save identity",
+    "logoError": "Choose a JPEG, PNG or WebP image under 10 MB.",
+    "saveError": "Could not save the gallery identity."
+  },
   "streamingVideo": {
     "loading": "Preparing video…",
     "unavailable": "This video could not be played.",

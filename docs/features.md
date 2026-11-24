@@ -390,6 +390,9 @@ Current non-admin behavior:
 | Regenerate Thumbnails | Clears generated thumbnails and video poster images, then rebuilds them from indexed media only. |
 | Rebuild Library Index | Clears indexed folders, posts, likes, folder scan state, and scan history, then rescans the active gallery root and reuses matching cached derivatives when possible. In lazy derivative mode it does not pre-generate missing thumbnails or previews. |
 
+## Gallery identity (photography fork)
+
+Settings → Appearance includes gallery identity: name, raster logo, photographer name, and bio. The name and logo are shown on the sign-in screen and are available before authentication. The photographer profile is available to gallery viewers; enabling public browse mode also exposes the profile. Logos are resized and re-encoded to WebP without the original file metadata. The existing appearance settings remain separate.
 ## Theme, language, and local UI preferences
 
 The startup screen follows your saved light or dark theme and displays a static

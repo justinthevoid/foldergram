@@ -1,4 +1,20 @@
 {
+  "branding": {
+    "title": "Identidad de la galería",
+    "description": "Personaliza el nombre, el logotipo y el perfil del fotógrafo.",
+    "logo": "Logotipo de la galería",
+    "removeLogo": "Quitar logotipo",
+    "publicHelp": "El nombre y el logotipo se muestran en la pantalla de inicio de sesión.",
+    "name": "Nombre de la galería",
+    "photographer": "Nombre del fotógrafo",
+    "bio": "Sobre el fotógrafo",
+    "profileHelp": "El perfil aparece dentro de la galería y es público en el modo de navegación pública.",
+    "saved": "Identidad guardada.",
+    "saving": "Guardando…",
+    "save": "Guardar identidad",
+    "logoError": "Elige una imagen JPEG, PNG o WebP de menos de 10 MB.",
+    "saveError": "No se pudo guardar la identidad."
+  },
   "streamingVideo": {
     "loading": "Preparando el vídeo…",
     "unavailable": "No se pudo reproducir este vídeo.",

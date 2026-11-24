@@ -1,4 +1,20 @@
 {
+  "branding": {
+    "title": "Galerie-Identität",
+    "description": "Gib deiner Galerie einen Namen, ein Logo und ein Fotografenprofil.",
+    "logo": "Galerie-Logo",
+    "removeLogo": "Logo entfernen",
+    "publicHelp": "Name und Logo sind auf der Anmeldeseite sichtbar.",
+    "name": "Galeriename",
+    "photographer": "Name des Fotografen",
+    "bio": "Über den Fotografen",
+    "profileHelp": "Das Profil erscheint in der Galerie. Im öffentlichen Modus ist es ebenfalls öffentlich.",
+    "saved": "Galerie-Identität gespeichert.",
+    "saving": "Speichern…",
+    "save": "Identität speichern",
+    "logoError": "Wähle ein JPEG-, PNG- oder WebP-Bild unter 10 MB.",
+    "saveError": "Galerie-Identität konnte nicht gespeichert werden."
+  },
   "streamingVideo": {
     "loading": "Video wird vorbereitet…",
     "unavailable": "Dieses Video konnte nicht abgespielt werden.",

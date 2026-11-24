@@ -1,5 +1,6 @@
 <template>
-  <svg
+  <img v-if="branding.value.logo" :src="branding.value.logo" alt="" aria-hidden="true" class="w-8 h-8 object-contain rounded-lg" />
+  <svg v-else
     viewBox="0 0 20 20"
     role="presentation"
     aria-hidden="true"
@@ -11,3 +12,8 @@
     />
   </svg>
 </template>
+
+<script setup lang="ts">
+import { useBrandingStore } from '../stores/branding';
+const branding = useBrandingStore();
+</script>

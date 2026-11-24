@@ -50,6 +50,7 @@
       </section>
 
       <section v-if="!appStore.isLibraryUnavailable && !showSourceOutageState" class="home-layout__header home-layout__feed-width grid min-w-0 gap-[0.6875rem] mb-5 mx-auto w-full max-w-[39.375rem]">
+        <GalleryProfile />
         <section v-if="displayMomentItems.length" class="home-layout__stories mb-2 min-w-0">
           <div class="story-rail-shell">
             <div class="stories-bar story-rail pb-5 pt-[0.12rem]" :aria-label="momentsStore.displayRailTitle">
@@ -297,6 +298,7 @@
 </template>
 
 <script setup lang="ts">
+import GalleryProfile from '../components/GalleryProfile.vue';
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import SourceUnavailable from '../components/SourceUnavailable.vue';
 import { useSourcesStore } from '../stores/sources';

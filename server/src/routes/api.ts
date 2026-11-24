@@ -6,6 +6,7 @@ import { getHeicImportSetting } from '../services/heic/import-setting.js';
 import express from 'express';
 import { getAppearance, saveAppearance, saveAppearanceTheme } from '../services/appearance-service.js';
 import { z } from 'zod';
+import { getBranding, getPublicBranding, saveBranding } from '../services/branding-service.js';
 
 import { AUTH_PASSWORD_MAX_LENGTH, AUTH_PASSWORD_MIN_LENGTH, authService } from '../services/auth-service.js';
 import {
@@ -26,6 +27,15 @@ import { registerVideoPlaybackRoutes } from './video-playback.js';
 import { videoPreviewReclamation } from '../services/video-preview-reclamation.js';
 
 const router = express.Router();
+router.get('/branding', (_request, response) => {
+  response.json(getPublicBranding());
+});
+router.get('/branding/profile', (_request, response) => {
+  response.json(getBranding());
+});
+router.put('/admin/settings/branding', requireCapability('canAccessSettings', 'Admin access is required.'), async (request, response) => {
+  response.json(await saveBranding(request.body));
+});
 
 router.get('/appearance', (_request, response) => {
   response.setHeader('Cache-Control', 'no-store');

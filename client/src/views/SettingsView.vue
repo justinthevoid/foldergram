@@ -1142,6 +1142,7 @@
           </section>
 
           <AppearanceSettings />
+          <BrandingSettings />
         </template>
 
         <!-- CATEGORY: PLACES -->
@@ -1472,6 +1473,7 @@ import SourceSettings from '../components/SourceSettings.vue';
 import VideoPreviewReclamation from '../components/VideoPreviewReclamation.vue';
 import { useReelsStore } from '../stores/reels';
 import AppearanceSettings from '../components/AppearanceSettings.vue';
+import BrandingSettings from '../components/BrandingSettings.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import {
   fetchAdminStats,
