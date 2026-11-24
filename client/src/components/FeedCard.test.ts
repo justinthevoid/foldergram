@@ -179,6 +179,26 @@ describe('FeedCard', () => {
     );
   });
 
+  it('uses high resolution Immich previews only for Home still photos', async () => {
+    const local = createImageItem(808);
+    const remote: FeedItem = { ...local, sourceKind: 'immich' };
+    const wrapper = mount(FeedCard, {
+      props: { item: remote, avatarUrl: null, context: 'home' },
+      global: { stubs: globalStubs }
+    });
+    const img = () => wrapper.get('[data-test="resilient-image"]');
+    expect(img().attributes('src')).toBe(remote.previewUrl);
+    expect(img().attributes('loading')).toBe('lazy');
+    await wrapper.setProps({ context: 'default' });
+    expect(img().attributes('src')).toBe(remote.thumbnailUrl);
+    await wrapper.setProps({ context: 'home', item: local });
+    expect(img().attributes('src')).toBe(local.thumbnailUrl);
+    await wrapper.setProps({ item: { ...local, isAnimated: true } });
+    expect(img().attributes('src')).toBe(local.previewUrl);
+    await wrapper.setProps({ item: { ...remote, previewUrl: '' } });
+    expect(img().attributes('src')).toBe(remote.thumbnailUrl);
+    wrapper.unmount();
+  });
   it('hides the menu original action when Immich original downloads are disabled', async () => {
     const wrapper = mount(FeedCard, {
       props: { item: { ...createImageItem(807), sourceId: 1, originalDownloadsAllowed: false }, avatarUrl: null },

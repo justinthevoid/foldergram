@@ -655,7 +655,11 @@ function observeMediaFrameWidth() {
 
 watch([feedCardElement, isHomeContext, () => props.fitTallMedia], observeMediaFrameWidth, { flush: 'post' });
 
-const homeImageSrc = computed(() => (props.item.isAnimated ? props.item.previewUrl : props.item.thumbnailUrl));
+const homeImageSrc = computed(() =>
+  props.item.isAnimated || props.item.sourceKind === 'immich'
+    ? props.item.previewUrl || props.item.thumbnailUrl
+    : props.item.thumbnailUrl
+);
 const activeMediaImageId = computed(() =>
   isCarousel.value
     ? props.item.mediaItems?.[carouselIndex.value]?.imageId ?? props.item.id
