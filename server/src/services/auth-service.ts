@@ -14,6 +14,7 @@ import {
 } from '../constants/app-setting-keys.js';
 import { appConfig } from '../config/env.js';
 import { appSettingsRepository } from '../db/repositories.js';
+import { getFamilyIdentity, type FamilyIdentity } from './family-service.js';
 
 export type AuthRole = 'admin' | 'viewer' | 'anonymous';
 export type SessionRole = Exclude<AuthRole, 'anonymous'>;
@@ -45,6 +46,7 @@ interface AuthConfigSnapshot {
 interface SessionPayload {
   exp: number;
   role: SessionRole;
+  familyMemberId?: string;
   sv: number;
 }
 
@@ -57,6 +59,7 @@ export interface AuthStatus {
   likesMode: LikesMode;
   defaultLocale: SupportedLocale | null;
   capabilities: AuthCapabilities;
+  familyMember?: FamilyIdentity;
 }
 
 export const AUTH_SESSION_COOKIE_NAME = 'foldergram_session';
@@ -64,6 +67,7 @@ export const AUTH_PASSWORD_MIN_LENGTH = 8;
 export const AUTH_PASSWORD_MAX_LENGTH = 256;
 const PASSWORD_HASH_LENGTH = 64;
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+const FAMILY_SESSION_DURATION_MS = 90 * 24 * 60 * 60 * 1000;
 const SUPPORTED_LOCALES = ['en', 'es', 'zh', 'de'] as const;
 
 function parseSupportedLocale(value: string | null): SupportedLocale | null {
@@ -248,7 +252,9 @@ function parseSessionToken(token: string, secret: Buffer): SessionPayload | null
       (payload.role !== 'admin' && payload.role !== 'viewer') ||
       typeof payload.sv !== 'number' ||
       !Number.isInteger(payload.sv) ||
-      payload.sv <= 0
+      payload.sv <= 0 ||
+      (payload.familyMemberId !== undefined &&
+        (payload.role !== 'viewer' || typeof payload.familyMemberId !== 'string' || !/^[0-9a-f-]{36}$/.test(payload.familyMemberId)))
     ) {
       return null;
     }
@@ -256,7 +262,8 @@ function parseSessionToken(token: string, secret: Buffer): SessionPayload | null
     return {
       exp: payload.exp,
       role: payload.role,
-      sv: payload.sv
+      sv: payload.sv,
+      ...(payload.familyMemberId ? { familyMemberId: payload.familyMemberId } : {})
     };
   } catch {
     return null;
@@ -297,9 +304,9 @@ function storeSessionConfig(nextSessionVersion: number): void {
   appSettingsRepository.set(AUTH_SESSION_VERSION_SETTING_KEY, String(nextSessionVersion));
 }
 
-function getRequestSessionRole(request: express.Request): SessionRole | null {
+function getRequestSession(request: express.Request): SessionPayload | null {
   if (!authConfig.enabled || !authConfig.sessionSecret) {
-    return 'admin';
+    return null;
   }
 
   const cookieHeader = request.get('cookie') ?? undefined;
@@ -317,7 +324,7 @@ function getRequestSessionRole(request: express.Request): SessionRole | null {
     return null;
   }
 
-  return payload.sv === authConfig.sessionVersion ? payload.role : null;
+  return payload.sv === authConfig.sessionVersion ? payload : null;
 }
 
 export const authService = {
@@ -349,6 +356,24 @@ export const authService = {
     return authConfig.enabled ? getAnonymousStatus() : createStatus('admin', true, false, 'off');
   },
 
+  getFamilyGeneration(): string | null {
+    return authConfig.enabled && authConfig.sessionSecret && authConfig.viewerAccessMode !== 'public'
+      ? signValue('foldergram-family-invite-v1', authConfig.sessionSecret)
+      : null;
+  },
+
+  getFamilyStatus(identity: FamilyIdentity): AuthStatus {
+    const status = createAuthenticatedStatus('viewer');
+    // Named family sessions never modify the existing shared likes/collections.
+    status.capabilities = {
+      ...status.capabilities,
+      canUseSharedLikes: false,
+      canUseSharedCollections: false,
+      canUseLocalFavorites: true,
+      canUseLocalCollections: true
+    };
+    return { ...status, likesMode: 'local', familyMember: identity };
+  },
   getAuthenticatedStatus(role: SessionRole = 'admin'): AuthStatus {
     return createAuthenticatedStatus(role);
   },
@@ -358,8 +383,14 @@ export const authService = {
       return createStatus('admin', true, false, 'off');
     }
 
-    const role = getRequestSessionRole(request);
-    return role ? createAuthenticatedStatus(role) : getAnonymousStatus();
+    const session = getRequestSession(request);
+    if (!session) return getAnonymousStatus();
+    if (session.familyMemberId) {
+      const identity = getFamilyIdentity(session.familyMemberId);
+      if (!identity) return getAnonymousStatus();
+      return this.getFamilyStatus(identity);
+    }
+    return createAuthenticatedStatus(session.role);
   },
 
   isAuthenticatedRequest(request: express.Request): boolean {
@@ -477,15 +508,17 @@ export const authService = {
     return createStatus('admin', true, false, 'off');
   },
 
-  setAuthenticatedSession(response: express.Response, request: express.Request, role: SessionRole = 'admin'): void {
+  setAuthenticatedSession(response: express.Response, request: express.Request, role: SessionRole = 'admin', familyMember?: FamilyIdentity): void {
     if (!authConfig.enabled || !authConfig.sessionSecret) {
       return;
     }
 
+    const duration = familyMember ? FAMILY_SESSION_DURATION_MS : SESSION_DURATION_MS;
     const payload: SessionPayload = {
-      exp: Date.now() + SESSION_DURATION_MS,
+      exp: Date.now() + duration,
       role,
-      sv: authConfig.sessionVersion
+      sv: authConfig.sessionVersion,
+      ...(familyMember ? { familyMemberId: familyMember.id } : {})
     };
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
     const signature = signValue(encodedPayload, authConfig.sessionSecret);
@@ -493,7 +526,7 @@ export const authService = {
     response.cookie(AUTH_SESSION_COOKIE_NAME, `${encodedPayload}.${signature}`, {
       encode: (value) => value,
       httpOnly: true,
-      maxAge: SESSION_DURATION_MS,
+      maxAge: duration,
       path: '/',
       sameSite: 'lax',
       secure: isSecureRequest(request)

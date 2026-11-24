@@ -15,7 +15,14 @@
         {{ description }}
       </p>
 
-      <form class="mt-6 grid gap-4" @submit.prevent="submitLogin">
+      <div v-if="inviteToken" class="mt-6 grid gap-3 rounded-xl border border-border bg-surface-alt p-4">
+        <h2 class="m-0 text-lg font-semibold">{{ t('family.joinTitle') }}</h2>
+        <p class="m-0 text-sm text-muted">{{ t('family.joinHelp') }}</p>
+        <p v-if="inviteError" role="alert" class="m-0 text-sm text-red-500">{{ inviteError }}</p>
+        <button class="btn-primary" type="button" :disabled="submitting" @click="acceptInvite">{{ t('family.accept') }}</button>
+        <button class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''">{{ t('family.usePassword') }}</button>
+      </div>
+      <form v-else class="mt-6 grid gap-4" @submit.prevent="submitLogin">
         <label class="grid gap-[0.45rem]">
           <span class="text-[0.76rem] font-bold uppercase tracking-[0.08em] text-muted">{{ t('auth.gate.passwordLabel') }}</span>
           <input
@@ -41,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import BrandMark from './BrandMark.vue';
@@ -53,6 +60,29 @@ const branding = useBrandingStore();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const password = ref('');
+const inviteToken = ref('');
+const inviteError = ref('');
+onMounted(() => {
+  const match = /^#family-invite=([A-Za-z0-9_-]{43})$/.exec(window.location.hash);
+  if (match) {
+    inviteToken.value = match[1]!;
+    // Strip the bearer token from browser history before using it.
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+  }
+});
+async function acceptInvite() {
+  if (!inviteToken.value || submitting.value) return;
+  submitting.value = true;
+  inviteError.value = '';
+  try {
+    await authStore.acceptFamilyInvite(inviteToken.value);
+    inviteToken.value = '';
+  } catch {
+    inviteError.value = t('family.joinError');
+  } finally {
+    submitting.value = false;
+  }
+}
 const submitting = ref(false);
 const localError = ref<string | null>(null);
 const errorMessage = computed(() => localError.value ?? authStore.error);

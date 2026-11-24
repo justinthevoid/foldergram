@@ -275,6 +275,7 @@
         <SourceSettings v-if="currentCategory === 'sources'" @manage-local-exclusions="openExcludedFolders" />
         <!-- CATEGORY: ACCESS -->
         <template v-if="currentCategory === 'access'">
+          <FamilyAccessSettings />
           <section class="card grid gap-[1.15rem] p-8">
             <div class="flex items-start justify-between gap-4 max-sm:flex-col max-sm:items-start">
               <div>
@@ -1474,6 +1475,7 @@ import VideoPreviewReclamation from '../components/VideoPreviewReclamation.vue';
 import { useReelsStore } from '../stores/reels';
 import AppearanceSettings from '../components/AppearanceSettings.vue';
 import BrandingSettings from '../components/BrandingSettings.vue';
+import FamilyAccessSettings from '../components/FamilyAccessSettings.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import {
   fetchAdminStats,

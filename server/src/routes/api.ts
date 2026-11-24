@@ -7,6 +7,7 @@ import express from 'express';
 import { getAppearance, saveAppearance, saveAppearanceTheme } from '../services/appearance-service.js';
 import { z } from 'zod';
 import { getBranding, getPublicBranding, saveBranding } from '../services/branding-service.js';
+import { listFamilyMembers, createFamilyMember, renewFamilyInvite, revokeFamilyMember, redeemFamilyInvite } from '../services/family-service.js';
 
 import { AUTH_PASSWORD_MAX_LENGTH, AUTH_PASSWORD_MIN_LENGTH, authService } from '../services/auth-service.js';
 import {
@@ -397,6 +398,43 @@ router.get('/health', (_request, response) => {
   });
 });
 
+const familyAdmin = requireCapability('canAccessSettings', 'Admin access is required.');
+function familyGeneration() {
+  const generation = authService.getFamilyGeneration();
+  if (!generation) throw new Error('Enable password protection and turn off public browse mode before inviting family.');
+  return generation;
+}
+
+router.get('/admin/family', familyAdmin, (_request, response) => {
+  const generation = authService.getFamilyGeneration();
+  response.json({ enabled: Boolean(generation), members: listFamilyMembers(generation) });
+});
+
+router.post('/admin/family', familyAdmin, (request, response) => {
+  const { name } = z.object({ name: z.string().trim().min(1).max(80) }).strict().parse(request.body);
+  response.status(201).json(createFamilyMember(name, familyGeneration()));
+});
+
+router.post('/admin/family/:id/invite', familyAdmin, (request, response) => {
+  response.json(renewFamilyInvite(z.string().uuid().parse(request.params.id), familyGeneration()));
+});
+
+router.post('/admin/family/:id/revoke', familyAdmin, (request, response) => {
+  response.json(revokeFamilyMember(z.string().uuid().parse(request.params.id)));
+});
+
+router.post('/auth/family-invite', authRateLimiter, (request, response) => {
+  authService.setNoStoreHeaders(response);
+  const generation = authService.getFamilyGeneration();
+  if (!generation) return response.status(403).json({ message: 'Family sign-in is not enabled.' });
+  // Never replace a logged-in administrator or viewer with an invitation session.
+  if (authService.isAuthenticatedRequest(request)) return response.status(409).json({ message: 'Sign out before accepting an invitation.' });
+  const { token } = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/) }).strict().parse(request.body);
+  const identity = redeemFamilyInvite(token, generation);
+  if (!identity) return response.status(401).json({ message: 'This invitation has expired or has already been used.' });
+  authService.setAuthenticatedSession(response, request, 'viewer', identity);
+  return response.json({ ok: true, auth: authService.getFamilyStatus(identity) });
+});
 router.get('/auth/status', (request, response) => {
   authService.setNoStoreHeaders(response);
   response.json(authService.getStatus(request));

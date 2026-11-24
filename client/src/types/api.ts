@@ -697,7 +697,24 @@ export interface AuthCapabilities {
   canUseLocalCollections?: boolean;
 }
 
+export interface FamilyIdentity {
+  id: string;
+  name: string;
+}
+export interface FamilyMember extends FamilyIdentity {
+  createdAt: number;
+  revokedAt: number | null;
+  lastJoinedAt: number | null;
+  inviteExpiresAt: number | null;
+}
+export interface FamilyInvite {
+  member: FamilyMember;
+  token: string;
+  expiresAt: number;
+}
+
 export interface AuthStatus {
+  familyMember?: FamilyIdentity;
   enabled: boolean;
   publicDemoMode?: boolean;
   authenticated: boolean;

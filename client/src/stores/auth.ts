@@ -11,9 +11,12 @@ import {
   logout
 } from '../api/gallery';
 import { i18n } from '../locales';
+import { requestJson } from '../api/http';
+import type { AuthMutationResult, FamilyIdentity } from '../types/api';
 import type { AuthCapabilities, AuthRole, AuthStatus, LikesMode, ViewerAccessMode } from '../types/api';
 
 interface AuthState {
+  familyMember: FamilyIdentity | null;
   ready: boolean;
   loading: boolean;
   unlockDialogOpen: boolean;
@@ -93,6 +96,7 @@ async function clearAppCaches(): Promise<void> {
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
+    familyMember: null,
     ready: false,
     loading: false,
     unlockDialogOpen: false,
@@ -129,6 +133,7 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     applyStatus(status: AuthStatus) {
       this.enabled = status.enabled;
+      this.familyMember = status.familyMember ?? null;
       this.publicDemoMode = status.publicDemoMode ?? null;
       this.authenticated = status.authenticated;
       this.role = status.role;
@@ -192,6 +197,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async acceptFamilyInvite(token: string) {
+      const payload = await requestJson<AuthMutationResult>('/api/auth/family-invite', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token })
+      });
+      this.applyStatus(payload.auth);
+      this.unlockDialogOpen = false;
+      this.error = null;
+    },
     async login(password: string) {
       this.loading = true;
 
