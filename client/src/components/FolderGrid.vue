@@ -1,10 +1,14 @@
 <template>
-  <section class="grid gap-[1px]" :class="columns === 'three' ? 'grid-cols-3' : 'grid-cols-3 md:grid-cols-4'">
-    <RouterLink v-for="item in items" :key="item.id" custom :to="buildImageRoute(item.id, 'sourceKind' in item && item.sourceKind === 'immich')" v-slot="{ href, navigate }">
+  <section
+    ref="gridElement"
+    :class="variant === 'posts' ? 'flex flex-wrap items-start justify-start gap-1' : ['grid gap-[1px]', columns === 'three' ? 'grid-cols-3' : 'grid-cols-3 md:grid-cols-4']"
+  >
+    <RouterLink v-for="(item, index) in items" :key="item.id" custom :to="buildImageRoute(item.id, 'sourceKind' in item && item.sourceKind === 'immich')" v-slot="{ href, navigate }">
       <a
         :href="href"
         class="group relative overflow-hidden bg-surface-alt"
-        :class="variant === 'reels' ? 'aspect-[9/14]' : variant === 'posts' ? 'aspect-[3/4]' : 'aspect-square'"
+        :class="variant === 'reels' ? 'aspect-[9/14]' : variant === 'posts' ? 'shrink-0' : 'aspect-square'"
+        :style="variant === 'posts' ? tileStyles[index] : undefined"
         @click="handleImageNavigation($event, navigate)"
         :aria-label="item.postType === 'carousel' ? t('post.carousel.open', { count: item.itemCount ?? item.mediaItems?.length ?? 0 }) : undefined"
       >
@@ -13,7 +17,7 @@
           :alt="item.filename"
           loading="lazy"
           :retry-while="appStore.isScanning"
-          class="h-full w-full object-cover group-hover:scale-[1.03] group-hover:opacity-90"
+          class="h-full w-full group-hover:opacity-90" :class="variant === 'posts' ? 'object-contain' : 'object-cover group-hover:scale-[1.03]'"
           style="transition: transform 0.22s ease, opacity 0.22s ease;"
         />
         <div v-if="item.mediaType === 'video'" class="absolute inset-x-0 top-0 flex items-center justify-between px-2 py-2 text-white pointer-events-none bg-[linear-gradient(180deg,rgba(10,14,24,0.72)_0%,rgba(10,14,24,0)_100%)]">
@@ -36,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
@@ -43,6 +48,7 @@ import { useAppStore } from '../stores/app';
 import type { FeedItem, SharedFeedItem } from '../types/api';
 import { formatMediaDuration } from '../utils/media';
 import ResilientImage from './ResilientImage.vue';
+import { justifiedTiles } from '../utils/justified-grid';
 
 const props = withDefaults(
   defineProps<{
@@ -61,6 +67,26 @@ const props = withDefaults(
 const appStore = useAppStore();
 const route = useRoute();
 const { t } = useI18n();
+const gridElement = ref<HTMLElement | null>(null);
+const gridWidth = ref(360);
+let gridObserver: ResizeObserver | undefined;
+const measureGrid = () => {
+  const width = gridElement.value?.clientWidth;
+  if (width && width > 0) gridWidth.value = width;
+};
+onMounted(() => {
+  measureGrid();
+  if (typeof ResizeObserver !== 'undefined' && gridElement.value) {
+    gridObserver = new ResizeObserver(measureGrid);
+    gridObserver.observe(gridElement.value);
+  }
+});
+onBeforeUnmount(() => gridObserver?.disconnect());
+const tileStyles = computed(() => {
+  const target = Math.max(112, Math.min(220, gridWidth.value / 3.5));
+  return justifiedTiles(props.items, gridWidth.value, target, 4)
+    .map(tile => ({ width: tile.width + 'px', height: tile.height + 'px' }));
+});
 
 function buildImageRoute(id: number, useAlbumRoute: boolean) {
   if (props.sharedSlug) {
