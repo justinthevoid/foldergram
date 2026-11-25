@@ -83,6 +83,7 @@ const lastRatio = computed(() => lastItem.value && lastItem.value.width > 0 && l
 let resizeObserver: ResizeObserver | null = null;
 let scrollFrame = 0;
 let navigationLock = false;
+let navigationTargetId: number | null = null;
 let navigationFallbackTimer = 0;
 let navigationSettleTimer = 0;
 let wheelDeltaAccumulator = 0;
@@ -168,6 +169,7 @@ function clearNavigationTimers() {
 function unlockNavigation() {
   clearNavigationTimers();
   navigationLock = false;
+  navigationTargetId = null;
   wheelDeltaAccumulator = 0;
 }
 
@@ -218,9 +220,13 @@ function scrollToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
   });
 }
 
-function navigateByOffset(offset: number) {
+function navigateByOffset(offset: number, deliberate = false) {
   if (navigationLock) {
-    return;
+    // Trackpad momentum must not advance multiple panels. A deliberate arrow
+    // click, however, should work once the previously requested Reel is active,
+    // even if the browser is still settling its smooth scroll.
+    if (!deliberate || props.activeReelId !== navigationTargetId) return;
+    unlockNavigation();
   }
 
   const activeIndex = props.items.findIndex((item) => item.id === props.activeReelId);
@@ -238,6 +244,7 @@ function navigateByOffset(offset: number) {
   }
 
   navigationLock = true;
+  navigationTargetId = props.items[nextIndex]!.id;
   wheelDeltaAccumulator = 0;
   scheduleNavigationFallbackUnlock();
   scrollToIndex(nextIndex);
@@ -246,17 +253,18 @@ function navigateByOffset(offset: number) {
 function scrollToReel(id: number) {
   const index = props.items.findIndex((item) => item.id === id);
   if (index >= 0) {
+    unlockNavigation();
     scrollToIndex(index, 'instant');
     scheduleActiveUpdate();
   }
 }
 
 function goToPrevious() {
-  navigateByOffset(-1);
+  navigateByOffset(-1, true);
 }
 
 function goToNext() {
-  navigateByOffset(1);
+  navigateByOffset(1, true);
 }
 
 function navigateByWheel(deltaY: number) {
