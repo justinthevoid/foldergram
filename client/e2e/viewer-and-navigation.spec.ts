@@ -505,6 +505,79 @@ test('family carousel feed measures offscreen photo requests', async ({ page }) 
   await expect(page.getByAltText('perf-18-1.jpg', { exact: true })).toHaveAttribute('data-loaded', 'true');
 });
 
+test('family can explicitly create a temporary device link from More', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page, 'light');
+  await page.route('**/api/auth/status', route => route.fulfill({ json: {
+    enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  }}));
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  const fakeToken = 'A'.repeat(43);
+  let linkRequests = 0;
+  await page.route('**/api/family/device-invite', route => {
+    linkRequests++;
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toEqual({});
+    expect(route.request().headers()['x-foldergram-intent']).toBe('1');
+    return route.fulfill({ json: { token: fakeToken, origin: 'https://gallery.example.test', expiresAt: Date.now() + 600000 } });
+  });
+  await page.goto('/');
+  const more = page.getByRole('button', { name: 'More', exact: true });
+  await more.click();
+  await page.getByRole('button', { name: 'Add another device', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add another device' });
+  await expect(dialog).toBeVisible();
+  expect(linkRequests).toBe(0);
+  await dialog.getByRole('button', { name: 'Create device link' }).click();
+  await expect(dialog.getByRole('textbox', { name: 'Invitation link' })).toHaveValue('https://gallery.example.test/#family-invite=' + fakeToken);
+  await expect(dialog.getByRole('img', { name: 'Scan to sign in on another device' })).toBeVisible();
+  expect(linkRequests).toBe(1);
+  await page.screenshot({ path: testInfo.outputPath('device-link-fixture.png') });
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(more).toBeFocused();
+});
+
+test('family welcome screen explains device linking and redeems only after an explicit action', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page, 'light');
+  const viewer = { enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  };
+  let joined = false;
+  let redemptions = 0;
+  await page.route('**/api/auth/status', route => route.fulfill({ json: joined ? viewer : {
+    ...viewer, authenticated: false, role: 'anonymous', likesMode: 'local', familyMember: undefined
+  }}));
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  const token = 'B'.repeat(43);
+  await page.route('**/api/auth/family-invite', route => {
+    redemptions++;
+    expect(route.request().postDataJSON()).toEqual({ token });
+    joined = true;
+    return route.fulfill({ json: { ok: true, auth: viewer } });
+  });
+  await page.goto('/#family-invite=' + token);
+  await expect(page.getByRole('button', { name: 'Open gallery', exact: true })).toBeVisible();
+  await expect(page.getByText(/Already signed in on another device/)).toBeVisible();
+  await expect(page.locator('input[type="password"]')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => location.hash)).toBe('');
+  expect(redemptions).toBe(0);
+  await page.getByRole('button', { name: 'Open gallery', exact: true }).click();
+  await expect(page.locator('.family-header')).toBeVisible();
+  expect(redemptions).toBe(1);
+  await page.reload();
+  await expect(page.locator('.family-header')).toBeVisible();
+  expect(redemptions).toBe(1);
+});
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

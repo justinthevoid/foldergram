@@ -214,13 +214,25 @@
     "saveError": "Kommentar konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "deleteError": "Kommentar konnte nicht gelöscht werden. Bitte erneut versuchen."
   },
+  "deviceLink": {
+    "title": "Weiteres Gerät hinzufügen",
+    "description": "Melde dich auf einem anderen Smartphone, Tablet oder Computer mit einem Einmallink an. Deine Favoriten und Kommentare bleiben erhalten.",
+    "privateHelp": "Nutze den Link nur auf einem Gerät, dem du vertraust. Wer ihn hat, kann sich bis zur Nutzung oder zum Ablauf als du anmelden.",
+    "generate": "Gerätelink erstellen",
+    "generating": "Link wird erstellt…",
+    "qrLabel": "Scannen, um dich auf einem anderen Gerät anzumelden",
+    "copyInstead": "Du kannst den Link auch kopieren.",
+    "expires": "Verwende diesen Link vor {time}. Er ist nur einmal gültig.",
+    "expired": "Dieser Link ist abgelaufen. Erstelle bei Bedarf einen neuen.",
+    "failed": "Gerätelink konnte nicht erstellt werden. Bitte erneut versuchen."
+  },
   "family": {
     "destination": "Einladungsadresse",
     "externalLink": "Internetzugang (nur Einladung)",
     "privateLink": "Privates Netzwerk (Tailscale)",
     "externalHelp": "Sende diesen privaten Link direkt an dein Familienmitglied. Keine E-Mail-Adresse, kein Passwort und kein Tailscale erforderlich. Teile den unbenutzten Link nur privat.",
     "pasteInvite": "Einladungslink einfügen",
-    "externalSignIn": "Verwende deine private Einladung für den Zugang zur Galerie.",
+    "externalSignIn": "Nutze deine private Einladung. Schon auf einem anderen Gerät angemeldet? Öffne dort Mehr → Weiteres Gerät hinzufügen.",
     "anotherInvite": "Andere Einladung verwenden",
     "reactionsBy": "Gefällt {names}",
     "reactionsCount": "Gefällt {count} Familienmitgliedern",
@@ -231,7 +243,7 @@
     "name": "Name des Familienmitglieds",
     "create": "Einladung erstellen",
     "linkFor": "Einladung für {name}",
-    "linkHelp": "Teile den Link privat. Er ist sieben Tage gültig, einmal verwendbar und ermöglicht eine Anmeldung für bis zu 90 Tage.",
+    "linkHelp": "Teile den Link privat. Er ist sieben Tage gültig, einmal verwendbar und ermöglicht eine Anmeldung für bis zu ein Jahr.",
     "invitation": "Einladungslink",
     "copied": "Kopiert",
     "copy": "Link kopieren",
@@ -254,7 +266,7 @@
     "joinHelp": "Nimm die Einladung an, um die private Galerie zu öffnen.",
     "accept": "Galerie öffnen",
     "usePassword": "Stattdessen Passwort verwenden",
-    "joinError": "Einladung konnte nicht angenommen werden. Bitte um einen neuen Link."
+    "joinError": "Der Link konnte nicht angenommen werden. Erstelle auf einem angemeldeten Gerät einen neuen Link oder frage den Galerieinhaber."
   },
   "branding": {
     "title": "Galerie-Identität",

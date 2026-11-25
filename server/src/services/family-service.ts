@@ -17,6 +17,54 @@ const memberSchema = z.object({
   }).strict().nullable()
 }).strict();
 const membersSchema = z.array(memberSchema).max(100);
+// Separate from administrator invitations so a device link never replaces one.
+const deviceInvitesKey = 'app.family-device-invites.v1';
+const deviceInviteSchema = z.object({
+  memberId: z.string().uuid(),
+  hash: z.string().regex(/^[a-f0-9]{64}$/),
+  generation: z.string().min(1).max(128),
+  expiresAt: z.number().int().positive(),
+  issuerSessionKey: z.string().regex(/^[a-f0-9]{64}$/)
+}).strict();
+const deviceInvitesSchema = z.array(deviceInviteSchema).max(100);
+export const familyDeviceInviteLifetimeMs = 10 * 60 * 1000;
+
+export function isFamilySessionEnded(sessionKey: string): boolean {
+  return Boolean(databaseManager.connection.prepare(
+    'SELECT 1 FROM family_push_ended_sessions WHERE session_key = ?'
+  ).get(sessionKey));
+}
+
+function readDeviceInvites() {
+  const raw = appSettingsRepository.get(deviceInvitesKey);
+  return raw == null ? [] : deviceInvitesSchema.parse(JSON.parse(raw));
+}
+
+function writeDeviceInvites(invites: z.infer<typeof deviceInviteSchema>[]) {
+  appSettingsRepository.set(deviceInvitesKey, JSON.stringify(deviceInvitesSchema.parse(invites)));
+}
+
+export function issueFamilyDeviceInvite(session: {
+  memberId: string; sessionKey: string; generation: string; expiresAt: number;
+}) {
+  return mutate(members => {
+    const now = Date.now();
+    const member = members.find(value => value.id === session.memberId && !value.revokedAt);
+    if (!member || session.expiresAt <= now || isFamilySessionEnded(session.sessionKey)) {
+      throw new Error('Active family session required.');
+    }
+    const token = randomBytes(32).toString('base64url');
+    const expiresAt = Math.min(now + familyDeviceInviteLifetimeMs, session.expiresAt);
+    const invites = readDeviceInvites().filter(invite =>
+      invite.memberId !== member.id && invite.generation === session.generation && invite.expiresAt > now);
+    invites.push({
+      memberId: member.id, hash: createHash('sha256').update(token).digest('hex'),
+      generation: session.generation, expiresAt, issuerSessionKey: session.sessionKey
+    });
+    writeDeviceInvites(invites);
+    return { token, expiresAt };
+  });
+}
 type Member = z.infer<typeof memberSchema>;
 export type FamilyIdentity = Pick<Member, 'id' | 'name'>;
 const nameSchema = memberSchema.shape.name;
@@ -109,9 +157,21 @@ export function redeemFamilyInvite(token: string, generation: string): FamilyIde
       return !value.revokedAt && invite && invite.expiresAt > Date.now() && invite.generation === generation
         && timingSafeEqual(Buffer.from(invite.hash, 'hex'), hash);
     });
-    if (!member) return null;
-    member.invite = null;
-    member.lastJoinedAt = Date.now();
-    return { id: member.id, name: member.name };
+    if (member) {
+      member.invite = null;
+      member.lastJoinedAt = Date.now();
+      return { id: member.id, name: member.name };
+    }
+    const now = Date.now();
+    const invites = readDeviceInvites().filter(invite =>
+      invite.expiresAt > now && invite.generation === generation);
+    const deviceInvite = invites.find(invite =>
+      timingSafeEqual(Buffer.from(invite.hash, 'hex'), hash));
+    if (!deviceInvite || isFamilySessionEnded(deviceInvite.issuerSessionKey)) return null;
+    const linkedMember = members.find(value => value.id === deviceInvite.memberId && !value.revokedAt);
+    if (!linkedMember) return null;
+    writeDeviceInvites(invites.filter(invite => invite !== deviceInvite));
+    linkedMember.lastJoinedAt = now;
+    return { id: linkedMember.id, name: linkedMember.name };
   });
 }

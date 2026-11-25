@@ -26,7 +26,7 @@ existing exact-revision Linux build gate and the private deployment runbook.
 | Q2. Perceived performance | Measure the existing feed, albums, viewer, and Reels under controlled latency; compare request counts, time to useful photo, layout shifts, and media decode; eliminate avoidable work and preserve photo quality. Keep bounded loading and private-cache rules. | In progress |
 | Q3. Visual consistency | Audit existing screens in light/dark mode; standardize typography, spacing, actions, dialogs and feedback using existing tokens; remove duplicate visual affordances without removing their functions. Review mobile and desktop screenshots. | Planned |
 | Q4. Accessibility and ease of use | Check keyboard and screen-reader names, focus, larger text, contrast, reduced motion, touch targets, simple language and error states. Test with a family member unfamiliar with the app when available. | Planned |
-| Q5. Invitation and return journey | Exercise existing one-time links, geometric QR verification, explicit redemption, expired/reused links, Home Screen installation, and session return. Verify no uninvited user can read protected content. No new account system. | Planned |
+| Q5. Invitation and return journey | Exercise existing one-time links, geometric QR verification, explicit redemption, expired/reused links, Home Screen installation, and session return. Verify no uninvited user can read protected content. Keep named identities and support independently revocable device sessions and self-service device linking. | In progress |
 | Q6. Reliability and release hygiene | Check source outage recovery, retry behavior, session revocation, service worker cache/update, actual production release build, database backup and rollback. Preserve the existing private gateway and tunnel restrictions. | Planned |
 
 ## First audit (Q1)
@@ -141,19 +141,39 @@ also passed. Preview URLs, photo resolution, existing video controls,
 authorization and cache policies are unchanged. The test measures
 request counts, not real photo bytes or cellular timings.
 
-## Family re-entry clarification (Q5 reference)
+## Family device linking and durable sessions (Q5)
 
-Existing access is passwordless. An invitation is single-use, valid
-for seven days, and redeemed by the explicit Open gallery action.
-The authenticated device/browser session lasts up to 90 days. For a
-new device, expired session or cleared browser data, use New link on
-the existing family member in Settings → Security & Access → Family
-access. Do not create a duplicate named member. Reissuing invalidates
-an earlier unused invitation for that person but not existing valid
-sessions. Favorites and comments use the existing member identity;
-collections are browser-local. The external URL requires a named
-family session and never accepts the administrator password. Physical
-Home Screen installation/session behavior remains a Q5 test.
+The revised flow keeps the existing named, passwordless identity and
+adds More → Add another device on the external HTTPS gallery. A signed-in
+viewer explicitly creates a single-use link or verified QR code, then
+accepts it on the other device. No member identifier can be supplied by
+the caller. The link expires within ten minutes and requires the issuing
+session to remain active. Logout, revocation, generation changes,
+expiration, reuse, and replacement invalidate it. Administrator
+invitations remain separate and expire after seven days.
+
+New family sessions have a fixed 365-day maximum lifetime, distinct
+random nonces, host-only Secure/HttpOnly cookies, and independent logout.
+The existing persistent ended-session record prevents replay of a signed-
+out family cookie for its remaining lifetime. Earlier sessions retain
+their original expiry. The administrator can revoke a member and all
+their devices. Favorites and comments follow the member identity;
+collections remain browser-local.
+
+Targeted family-access, external-ingress, and notification tests passed,
+including identity reuse, link expiration/replacement/replay, logout
+replay denial, and preserving another signed-in device. The 390×844
+Chromium fixture verified explicit issuance, locally decoded QR rendering,
+the welcome screen, explicit redemption, and return on reload. The
+startup budget still passed (1,157,386 decoded JS bytes). These tests
+use disposable databases and mocked browser credentials.
+
+Remaining Q5 work: physical iPhone camera scans and Home Screen session
+storage; recovery when no device remains signed in (administrator
+reissue is currently required); evaluate synchronized passkeys as a
+long-term recovery option without reusable bearer links. There is no
+individual lost-device management UI or automatic session renewal in
+this pass.
 
 ### Remaining boundaries
 

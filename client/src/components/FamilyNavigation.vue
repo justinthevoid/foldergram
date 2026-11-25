@@ -25,6 +25,7 @@
         <RouterLink v-if="places.items.length && !places.listError" class="family-menu__link" :to="{name:'places'}" @click="closeMenu(false)"><span class="i-fluent-location-20-regular family-link__icon" aria-hidden="true"/>{{ t('nav.places') }}</RouterLink>
         <RouterLink v-if="auth.canUseSharedCollections || auth.canUseLocalCollections" class="family-menu__link" :to="{name:'collections'}" @click="closeMenu(false)"><span class="i-fluent-bookmark-20-regular family-link__icon" aria-hidden="true"/>{{ t('nav.collections') }}</RouterLink>
         <button type="button" class="family-menu__link" @click="openPreferences"><span class="i-fluent-desktop-20-regular family-link__icon" aria-hidden="true"/>{{ t('displayPreferences.title') }}</button>
+        <button v-if="auth.externalFamilyAccess" type="button" class="family-menu__link" @click="openDeviceLink"><span class="i-fluent-phone-laptop-24-regular family-link__icon" aria-hidden="true"/>{{ t('deviceLink.title') }}</button>
         <FamilyPushSettings class="family-menu__push" />
         <button v-if="auth.canSignOut" type="button" class="family-menu__link" :disabled="auth.loading" @click="signOut"><span class="i-fluent-arrow-exit-20-regular family-link__icon" aria-hidden="true"/>{{ t('nav.signOut') }}</button>
         <p v-if="signOutError" role="alert" class="family-menu__error">{{ signOutError }}</p>
@@ -39,9 +40,12 @@
       <span>{{ t(item.label) }}</span>
     </RouterLink>
   </nav>
+  <Teleport to="body">
+    <FamilyDeviceLinkDialog v-if="deviceLinkOpen && auth.externalFamilyAccess" @close="closeDeviceLink" />
+  </Teleport>
 </template>
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth';
@@ -49,6 +53,7 @@ import { useBrandingStore } from '../stores/branding';
 import { usePlacesStore } from '../stores/places';
 import BrandMark from './BrandMark.vue';
 import FamilyPushSettings from './FamilyPushSettings.vue';
+const FamilyDeviceLinkDialog = defineAsyncComponent(() => import('./FamilyDeviceLinkDialog.vue'));
 
 const props = defineProps<{inert?: boolean}>();
 const { t } = useI18n();
@@ -65,6 +70,7 @@ const items = [
   {name:'likes', label:'familyGallery.favorites', icon:'i-fluent-heart-24-regular'}
 ] as const;
 const menuOpen = ref(false);
+const deviceLinkOpen = ref(false);
 const moreButton = ref<HTMLButtonElement | null>(null);
 const menuElement = ref<HTMLElement | null>(null);
 const signOutError = ref('');
@@ -79,6 +85,14 @@ function closeMenu(restoreFocus = true) {
 function openPreferences() {
   closeMenu(false);
   if (moreButton.value) emit('openDisplayPreferences', moreButton.value);
+}
+function openDeviceLink() {
+  closeMenu(false);
+  deviceLinkOpen.value = true;
+}
+function closeDeviceLink() {
+  deviceLinkOpen.value = false;
+  void nextTick(() => moreButton.value?.focus());
 }
 async function signOut() {
   signOutError.value = '';
@@ -100,8 +114,9 @@ function onFocusIn(event: FocusEvent) {
   if (moreButton.value?.contains(event.target) || menuElement.value?.contains(event.target)) return;
   closeMenu(false);
 }
-watch(() => route.fullPath, () => closeMenu(false));
-watch(() => props.inert, value => { if (value) closeMenu(false); });
+watch(() => route.fullPath, () => { closeMenu(false); deviceLinkOpen.value = false; });
+watch(() => props.inert, value => { if (value) { closeMenu(false); deviceLinkOpen.value = false; } });
+watch(() => auth.familyMember?.id, () => { deviceLinkOpen.value = false; }, { flush: 'sync' });
 onMounted(() => {
   void places.fetchPlaces();
   window.addEventListener('keydown', onKey);

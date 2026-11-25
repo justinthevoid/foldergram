@@ -214,13 +214,25 @@
     "saveError": "Could not save your comment. Please try again.",
     "deleteError": "Could not delete the comment. Please try again."
   },
+  "deviceLink": {
+    "title": "Add another device",
+    "description": "Sign in on your other phone, tablet, or computer using a one-time link. Your favorites and comments stay with you.",
+    "privateHelp": "Only use this link on a device you trust. Anyone with it can sign in as you until it is used or expires.",
+    "generate": "Create device link",
+    "generating": "Creating link…",
+    "qrLabel": "Scan to sign in on another device",
+    "copyInstead": "You can copy the link instead of scanning a code.",
+    "expires": "Use this link before {time}. It works only once.",
+    "expired": "This link has expired. Create another when you are ready.",
+    "failed": "Could not create a device link. Please try again."
+  },
   "family": {
     "destination": "Invitation address",
     "externalLink": "Internet access (invitation only)",
     "privateLink": "Private network (Tailscale)",
     "externalHelp": "Send this private link directly to your family member. No email address, password or Tailscale is needed. Anyone who receives the unused link can accept it, so share it privately.",
     "pasteInvite": "Paste your invitation link",
-    "externalSignIn": "Use your private invitation to enter the gallery.",
+    "externalSignIn": "Use your private invitation. Already signed in on another device? Open More → Add another device there.",
     "anotherInvite": "Use another invitation",
     "reactionsBy": "Liked by {names}",
     "reactionsCount": "Liked by {count} family members",
@@ -231,7 +243,7 @@
     "name": "Family member name",
     "create": "Create invitation",
     "linkFor": "Invitation for {name}",
-    "linkHelp": "Send this link privately. It can be redeemed once within seven days and signs the recipient in for up to 90 days. They must be able to reach this gallery.",
+    "linkHelp": "Send this link privately. It can be redeemed once within seven days and signs the recipient in for up to one year. They must be able to reach this gallery.",
     "invitation": "Invitation link",
     "copied": "Copied",
     "copy": "Copy link",
@@ -254,7 +266,7 @@
     "joinHelp": "Accept the invitation to browse this private gallery.",
     "accept": "Open gallery",
     "usePassword": "Use a password instead",
-    "joinError": "This invitation could not be accepted. Ask the gallery owner for a new link."
+    "joinError": "This link could not be accepted. Generate a new link on a signed-in device, or ask the gallery owner."
   },
   "branding": {
     "title": "Gallery identity",

@@ -214,13 +214,25 @@
     "saveError": "No se pudo guardar el comentario. Inténtalo de nuevo.",
     "deleteError": "No se pudo eliminar el comentario. Inténtalo de nuevo."
   },
+  "deviceLink": {
+    "title": "Añadir otro dispositivo",
+    "description": "Inicia sesión en otro teléfono, tableta u ordenador mediante un enlace de un solo uso. Tus favoritos y comentarios se mantienen.",
+    "privateHelp": "Usa el enlace solo en un dispositivo de confianza. Quien lo tenga puede iniciar sesión como tú hasta que se use o caduque.",
+    "generate": "Crear enlace de dispositivo",
+    "generating": "Creando enlace…",
+    "qrLabel": "Escanear para iniciar sesión en otro dispositivo",
+    "copyInstead": "También puedes copiar el enlace.",
+    "expires": "Usa este enlace antes de las {time}. Solo funciona una vez.",
+    "expired": "El enlace ha caducado. Crea otro cuando lo necesites.",
+    "failed": "No se pudo crear el enlace. Inténtalo de nuevo."
+  },
   "family": {
     "destination": "Dirección de invitación",
     "externalLink": "Acceso por internet (solo invitación)",
     "privateLink": "Red privada (Tailscale)",
     "externalHelp": "Envía este enlace privado directamente a tu familiar. No necesita correo electrónico, contraseña ni Tailscale. Comparte el enlace sin usar solo en privado.",
     "pasteInvite": "Pega tu enlace de invitación",
-    "externalSignIn": "Usa tu invitación privada para entrar en la galería.",
+    "externalSignIn": "Usa tu invitación privada. ¿Ya has iniciado sesión en otro dispositivo? Abre Más → Añadir otro dispositivo allí.",
     "anotherInvite": "Usar otra invitación",
     "reactionsBy": "Les gusta a {names}",
     "reactionsCount": "Les gusta a {count} familiares",
@@ -231,7 +243,7 @@
     "name": "Nombre del familiar",
     "create": "Crear invitación",
     "linkFor": "Invitación para {name}",
-    "linkHelp": "Comparte el enlace en privado. Caduca en siete días, es de un solo uso y permite iniciar sesión durante un máximo de 90 días.",
+    "linkHelp": "Comparte el enlace en privado. Caduca en siete días, es de un solo uso y permite iniciar sesión durante un máximo de un año.",
     "invitation": "Enlace de invitación",
     "copied": "Copiado",
     "copy": "Copiar enlace",
@@ -254,7 +266,7 @@
     "joinHelp": "Acepta la invitación para abrir esta galería privada.",
     "accept": "Abrir galería",
     "usePassword": "Usar contraseña",
-    "joinError": "No se pudo aceptar la invitación. Solicita un nuevo enlace."
+    "joinError": "No se pudo aceptar el enlace. Crea otro en un dispositivo con sesión iniciada o pide uno al propietario."
   },
   "branding": {
     "title": "Identidad de la galería",

@@ -69,7 +69,7 @@ describe.sequential('family invitation access', () => {
     const cookie = accepted.headers.get('set-cookie')!;
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('Secure');
-    expect(cookie).toContain('Max-Age=7776000');
+    expect(cookie).toContain('Max-Age=31536000');
     const viewer = { ...intent, Cookie: cookie.split(';', 1)[0]! };
     expect((await requestTestApp(app, 'POST', redeem, intent, { token: renewed.body.token })).status).toBe(401);
     databaseManager.close();

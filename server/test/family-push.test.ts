@@ -151,7 +151,7 @@ describe.sequential('family web push', () => {
     expect((await get(alice.headers)).status).toBe(401);
     expect((await requestTestApp(app,'POST','/api/auth/logout',bob.headers)).status).toBe(200);
     expect(db.prepare('SELECT COUNT(*) AS n FROM family_push_subscriptions').get()).toMatchObject({n:0});
-    expect((await put(bob.headers,b)).status).toBe(400);
+    expect((await put(bob.headers,b)).status).toBe(401);
     addPost(106);
     await familyPush.tick(send);
     expect(send).toHaveBeenCalledTimes(5);

@@ -15,7 +15,7 @@ import {
 } from '../constants/app-setting-keys.js';
 import { appConfig } from '../config/env.js';
 import { appSettingsRepository } from '../db/repositories.js';
-import { getFamilyIdentity, type FamilyIdentity } from './family-service.js';
+import { getFamilyIdentity, isFamilySessionEnded, type FamilyIdentity } from './family-service.js';
 
 export type AuthRole = 'admin' | 'viewer' | 'anonymous';
 export type SessionRole = Exclude<AuthRole, 'anonymous'>;
@@ -48,6 +48,7 @@ interface SessionPayload {
   exp: number;
   role: SessionRole;
   familyMemberId?: string;
+  familySessionNonce?: string;
   sv: number;
 }
 
@@ -68,7 +69,7 @@ export const AUTH_PASSWORD_MIN_LENGTH = 8;
 export const AUTH_PASSWORD_MAX_LENGTH = 256;
 const PASSWORD_HASH_LENGTH = 64;
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
-const FAMILY_SESSION_DURATION_MS = 90 * 24 * 60 * 60 * 1000;
+const FAMILY_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
 const SUPPORTED_LOCALES = ['en', 'es', 'zh', 'de'] as const;
 
 function parseSupportedLocale(value: string | null): SupportedLocale | null {
@@ -325,7 +326,15 @@ function getRequestSession(request: express.Request): SessionPayload | null {
     return null;
   }
 
-  return payload.sv === authConfig.sessionVersion ? payload : null;
+  if (payload.sv !== authConfig.sessionVersion) return null;
+  // The existing persistent ended-session record also revokes gallery access.
+  // Every new family cookie has its own nonce, even for simultaneous joins.
+  if (payload.familyMemberId) {
+    try {
+      if (isFamilySessionEnded(createHash('sha256').update(token).digest('hex'))) return null;
+    } catch { return null; }
+  }
+  return payload;
 }
 
 export const authService = {
@@ -528,7 +537,7 @@ export const authService = {
       exp: Date.now() + duration,
       role,
       sv: authConfig.sessionVersion,
-      ...(familyMember ? { familyMemberId: familyMember.id } : {})
+      ...(familyMember ? { familyMemberId: familyMember.id, familySessionNonce: randomBytes(16).toString('base64url') } : {})
     };
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
     const signature = signValue(encodedPayload, authConfig.sessionSecret);

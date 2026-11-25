@@ -7,7 +7,7 @@ import express from 'express';
 import { getAppearance, saveAppearance, saveAppearanceTheme } from '../services/appearance-service.js';
 import { z } from 'zod';
 import { getBranding, getPublicBranding, saveBranding } from '../services/branding-service.js';
-import { listFamilyMembers, createFamilyMember, renewFamilyInvite, revokeFamilyMember, redeemFamilyInvite } from '../services/family-service.js';
+import { listFamilyMembers, createFamilyMember, renewFamilyInvite, revokeFamilyMember, redeemFamilyInvite, issueFamilyDeviceInvite } from '../services/family-service.js';
 
 import { AUTH_PASSWORD_MAX_LENGTH, AUTH_PASSWORD_MIN_LENGTH, authService } from '../services/auth-service.js';
 import {
@@ -31,7 +31,7 @@ import { publicationRouter } from './publication.js';
 import { familyActivityRouter } from './family-activity.js';
 import { familyPushRouter } from './family-push.js';
 import { familyPush } from '../services/family-push.js';
-import { externalFamilyOrigin } from '../middleware/external-family-access.js';
+import { externalFamilyOrigin, isExternalFamilyRequest } from '../middleware/external-family-access.js';
 
 const router = express.Router();
 router.use(familyCommentsRouter);
@@ -431,6 +431,21 @@ router.post('/admin/family/:id/invite', familyAdmin, (request, response) => {
 
 router.post('/admin/family/:id/revoke', familyAdmin, (request, response) => {
   response.json(revokeFamilyMember(z.string().uuid().parse(request.params.id)));
+});
+
+const familyDeviceLinkRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, max: 10, message: 'Too many device links. Please try again in a minute.'
+});
+router.post('/family/device-invite', familyDeviceLinkRateLimiter, (request, response) => {
+  authService.setNoStoreHeaders(response);
+  const session = authService.getFamilyPushSession(request);
+  const origin = externalFamilyOrigin();
+  if (!origin || !isExternalFamilyRequest(request) || !session) {
+    return response.status(403).json({ message: 'Active family gallery session required.' });
+  }
+  // Do not accept a target identity or caller-chosen destination.
+  z.object({}).strict().parse(request.body);
+  return response.json({ ...issueFamilyDeviceInvite(session), origin });
 });
 
 router.post('/auth/family-invite', authRateLimiter, (request, response) => {

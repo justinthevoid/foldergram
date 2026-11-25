@@ -214,13 +214,25 @@
     "saveError": "无法保存评论，请重试。",
     "deleteError": "无法删除评论，请重试。"
   },
+  "deviceLink": {
+    "title": "添加其他设备",
+    "description": "使用一次性链接在其他手机、平板电脑或电脑上登录。你的收藏和评论会保留。",
+    "privateHelp": "请仅在信任的设备上使用此链接。任何持有链接的人都能以你的身份登录，直到链接被使用或过期。",
+    "generate": "创建设备链接",
+    "generating": "正在创建链接…",
+    "qrLabel": "扫描二维码以在其他设备登录",
+    "copyInstead": "也可以复制链接。",
+    "expires": "请在 {time} 前使用此链接，仅可使用一次。",
+    "expired": "此链接已过期。准备好后可创建新链接。",
+    "failed": "无法创建设备链接，请重试。"
+  },
   "family": {
     "destination": "邀请地址",
     "externalLink": "互联网访问（仅邀请）",
     "privateLink": "私有网络（Tailscale）",
     "externalHelp": "将私密链接直接发送给家庭成员。无需邮箱、密码或 Tailscale。未使用的链接可被收到链接的人接受，请私下分享。",
     "pasteInvite": "粘贴邀请链接",
-    "externalSignIn": "使用私密邀请进入图库。",
+    "externalSignIn": "使用私密邀请。已在其他设备登录？请在该设备打开更多 → 添加其他设备。",
     "anotherInvite": "使用其他邀请",
     "reactionsBy": "{names} 赞了这张照片",
     "reactionsCount": "{count} 位家庭成员点赞",
@@ -231,7 +243,7 @@
     "name": "家庭成员姓名",
     "create": "创建邀请",
     "linkFor": "{name} 的邀请",
-    "linkHelp": "请私下分享链接。链接七天内有效且仅可使用一次，登录最长有效九十天。",
+    "linkHelp": "请私下分享链接。链接七天内有效且仅可使用一次，登录最长有效一年。",
     "invitation": "邀请链接",
     "copied": "已复制",
     "copy": "复制链接",
@@ -254,7 +266,7 @@
     "joinHelp": "接受邀请以浏览此私密图库。",
     "accept": "打开图库",
     "usePassword": "改用密码",
-    "joinError": "无法接受邀请，请向图库所有者索取新链接。"
+    "joinError": "无法接受此链接。请在已登录的设备上生成新链接，或向图库所有者索取。"
   },
   "branding": {
     "title": "图库标识",
