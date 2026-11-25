@@ -400,6 +400,62 @@ test('family photo viewer preserves the browsing position and remains closable d
   await expect(opener).toBeFocused();
 });
 
+test('family performance audit measures startup payload and hidden polling', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page, 'light');
+  await page.addInitScript(() => {
+    const state = window as Window & { auditVisibility?: DocumentVisibilityState };
+    state.auditVisibility = 'visible';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state.auditVisibility });
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => state.auditVisibility === 'hidden' });
+  });
+  await page.route('**/api/auth/status', route => route.fulfill({ json: {
+    enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  }}));
+  let sourceRequests = 0;
+  await page.route('**/api/sources/status*', route => {
+    sourceRequests++;
+    return route.fulfill({ json: { items: [], hasLocalPosts: true, hasVisiblePosts: true } });
+  });
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  await page.route('**/api/feed?*', async route => {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await route.fulfill({ json: { items: [panorama], page: 1, limit: 18, total: 1, hasMore: false } });
+  });
+  await page.goto('/');
+  await expect(page.locator('.family-album__image[data-loaded="true"]').first()).toBeVisible();
+  await expect(page.locator('article img[data-loaded="true"]').first()).toBeVisible();
+  await expect.poll(() => sourceRequests).toBeGreaterThan(0);
+  const startup = await page.evaluate(() => {
+    const js = performance.getEntriesByType('resource').filter((entry): entry is PerformanceResourceTiming =>
+      entry instanceof PerformanceResourceTiming && new URL(entry.name).pathname.endsWith('.js'));
+    return { readyPhotoMs: Math.round(performance.now()), jsCount: js.length,
+      jsDecodedBytes: js.reduce((total, resource) => total + resource.decodedBodySize, 0),
+      jsEncodedBytes: js.reduce((total, resource) => total + resource.encodedBodySize, 0),
+      modules: js.map(resource => new URL(resource.name).pathname.split('/').pop()) };
+  });
+  await page.evaluate(() => {
+    (window as Window & { auditVisibility?: DocumentVisibilityState }).auditVisibility = 'hidden';
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const beforeHidden = sourceRequests;
+  await page.waitForTimeout(6200);
+  const hiddenSourceRequests = sourceRequests - beforeHidden;
+  const beforeResume = sourceRequests;
+  await page.evaluate(() => {
+    (window as Window & { auditVisibility?: DocumentVisibilityState }).auditVisibility = 'visible';
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(() => sourceRequests, { timeout: 3500 }).toBeGreaterThan(beforeResume);
+  console.log('FAMILY_PERFORMANCE_AUDIT ' + JSON.stringify({ ...startup, hiddenSourceRequests, hiddenWindowMs: 6200 }));
+  expect(hiddenSourceRequests).toBe(0);
+  expect(startup.jsDecodedBytes).toBeLessThan(1250000);
+});
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

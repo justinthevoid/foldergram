@@ -93,8 +93,11 @@ export const useSourcesStore = defineStore('sources', {
     },
     start() {
       if (this.timer) return;
-      void this.refresh();
-      this.timer = setInterval(() => void this.refresh(), 2000);
+      const refreshVisible = () => {
+        if (document.visibilityState !== 'hidden') void this.refresh();
+      };
+      refreshVisible();
+      this.timer = setInterval(refreshVisible, 2000);
     },
     stop() {
       if (this.timer) clearInterval(this.timer);

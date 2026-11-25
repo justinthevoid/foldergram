@@ -128,6 +128,30 @@ describe('application source tracking', () => {
     expect(stored.map(item => item.id)).toEqual([3, 1, 2]);
   });
 
+  it('skips scheduled source checks while hidden without disabling an explicit retry', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+    let visibility: DocumentVisibilityState = 'visible';
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
+    try {
+      request.mockResolvedValue({ items: [source()] });
+      const sources = useSourcesStore();
+      sources.start();
+      await flushPromises();
+      expect(request).toHaveBeenCalledTimes(1);
+      visibility = 'hidden';
+      await vi.advanceTimersByTimeAsync(6000);
+      expect(request).toHaveBeenCalledTimes(1);
+      await sources.refresh(true);
+      expect(request).toHaveBeenLastCalledWith('/api/sources/status?retry=1');
+      visibility = 'visible';
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(request).toHaveBeenCalledTimes(3);
+    } finally {
+      if (descriptor) Object.defineProperty(document, 'visibilityState', descriptor);
+      else Reflect.deleteProperty(document, 'visibilityState');
+    }
+  });
+
   it('deduplicates polling and discards a pending response after access is lost', async () => {
     let resolve!: (payload: { items: SourceStatus[] }) => void;
     request.mockReturnValue(new Promise(r => { resolve = r; }));

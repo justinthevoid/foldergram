@@ -9,16 +9,10 @@ import CollectionView from '../views/CollectionView.vue';
 import ExploreView from '../views/ExploreView.vue';
 import FolderView from '../views/FolderView.vue';
 import MomentView from '../views/MomentView.vue';
-import PlaceView from '../views/PlaceView.vue';
-import PlacesView from '../views/PlacesView.vue';
 import ReelsView from '../views/ReelsView.vue';
-import SharedFolderView from '../views/SharedFolderView.vue';
-import SharedPostView from '../views/SharedPostView.vue';
-import TrashView from '../views/TrashView.vue';
 import { useAppStore } from '../stores/app';
 import { useAuthStore } from '../stores/auth';
 import { pinia } from '../stores/pinia';
-import SettingsView from '../views/SettingsView.vue';
 import type { AuthCapabilities } from '../types/api';
 
 type RouteCapability = keyof AuthCapabilities;
@@ -113,7 +107,7 @@ export const router = createRouter({
     {
       path: '/trash',
       name: 'trash',
-      component: TrashView,
+      component: () => import('../views/TrashView.vue'),
       meta: {
         requiredCapability: 'canDeleteMedia'
       }
@@ -121,7 +115,7 @@ export const router = createRouter({
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView,
+      component: () => import('../views/SettingsView.vue'),
       meta: {
         requiredCapability: 'canAccessSettings'
       }
@@ -135,12 +129,12 @@ export const router = createRouter({
     {
       path: '/places',
       name: 'places',
-      component: PlacesView
+      component: () => import('../views/PlacesView.vue')
     },
     {
       path: '/places/:slug',
       name: 'place',
-      component: PlaceView,
+      component: () => import('../views/PlaceView.vue'),
       props: true
     },
     {
@@ -153,7 +147,7 @@ export const router = createRouter({
     {
       path: '/share/:slug',
       name: 'shared-folder',
-      component: SharedFolderView,
+      component: () => import('../views/SharedFolderView.vue'),
       props: true,
       meta: {
         publicShare: true
@@ -162,7 +156,7 @@ export const router = createRouter({
     {
       path: '/share/:slug/posts/:id',
       name: 'shared-post',
-      component: SharedPostView,
+      component: () => import('../views/SharedPostView.vue'),
       props: true,
       meta: {
         publicShare: true
@@ -171,7 +165,7 @@ export const router = createRouter({
     {
       path: '/share/:slug/images/:id',
       name: 'shared-image',
-      component: SharedPostView,
+      component: () => import('../views/SharedPostView.vue'),
       props: true,
       meta: {
         publicShare: true

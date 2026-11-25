@@ -318,7 +318,10 @@ function unlockModalScroll() {
 }
 
 function refreshVisibleScanStatus() {
-  if (authStore.accessGranted && !route.meta.publicShare) appStore.refreshVisibleScanStatus();
+  if (authStore.accessGranted && !route.meta.publicShare) {
+    appStore.refreshVisibleScanStatus();
+    if (document.visibilityState !== 'hidden') void sourcesStore.refresh();
+  }
 }
 
 onMounted(() => {

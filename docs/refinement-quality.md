@@ -23,7 +23,7 @@ existing exact-revision Linux build gate and the private deployment runbook.
 | Story | Scope and acceptance criteria | Status |
 | --- | --- | --- |
 | Q1. Mobile interaction and layout | Audit phone and desktop navigation; all existing controls remain reachable in portrait and landscape; no horizontal document overflow; safe-area-aware header/nav and overlays; keyboard focus remains coherent; gesture interactions preserve existing photo/reel behavior. Test installed Safari on a real iPhone separately. | In progress |
-| Q2. Perceived performance | Measure the existing feed, albums, viewer, and Reels under controlled latency; compare request counts, time to useful photo, layout shifts, and media decode; eliminate avoidable work and preserve photo quality. Keep bounded loading and private-cache rules. | Planned |
+| Q2. Perceived performance | Measure the existing feed, albums, viewer, and Reels under controlled latency; compare request counts, time to useful photo, layout shifts, and media decode; eliminate avoidable work and preserve photo quality. Keep bounded loading and private-cache rules. | In progress |
 | Q3. Visual consistency | Audit existing screens in light/dark mode; standardize typography, spacing, actions, dialogs and feedback using existing tokens; remove duplicate visual affordances without removing their functions. Review mobile and desktop screenshots. | Planned |
 | Q4. Accessibility and ease of use | Check keyboard and screen-reader names, focus, larger text, contrast, reduced motion, touch targets, simple language and error states. Test with a family member unfamiliar with the app when available. | Planned |
 | Q5. Invitation and return journey | Exercise existing one-time links, geometric QR verification, explicit redemption, expired/reused links, Home Screen installation, and session return. Verify no uninvited user can read protected content. No new account system. | Planned |
@@ -88,6 +88,39 @@ Native browser zoom is retained; no new custom zoom controls or gesture
 engine were introduced. Adjacent-photo preload and network measurements
 belong to Q2; verify real-device pinch/pan, safe areas and installation
 before marking Q1 complete.
+
+## Startup payload and idle network pass (Q2)
+
+The baseline (`4d0fa0d`) and revised build were measured with the same
+390×844 Chromium fixture, 100 ms artificial feed-response delay, disabled
+service worker and fresh browser context. The audit logs resource timing
+for JavaScript loaded by the first usable photo, and counts requests to
+the source-status endpoint over a simulated 6.2-second hidden interval.
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| Startup JavaScript decoded bytes | 1,371,981 | 1,153,344 |
+| Startup JavaScript encoded bytes | 387,889 | 339,693 |
+| Source-status requests while hidden | 3 | 0 |
+| Time to loaded fixture photo (single run) | 2,105 ms | 1,471 ms |
+
+Defer Settings, Trash, Places (directory and detail), and the shared
+folder/post routes using Vue Router's native lazy imports. Keep the
+frequently used family routes eager. Skip scheduled source polling while
+hidden; focus and visibility events refresh the current protected state,
+and manual Retry still works. Visible polling retains its existing
+two-second interval and request deduplication.
+
+The browser regression sets a decoded startup JS budget of 1,250,000 bytes
+and checks zero hidden source-status requests and resumed polling. The
+payload measurements are controlled local evidence, not a claim about
+real cellular load times; the timing sample is not a statistical benchmark.
+
+Private media and API no-store headers and service-worker exclusions are
+unchanged. Speculatively prefetching private previews that cannot be cached
+could simply duplicate transfers; defer that work until a measured
+privacy-preserving approach is justified. Continue Q2 with viewer loading,
+Reels and real device/cellular measurements. No photo-resolution change.
 
 ### Remaining boundaries
 
