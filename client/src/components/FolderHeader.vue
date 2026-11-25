@@ -1,5 +1,17 @@
 <template>
-  <section class="grid grid-cols-[10.75rem_minmax(0,1fr)] items-start gap-x-[2.65rem] pt-[0.6rem] pb-[2.4rem] max-md:grid-cols-[9rem_minmax(0,1fr)] max-md:gap-x-[2rem] max-sm:grid-cols-1 max-sm:gap-y-[1.35rem] max-sm:pb-[1.85rem] max-sm:text-center">
+  <header v-if="familyPresentation" class="family-folder-header">
+    <RouterLink :to="{name:'library'}" class="family-folder-header__back">
+      <span class="i-fluent-chevron-left-20-regular w-5 h-5" aria-hidden="true"/>
+      {{ t('familyGallery.albumBack') }}
+    </RouterLink>
+    <h1>{{ displayFolderTitle }}</h1>
+    <p class="family-folder-header__meta">
+      {{ t(folder.imageCount === 1 ? 'familyGallery.itemOne' : 'familyGallery.itemOther', {count: folder.imageCount}) }}
+      <span v-if="folder.latestImageMtimeMs"> · {{ t('familyGallery.updated', {date:formattedUpdatedDate}) }}</span>
+    </p>
+    <p v-if="folder.description" class="family-folder-header__description">{{ folder.description }}</p>
+  </header>
+  <section v-else class="grid grid-cols-[10.75rem_minmax(0,1fr)] items-start gap-x-[2.65rem] pt-[0.6rem] pb-[2.4rem] max-md:grid-cols-[9rem_minmax(0,1fr)] max-md:gap-x-[2rem] max-sm:grid-cols-1 max-sm:gap-y-[1.35rem] max-sm:pb-[1.85rem] max-sm:text-center">
     <div class="grid place-items-center">
       <button
         v-if="hasAvatarStory"
@@ -129,6 +141,7 @@ import FolderProfileModal from './FolderProfileModal.vue';
 import FolderShareModal from './FolderShareModal.vue';
 import { useAppStore } from '../stores/app';
 import { useAuthStore } from '../stores/auth';
+import { useFamilyPresentation } from '../composables/useFamilyPresentation';
 import { useFoldersStore } from '../stores/folders';
 
 const props = defineProps<{
@@ -142,6 +155,7 @@ const emit = defineEmits<{
 
 const appStore = useAppStore();
 const authStore = useAuthStore();
+const familyPresentation = useFamilyPresentation();
 const foldersStore = useFoldersStore();
 const route = useRoute();
 const { locale, t } = useI18n();
@@ -303,6 +317,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.family-folder-header { padding: 0 0 20px; display: grid; gap: 7px; }
+.family-folder-header__back { display:inline-flex; align-items:center; gap:5px; width:fit-content; min-height:44px; color:var(--accent-strong); font-size:.88rem; font-weight:600; text-decoration:none; }
+.family-folder-header h1 { font-size:clamp(1.55rem,3vw,2rem); line-height:1.2; font-weight:650; letter-spacing:-.025em; margin:0; overflow-wrap:anywhere; }
+.family-folder-header__meta { color:var(--muted); font-size:.9rem; margin:0; }
+.family-folder-header__description { margin:5px 0 0; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; max-width:65ch; }
 .folder-description--collapsed,
 .folder-description--measure {
   display: -webkit-box;

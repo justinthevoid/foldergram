@@ -183,7 +183,7 @@
             :aria-selected="activeSearchTab === 'folders'"
             @click="selectSearchTab('folders')"
           >
-            {{ t('explore.tabs.folders') }}
+            {{ t(familyPresentation ? 'familyGallery.albums' : 'explore.tabs.folders') }}
           </button>
         </div>
 
@@ -339,6 +339,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFamilyPresentation } from '../composables/useFamilyPresentation';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -368,6 +369,7 @@ const likesStore = useLikesStore();
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
+const familyPresentation = useFamilyPresentation();
 
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchQuery = ref(readRouteQueryValue(route.query.q));

@@ -1,9 +1,13 @@
 <template>
-  <section class="centered-page flex flex-col gap-[1.4rem]">
+  <section class="centered-page flex flex-col gap-[1.4rem]" :class="{ 'family-library': familyPresentation }">
     <SourceUnavailable v-for="source in sourcesStore.unavailable" :key="source.id" :name="source.name" variant="banner" />
+    <header v-if="familyPresentation" class="family-library__header">
+      <h1>{{ t('familyGallery.albums') }}</h1>
+
+    </header>
     <!-- Page header -->
     <header
-      class="flex items-end justify-between gap-4 max-sm:flex-col max-sm:items-start"
+      v-else class="flex items-end justify-between gap-4 max-sm:flex-col max-sm:items-start"
     >
       <div>
         <span class="eyebrow">{{ t('libraryPage.eyebrow') }}</span>
@@ -39,7 +43,7 @@
       </div>
     </header>
 
-    <div v-if="scan?.isScanning" class="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-[0.9rem] border border-border bg-surface px-3 py-2" data-test="library-scan-progress">
+    <div v-if="!familyPresentation && scan?.isScanning" class="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-[0.9rem] border border-border bg-surface px-3 py-2" data-test="library-scan-progress">
       <ScanProgressContent :scan="scan" compact announce />
       <div class="flex flex-wrap items-center gap-2">
         <ScanControls />
@@ -54,7 +58,7 @@
     />
     <template v-else>
       <div
-        class="flex flex-wrap items-center gap-3 p-[0.85rem] pl-4 bg-surface border border-border rounded-[1.1rem] shadow-[var(--shadow)]"
+        class="flex flex-wrap items-center gap-3 p-[0.85rem] pl-4 bg-surface border border-border rounded-[1.1rem] shadow-[var(--shadow)]" :class="{ 'family-library__controls': familyPresentation }"
       >
         <div class="relative flex-1 min-w-[min(12rem,100%)]">
           <svg
@@ -75,20 +79,20 @@
             v-model.trim="searchQuery"
             class="w-full h-10 pl-9 pr-4 border border-border rounded-[0.75rem] text-text text-[0.88rem] bg-surface-alt transition-[border-color,box-shadow] duration-150 focus:outline-none focus:border-accent/40 focus:shadow-[0_0_0_3px_var(--accent-soft)]"
             type="search"
-            :placeholder="t('libraryPage.searchPlaceholder')"
+            :placeholder="t(familyPresentation ? 'familyGallery.searchAlbums' : 'libraryPage.searchPlaceholder')" :aria-label="t(familyPresentation ? 'familyGallery.searchAlbums' : 'libraryPage.searchPlaceholder')"
           />
         </div>
 
         <div class="relative">
           <select
-            v-model="sortMode"
+            v-model="sortMode" :aria-label="t('familyGallery.sortAlbums')"
             class="h-10 pl-3 pr-9 border border-border rounded-[0.75rem] text-text text-[0.82rem] bg-surface-alt cursor-pointer appearance-none focus:outline-none focus:border-accent/40"
           >
             <option value="recent-desc">{{ t('libraryPage.sort.recentDesc') }}</option>
             <option value="images-desc">{{ t('libraryPage.sort.imagesDesc') }}</option>
             <option value="name-asc">{{ t('libraryPage.sort.nameAsc') }}</option>
             <option value="name-desc">{{ t('libraryPage.sort.nameDesc') }}</option>
-            <option value="path-asc">{{ t('libraryPage.sort.pathAsc') }}</option>
+            <option v-if="!familyPresentation" value="path-asc">{{ t('libraryPage.sort.pathAsc') }}</option>
           </select>
           <svg
             class="pointer-events-none absolute right-[0.65rem] top-1/2 -translate-y-1/2 w-[0.85rem] h-[0.85rem] text-muted"
@@ -132,6 +136,7 @@
         </p>
       </section>
 
+      <FamilyAlbumGrid v-else-if="familyPresentation" :folders="filteredFolders" />
       <section
         v-else
         class="bg-surface border border-border rounded-[1.1rem] shadow-[var(--shadow)] overflow-hidden"
@@ -351,6 +356,8 @@
   import InfiniteLoader from "../components/InfiniteLoader.vue"
   import { useLibraryDirectoryStore } from "../stores/folder-directory"
   import Avatar from "../components/Avatar.vue"
+  import FamilyAlbumGrid from '../components/FamilyAlbumGrid.vue';
+  import { useFamilyPresentation } from '../composables/useFamilyPresentation';
   import ConfirmDialog from "../components/ConfirmDialog.vue"
   import EmptyState from "../components/EmptyState.vue"
   import ErrorState from "../components/ErrorState.vue"
@@ -379,6 +386,7 @@
   const openScanActivity = inject(openScanActivityKey, null)
   const sourcesStore = useSourcesStore();
   const authStore = useAuthStore()
+  const familyPresentation = useFamilyPresentation();
   const feedStore = useFeedStore()
   const likesStore = useLikesStore()
   const foldersStore = useFoldersStore()
@@ -577,3 +585,16 @@
     await directory.activate()
   })
 </script>
+
+<style scoped>
+.family-library { width: min(100%, 1100px); max-width: 1100px; gap: 20px; }
+.family-library__header h1 { font-size: clamp(1.55rem, 3vw, 2rem); font-weight: 650; margin: 0; line-height: 1.2; letter-spacing: -.025em; }
+.family-library__header p { margin: 6px 0 0; color: var(--muted); font-size: .9rem; }
+.family-library__controls { border: 0; background: transparent; padding: 0; box-shadow: none; gap: 10px; }
+.family-library__controls input, .family-library__controls select { min-height: 44px; }
+.family-library__controls :deep(select) { max-width: 100%; }
+@media (max-width: 767.98px) {
+  .family-library { gap: 18px; }
+  .family-library__controls > :first-child { flex-basis: 100%; }
+}
+</style>

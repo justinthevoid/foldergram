@@ -271,7 +271,7 @@
         </div>
         <div class="flex items-center gap-[0.65rem]">
           <a
-            v-if="isHomeContext && item.originalDownloadsAllowed !== false"
+            v-if="isHomeContext && !authStore.externalFamilyAccess && item.originalDownloadsAllowed !== false"
             class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
             :href="downloadOriginalMediaUrl"
             download
@@ -291,7 +291,7 @@
           </a>
           <a
             class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
-            v-if="item?.originalDownloadsAllowed !== false && !isActiveLocalHeic"
+            v-if="!authStore.externalFamilyAccess && item?.originalDownloadsAllowed !== false && !isActiveLocalHeic"
             :href="originalMediaUrl"
             target="_blank"
             rel="noreferrer"
@@ -338,7 +338,7 @@
           <span>{{ t('post.viewer.editCaption') }}</span>
         </button>
         <button
-          v-if="item.originalDownloadsAllowed !== false"
+          v-if="!authStore.externalFamilyAccess && item.originalDownloadsAllowed !== false"
           class="flex items-center gap-[0.8rem] w-full px-4 py-[0.95rem] border-0 border-b border-border text-text bg-transparent cursor-pointer text-left"
           type="button"
           @click="openOriginal"

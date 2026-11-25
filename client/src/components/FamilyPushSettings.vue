@@ -43,7 +43,11 @@ async function prepare(){
  preparing.value=true;available.value=false;error.value='';permission.value=Notification.permission;
  try{
   registration=await navigator.serviceWorker.register('/sw.js');
-  const active=await navigator.serviceWorker.ready;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const active = await Promise.race([
+   navigator.serviceWorker.ready,
+   new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Notification setup timed out')), 8000); })
+  ]).finally(() => { if (timer !== undefined) clearTimeout(timer); });
   if(current!==revision||!allowed.value)return;
   registration=active;
   const subscription=await active.pushManager.getSubscription();

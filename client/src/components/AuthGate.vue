@@ -6,8 +6,8 @@
           <BrandMark />
         </div>
         <div>
-          <p class="m-0 text-[0.74rem] font-bold uppercase tracking-[0.08em] text-accent-strong">{{ t('auth.gate.eyebrow') }}</p>
-          <h1 class="m-0 text-[1.5rem] font-semibold tracking-[-0.04em]">{{ branding.value.name === 'Foldergram' ? t('auth.gate.title') : branding.value.name }}</h1>
+          <p v-if="!authStore.externalFamilyAccess" class="m-0 text-[0.74rem] font-bold uppercase tracking-[0.08em] text-accent-strong">{{ t('auth.gate.eyebrow') }}</p>
+          <h1 class="m-0 text-[1.5rem] font-semibold tracking-[-0.04em]">{{ authStore.externalFamilyAccess ? (branding.value.name === 'Foldergram' ? t('familyGallery.welcomeTitle') : branding.value.name) : (branding.value.name === 'Foldergram' ? t('auth.gate.title') : branding.value.name) }}</h1>
         </div>
       </div>
 

@@ -3,7 +3,7 @@
     ref="homeLayoutElement"
     :class="[
       'home-layout grid gap-[4rem] items-start justify-center mx-auto',
-      { 'home-layout--compact': isSingleColumnLayout },
+      { 'home-layout--compact': isSingleColumnLayout, 'home-layout--family': familyPresentation },
       { 'home-layout--wide-feed': isWideHomeFeed },
       isSingleColumnLayout
         ? 'grid-cols-1 w-full'
@@ -49,10 +49,29 @@
         </div>
       </section>
 
-      <section v-if="!appStore.isLibraryUnavailable && !showSourceOutageState" class="home-layout__header home-layout__feed-width grid min-w-0 gap-[0.6875rem] mb-5 mx-auto w-full max-w-[39.375rem]">
+      <header v-if="familyPresentation && !appStore.isLibraryUnavailable && !showSourceOutageState" class="family-home-header">
+        <div class="family-home-header__title sr-only">
+          <h1>{{ t('familyGallery.homeTitle') }}</h1>
+        </div>
+        <section v-if="recentAlbums.length" class="family-home-albums" aria-labelledby="recent-albums-title">
+          <div class="family-home-heading">
+            <h2 id="recent-albums-title">{{ t('familyGallery.recentAlbums') }}</h2>
+            <RouterLink :to="{name:'library'}" class="family-home-all">{{ t('familyGallery.allAlbums') }}</RouterLink>
+          </div>
+          <FamilyAlbumGrid :folders="recentAlbums" preview />
+        </section>
+        <div v-else-if="foldersStore.listError" class="family-home-album-error">
+          <p>{{ t('familyGallery.albumsUnavailable') }}</p>
+          <button type="button" class="btn-ghost" @click="foldersStore.fetchFolders(true)">{{ t('common.retry') }}</button>
+        </div>
+        <div class="family-home-heading family-home-heading--photos">
+          <h2>{{ t('familyGallery.recentPhotos') }}</h2>
+        </div>
+      </header>
+      <section v-else-if="!appStore.isLibraryUnavailable && !showSourceOutageState" class="home-layout__header home-layout__feed-width grid min-w-0 gap-[0.6875rem] mb-5 mx-auto w-full max-w-[39.375rem]">
         <GalleryProfile />
         <FamilyActivityLink />
-        <FamilyPushSettings />
+
         <section v-if="displayMomentItems.length" class="home-layout__stories mb-2 min-w-0">
           <div class="story-rail-shell">
             <div class="stories-bar story-rail pb-5 pt-[0.12rem]" :aria-label="momentsStore.displayRailTitle">
@@ -302,7 +321,8 @@
 <script setup lang="ts">
 import GalleryProfile from '../components/GalleryProfile.vue';
 import FamilyActivityLink from '../components/FamilyActivityLink.vue';
-import FamilyPushSettings from '../components/FamilyPushSettings.vue';
+import FamilyAlbumGrid from '../components/FamilyAlbumGrid.vue';
+import { useFamilyPresentation } from '../composables/useFamilyPresentation';
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import SourceUnavailable from '../components/SourceUnavailable.vue';
 import { useSourcesStore } from '../stores/sources';
@@ -334,12 +354,14 @@ const appStore = useAppStore();
 const router = inject(routerKey, null);
 let homeMounted = true;
 const authStore = useAuthStore();
+const familyPresentation = useFamilyPresentation();
 const feedStore = useFeedStore();
 const folderStoriesStore = useFolderStoriesStore();
 const likesStore = useLikesStore();
 const foldersStore = useFoldersStore();
 const momentsStore = useMomentsStore();
 const sourcesStore = useSourcesStore();
+const recentAlbums = computed(() => foldersStore.items.filter(folder => folder.imageCount > 0 && sourcesStore.canBrowse(folder.sourceId)).slice(0, 2));
 const suggestedFoldersPreference = useSuggestedFoldersPreference();
 const fitTallMediaPreference = useFitTallMediaPreference();
 const visibleFeedItems = computed(() => feedStore.items.filter(item =>
@@ -382,8 +404,8 @@ const homeLayoutElement = ref<HTMLElement | null>(null);
 const isCompactHomeLayout = ref(false);
 const isDesktopHomeLayout = ref(window.innerWidth >= 768);
 const fitTallMediaOnDesktop = computed(() => isDesktopHomeLayout.value && fitTallMediaPreference.enabled.value);
-const isWideHomeFeed = computed(() => isDesktopHomeLayout.value && !suggestedFoldersPreference.enabled.value && !showSourceOutageState.value);
-const isSingleColumnLayout = computed(() => isCompactHomeLayout.value || !suggestedFoldersPreference.enabled.value || showSourceOutageState.value);
+const isWideHomeFeed = computed(() => !familyPresentation.value && isDesktopHomeLayout.value && !suggestedFoldersPreference.enabled.value && !showSourceOutageState.value);
+const isSingleColumnLayout = computed(() => familyPresentation.value || isCompactHomeLayout.value || !suggestedFoldersPreference.enabled.value || showSourceOutageState.value);
 const requestingHomeScan = ref(false);
 const scanCompletion = computed(() => appStore.scanCompletion?.surface === (router?.currentRoute.value.fullPath ?? '/')
   ? appStore.scanCompletion.result : null);
@@ -632,16 +654,16 @@ onMounted(async () => {
     return;
   }
 
-  feedStore.initializeMode(appStore.defaultHomeFeedMode);
+  feedStore.initializeMode(familyPresentation.value ? 'recent' : appStore.defaultHomeFeedMode);
   if (sourcesStore.allContentUnavailable) return;
-  await Promise.all([feedStore.loadInitial(), momentsStore.fetchMoments()]);
+  await Promise.all([feedStore.loadInitial(), familyPresentation.value ? foldersStore.fetchFolders() : momentsStore.fetchMoments()]);
 });
 
 watch(
   () => sourcesStore.allContentUnavailable,
   async (unavailable, wasUnavailable) => {
     if (!unavailable && wasUnavailable && !appStore.isLibraryUnavailable) {
-      await Promise.all([feedStore.loadInitial(true), momentsStore.fetchMoments(true)]);
+      await Promise.all([feedStore.loadInitial(true), familyPresentation.value ? foldersStore.fetchFolders(true) : momentsStore.fetchMoments(true)]);
     }
   }
 );
@@ -670,7 +692,7 @@ watch(
       await feedStore.loadInitial(true);
     }
 
-    if (indexedImages > 0 && momentsStore.items.length === 0 && !momentsStore.loadingList) {
+    if (!familyPresentation.value && indexedImages > 0 && momentsStore.items.length === 0 && !momentsStore.loadingList) {
       await momentsStore.fetchMoments(true);
     }
   }
@@ -727,6 +749,20 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.home-layout--family { max-width: 880px; width: 100%; gap: 0; }
+.home-layout--family .home-layout__feed-width { max-width: 680px; }
+.family-home-header { margin: 0 auto 12px; max-width: 680px; display: grid; gap: 24px; }
+.family-home-header__title h1 { font-size: clamp(1.55rem, 3vw, 2rem); font-weight: 650; margin: 0; letter-spacing: -.025em; line-height: 1.2; }
+.family-home-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.family-home-heading h2 { font-size: 1.2rem; font-weight: 650; margin: 0; line-height: 1.3; }
+.family-home-heading--photos { margin: 0; border-top: 1px solid var(--border); padding-top: 18px; }
+.family-home-all { color: var(--accent-strong); font-size: .86rem; font-weight: 600; display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.family-home-album-error { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:.85rem; }
+@media (max-width: 767.98px) {
+  .family-home-header { gap: 18px; }
+  .family-home-heading { margin-bottom: 8px; }
+  .family-home-heading--photos { margin: 0; }
+}
 @media (width > 768px) {
   .home-layout__header {
     row-gap: 1.5rem;

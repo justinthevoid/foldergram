@@ -5,20 +5,22 @@
     class="app-shell flex min-h-screen overflow-x-clip"
     :class="{
       'app-shell--standalone': isStandaloneDisplay,
+      'app-shell--family': familyPresentation,
       'app-shell--home': isHomeShell,
       'app-shell--explore': isExploreShell,
       'app-shell--reels': isReelsShell
     }"
   >
     <!-- Sidebar: fixed on desktop, hidden on mobile -->
-    <SidebarNav :inert="isHomeReelOverlay" :aria-hidden="isHomeReelOverlay ? 'true' : undefined" class="hidden md:flex fixed top-0 left-0 h-screen z-30" :panel-open="Boolean(activityAnchor)" @open-more="dismissActivity(false)" @open-display-preferences="openDisplayPreferences">
+    <SidebarNav v-if="!familyPresentation" :inert="isHomeReelOverlay" :aria-hidden="isHomeReelOverlay ? 'true' : undefined" class="hidden md:flex fixed top-0 left-0 h-screen z-30" :panel-open="Boolean(activityAnchor)" @open-more="dismissActivity(false)" @open-display-preferences="openDisplayPreferences">
       <template #activity>
         <ScanActivityTrigger v-if="showActivity" v-bind="activityTrigger" @activate="toggleActivity" />
       </template>
     </SidebarNav>
     <!-- Content: margin-left matches sidebar width on desktop -->
     <div class="app-shell__content flex flex-1 min-h-screen min-w-0 flex-col md:ml-[4.85rem]">
-      <TopNav :inert="isHomeReelOverlay" :aria-hidden="isHomeReelOverlay ? 'true' : undefined" :has-activity="showActivity" :panel-open="Boolean(activityAnchor)" @open-more="dismissActivity(false)" @open-display-preferences="openDisplayPreferences">
+      <FamilyNavigation v-if="familyPresentation" :inert="isHomeReelOverlay" @open-display-preferences="openDisplayPreferences" />
+      <TopNav v-else :inert="isHomeReelOverlay" :aria-hidden="isHomeReelOverlay ? 'true' : undefined" :has-activity="showActivity" :panel-open="Boolean(activityAnchor)" @open-more="dismissActivity(false)" @open-display-preferences="openDisplayPreferences">
         <template #activity>
           <ScanActivityTrigger v-if="showActivity" v-bind="activityTrigger" mobile @activate="toggleActivity" />
         </template>
@@ -72,6 +74,8 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
 import SidebarNav from './SidebarNav.vue';
+import FamilyNavigation from './FamilyNavigation.vue';
+import { useFamilyPresentation } from '../composables/useFamilyPresentation';
 import TopNav from './TopNav.vue';
 import DisplayPreferencesDialog from './DisplayPreferencesDialog.vue';
 
@@ -88,6 +92,7 @@ import { getScanTitle } from '../utils/scan-progress';
 const { t } = useI18n();
 const appStore = useAppStore();
 const authStore = useAuthStore();
+const familyPresentation = useFamilyPresentation();
 const sourcesStore = useSourcesStore();
 const route = useRoute();
 const isStandaloneDisplay = ref(false);
@@ -138,7 +143,7 @@ async function closeDisplayPreferences(restoreFocus = true) {
   if (!restoreFocus || !anchor) return;
   await nextTick();
   const target = anchor.getClientRects().length ? anchor : document.querySelector<HTMLButtonElement>(
-    mobile.value ? '.mobile-nav__more-button' : '.sidebar__more'
+    familyPresentation.value ? '.family-more' : mobile.value ? '.mobile-nav__more-button' : '.sidebar__more'
   );
   target?.focus();
 }
@@ -195,6 +200,25 @@ onUnmounted(() => media.removeEventListener?.('change', onLayoutChange));
 .app-shell {
   --mobile-safe-area-bottom: 0px;
   --mobile-bottom-nav-height: calc(3.55rem + var(--mobile-safe-area-bottom));
+}
+
+.app-shell--family {
+  --mobile-bottom-nav-height: calc(65px + env(safe-area-inset-bottom, 0px));
+}
+.app-shell--family .app-shell__content { margin-left: 0; }
+.app-shell--family:not(.app-shell--explore):not(.app-shell--reels) .app-shell__main {
+  padding: 24px clamp(16px, 4vw, 36px) 40px;
+}
+@media (max-width: 767.98px) {
+  .app-shell--family:not(.app-shell--explore):not(.app-shell--reels) .app-shell__main {
+    padding: 18px 16px calc(var(--mobile-bottom-nav-height) + 24px);
+  }
+  .app-shell--family.app-shell--explore .app-shell__main {
+    padding-bottom: var(--mobile-bottom-nav-height);
+  }
+}
+@media (min-width: 768px) and (max-width: 979.98px) {
+  .app-shell.app-shell--family .app-shell__content { margin-left: 0; }
 }
 
 .app-shell--standalone {

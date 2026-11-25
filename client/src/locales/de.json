@@ -1,4 +1,24 @@
 {
+  "familyGallery": {
+    "albums": "Alben",
+    "favorites": "Favoriten",
+    "homeTitle": "Deine Galerie",
+    "recentAlbums": "Neueste Alben",
+    "allAlbums": "Alle Alben",
+    "recentPhotos": "Neueste Fotos",
+    "albumsUnavailable": "Die neuesten Alben konnten nicht geladen werden.",
+    "albumIntro": "Finde deine liebsten Treffen und Momente.",
+    "searchAlbums": "Alben suchen",
+    "sortAlbums": "Alben sortieren",
+    "itemOne": "{count} Element",
+    "itemOther": "{count} Elemente",
+    "updated": "Aktualisiert am {date}",
+    "invitationLabel": "Private Einladung",
+    "welcomeTitle": "Willkommen in der Galerie",
+    "favoritesEmpty": "Hier erscheinen deine Favoriten",
+    "favoritesHelp": "Tippe auf das Herz eines Fotos, um es hier zu speichern.",
+    "albumBack": "Zurück zu den Alben"
+  },
   "push": {
     "title": "Neue Fotos",
     "description": "Erhalte eine private Benachrichtigung bei neuen Fotos. Keine E-Mail erforderlich.",

@@ -1,4 +1,24 @@
 {
+  "familyGallery": {
+    "albums": "相册",
+    "favorites": "收藏",
+    "homeTitle": "你的图库",
+    "recentAlbums": "最近相册",
+    "allAlbums": "全部相册",
+    "recentPhotos": "最新照片",
+    "albumsUnavailable": "无法加载最近相册。",
+    "albumIntro": "查找喜爱的聚会和回忆。",
+    "searchAlbums": "搜索相册",
+    "sortAlbums": "相册排序",
+    "itemOne": "{count} 项",
+    "itemOther": "{count} 项",
+    "updated": "更新于 {date}",
+    "invitationLabel": "私人邀请",
+    "welcomeTitle": "欢迎来到图库",
+    "favoritesEmpty": "收藏将在这里显示",
+    "favoritesHelp": "点击照片上的爱心即可收藏。",
+    "albumBack": "返回相册"
+  },
   "push": {
     "title": "新照片提醒",
     "description": "新照片发布时接收私人通知，无需电子邮件。",

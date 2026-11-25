@@ -10,7 +10,8 @@
     </section>
     <ErrorState v-else-if="likesStore.error" :title="likesStore.errorTitle" :message="likesStore.error" />
     <template v-else>
-      <div class="flex justify-center py-[0.95rem] mb-[0.45rem] border-t border-border" :aria-label="t('likes.view.sectionsAria', { label: likesStore.collectionLabel })">
+      <h1 v-if="familyPresentation" class="m-0 mb-5 text-[clamp(1.55rem,3vw,2rem)] font-semibold">{{ t('familyGallery.favorites') }}</h1>
+      <div v-else class="flex justify-center py-[0.95rem] mb-[0.45rem] border-t border-border" :aria-label="t('likes.view.sectionsAria', { label: likesStore.collectionLabel })">
         <span class="relative pt-[0.1rem] text-text text-[0.78rem] font-bold tracking-[0.11em] uppercase">
           <span class="absolute left-0 right-0 top-[-1.05rem] h-px bg-text" aria-hidden="true"></span>
           {{ likesStore.collectionSectionLabel }}
@@ -18,8 +19,8 @@
       </div>
       <EmptyState
         v-if="!likesStore.loading && likesStore.items.length === 0"
-        :title="likesStore.emptyTitle"
-        :description="likesStore.emptyDescription"
+        :title="familyPresentation ? t('familyGallery.favoritesEmpty') : likesStore.emptyTitle"
+        :description="familyPresentation ? t('familyGallery.favoritesHelp') : likesStore.emptyDescription"
       />
       <div v-else-if="likesStore.loading" class="card p-8 text-center">
         <p class="text-muted">{{ likesStore.loadingLabel }}</p>
@@ -30,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFamilyPresentation } from '../composables/useFamilyPresentation';
 import { onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -42,6 +44,7 @@ import { useLikesStore } from '../stores/likes';
 const appStore = useAppStore();
 const likesStore = useLikesStore();
 const { t } = useI18n();
+const familyPresentation = useFamilyPresentation();
 
 onMounted(async () => {
   if (appStore.isLibraryUnavailable) {

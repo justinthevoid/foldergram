@@ -48,7 +48,7 @@
         </div>
         <section class="mx-auto w-[min(100%,66.5625rem)]">
             <div
-              v-if="folderStoriesStore.highlights.length"
+              v-if="!familyPresentation && folderStoriesStore.highlights.length"
               class="story-rail-shell mb-5"
               :aria-label="t('folder.header.openStories')"
             >
@@ -75,7 +75,7 @@
                 </div>
               </div>
             </div>
-            <div class="flex justify-center border-b border-border" :aria-label="t('folder.tabs.sections')">
+            <div v-if="!familyPresentation || hasReelsTab || hasLikesTab" class="flex justify-center border-b border-border" :aria-label="t('folder.tabs.sections')">
               <div class="flex items-center gap-40 pt-[0.2rem] max-sm:gap-[2.9rem] max-sm:pt-[0.12rem]">
                 <button
                   class="relative inline-flex h-[2.2rem] w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text"
@@ -214,6 +214,7 @@
   import StoriesModal from "../components/StoriesModal.vue"
   import { useAppStore } from "../stores/app"
   import { useAuthStore } from "../stores/auth"
+  import { useFamilyPresentation } from '../composables/useFamilyPresentation';
   import { useFolderStoriesStore } from "../stores/folder-stories"
   import { useFoldersStore } from "../stores/folders"
   import { useLikesStore } from "../stores/likes"
@@ -225,6 +226,7 @@
   const appStore = useAppStore()
   const sourcesStore = useSourcesStore();
   const authStore = useAuthStore()
+  const familyPresentation = useFamilyPresentation();
   const likesStore = useLikesStore()
   const folderStoriesStore = useFolderStoriesStore()
   const foldersStore = useFoldersStore()

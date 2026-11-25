@@ -1,4 +1,24 @@
 {
+  "familyGallery": {
+    "albums": "Albums",
+    "favorites": "Favorites",
+    "homeTitle": "Your gallery",
+    "recentAlbums": "Recent albums",
+    "allAlbums": "All albums",
+    "recentPhotos": "Latest photos",
+    "albumsUnavailable": "Recent albums couldn't be loaded.",
+    "albumIntro": "Find your favorite gatherings and moments.",
+    "searchAlbums": "Search albums",
+    "sortAlbums": "Sort albums",
+    "itemOne": "{count} item",
+    "itemOther": "{count} items",
+    "updated": "Updated {date}",
+    "invitationLabel": "Private invitation",
+    "welcomeTitle": "Welcome to the gallery",
+    "favoritesEmpty": "Your favorites will appear here",
+    "favoritesHelp": "Tap a heart on a photograph to save it here.",
+    "albumBack": "Back to albums"
+  },
   "push": {
     "title": "New-photo alerts",
     "description": "Get a private notification when new photographs are released. No email required.",
