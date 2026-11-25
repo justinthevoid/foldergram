@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FeedItem, ImageDetail } from '../types/api';
 import { useAppStore } from '../stores/app';
+import { useAuthStore } from '../stores/auth';
+import { i18n } from '../locales';
 import { useFoldersStore } from '../stores/folders';
 import { useLikesStore } from '../stores/likes';
 import PostViewer from './PostViewer.vue';
@@ -197,6 +199,51 @@ describe('PostViewer', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+  });
+
+  it('keeps family favorites, comments and navigation directly accessible without technical details', async () => {
+    useAuthStore().applyStatus({
+      enabled:true, authenticated:true, role:'viewer', accessMode:'off', likesMode:'family', defaultLocale:null,
+      publicDemoMode:false, externalFamilyAccess:true, familyMember:{id:'fixture-family',name:'Fixture'},
+      capabilities:{canManageLibrary:false,canDeleteMedia:false,canAccessSettings:false,
+        canUseSharedLikes:false,canUseLocalFavorites:false,canUseSharedCollections:false,canUseLocalCollections:true}
+    });
+    const image=createImageDetail(31,{previousImageId:null,nextImageId:32});
+    const likes=useLikesStore();
+    const toggle=vi.spyOn(likes,'toggleLike').mockResolvedValue(undefined);
+    const wrapper=mount(PostViewer,{attachTo:document.body,props:{image,isModal:true},global:{stubs:{...globalStubs,FamilyComments:{template:'<section data-test="family-comments">Comments fixture</section>'},FamilyReactionSummary:true,CollectionBookmark:true}}});
+    await flushPromises();
+    expect(wrapper.classes()).toContain('viewer--family');
+    const toolbar=wrapper.get('.viewer__family-toolbar');
+    expect((toolbar.element as HTMLElement).style.display).not.toBe('none');
+    expect(toolbar.get('button[aria-label='+JSON.stringify(i18n.global.t('post.viewer.previous'))+']').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('.viewer__sidebar').attributes('aria-hidden')).toBe('true');
+    await toolbar.get('button[aria-pressed]').trigger('click');
+    expect(toggle).toHaveBeenCalledWith(image);
+    await toolbar.get('button[aria-label='+JSON.stringify(i18n.global.t('comments.title'))+']').trigger('click');
+    await flushPromises();
+    expect((toolbar.element as HTMLElement).style.display).toBe('none');
+    expect(wrapper.get('.viewer__sidebar').attributes('aria-hidden')).toBe('false');
+    expect(wrapper.find('[data-test="family-comments"]').exists()).toBe(true);
+    expect(wrapper.find('.viewer__sidebar-stats').exists()).toBe(false);
+    window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',cancelable:true}));
+    await flushPromises();
+    expect((toolbar.element as HTMLElement).style.display).not.toBe('none');
+    expect(wrapper.get('.viewer__sidebar').attributes('aria-hidden')).toBe('true');
+    expect(wrapper.emitted('close')).toBeUndefined();
+    await toolbar.get('button[aria-label='+JSON.stringify(i18n.global.t('post.viewer.showDetails'))+']').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.viewer__sidebar-stats').exists()).toBe(true);
+    expect(wrapper.find('.viewer__sidebar-path').exists()).toBe(false);
+    expect(wrapper.find('a[download]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="family-comments"]').exists()).toBe(false);
+    await wrapper.get('.viewer__family-panel-close').trigger('click');
+    await flushPromises();
+    expect((toolbar.element as HTMLElement).style.display).not.toBe('none');
+    await toolbar.get('button[aria-label='+JSON.stringify(i18n.global.t('post.viewer.next'))+']').trigger('click');
+    expect(mockRouterPush).toHaveBeenCalledWith({name:'image',params:{id:'32'},query:{}});
+    window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',cancelable:true}));
+    expect(wrapper.emitted('close')).toHaveLength(1);
   });
 
   it('collapses details in portrait desktop windows and docks them again in landscape', async () => {

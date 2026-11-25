@@ -19,7 +19,7 @@
     </SidebarNav>
     <!-- Content: margin-left matches sidebar width on desktop -->
     <div class="app-shell__content flex flex-1 min-h-screen min-w-0 flex-col md:ml-[4.85rem]">
-      <FamilyNavigation v-if="familyPresentation" :inert="isHomeReelOverlay" @open-display-preferences="openDisplayPreferences" />
+      <FamilyNavigation v-if="familyPresentation" :inert="isHomeReelOverlay || familyPhotoOpen" @open-display-preferences="openDisplayPreferences" />
       <TopNav v-else :inert="isHomeReelOverlay" :aria-hidden="isHomeReelOverlay ? 'true' : undefined" :has-activity="showActivity" :panel-open="Boolean(activityAnchor)" @open-more="dismissActivity(false)" @open-display-preferences="openDisplayPreferences">
         <template #activity>
           <ScanActivityTrigger v-if="showActivity" v-bind="activityTrigger" mobile @activate="toggleActivity" />
@@ -89,6 +89,7 @@ import { useAuthStore } from '../stores/auth';
 import { useSourcesStore } from '../stores/sources';
 import { getScanTitle } from '../utils/scan-progress';
 
+defineProps<{familyPhotoOpen?: boolean}>();
 const { t } = useI18n();
 const appStore = useAppStore();
 const authStore = useAuthStore();

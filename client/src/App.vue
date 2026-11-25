@@ -12,8 +12,8 @@
   </section>
   <RouterView v-else-if="isPublicShareRoute" />
   <AuthGate v-else-if="authStore.requiresLogin" />
-  <AppShell v-else>
-    <div class="app__background-route" :inert="showReelModal" :aria-hidden="showReelModal ? 'true' : undefined">
+  <AppShell v-else :family-photo-open="showFamilyImageModal">
+    <div class="app__background-route" :inert="showReelModal || showFamilyImageModal" :aria-hidden="showReelModal || showFamilyImageModal ? 'true' : undefined">
       <RouterView :key="displayRoute?.name === 'settings' ? 'settings' : sourcesStore.contentRevision" :route="displayRoute" />
     </div>
     <div
@@ -28,7 +28,16 @@
     >
       <ReelsView :key="sourcesStore.contentRevision" />
     </div>
-    <div v-if="showImageModal" class="app__image-modal-layer" @click.self="closeImageModal">
+        <div v-if="showImageModal" ref="imageModalElement" class="app__image-modal-layer"
+      :class="{'app__image-modal-layer--family': showFamilyImageModal}"
+      :role="showFamilyImageModal ? 'dialog' : undefined"
+      :aria-modal="showFamilyImageModal ? 'true' : undefined"
+      :aria-label="showFamilyImageModal ? t('familyGallery.photoViewer') : undefined"
+      :tabindex="showFamilyImageModal ? -1 : undefined"
+      @keydown="handleFamilyImageModalKeys" @click.self="closeImageModal">
+      <button v-if="showFamilyImageModal && viewerStore.image?.id !== Number(route.params.id)" class="app__family-photo-close" type="button" :aria-label="t('post.viewer.close')" @click="closeImageModal">
+        <span class="i-fluent-dismiss-24-regular w-6 h-6" aria-hidden="true"/>
+      </button>
       <PostView :key="sourcesStore.contentRevision" :id="String(route.params.id ?? '')" modal @close="closeImageModal" />
     </div>
   </AppShell>
@@ -41,6 +50,7 @@ import { useI18n } from 'vue-i18n';
 import { RouterView, useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 
 import AppShell from './components/AppShell.vue';
+import { useFamilyPresentation } from './composables/useFamilyPresentation';
 import AdminUnlockDialog from './components/AdminUnlockDialog.vue';
 import AuthGate from './components/AuthGate.vue';
 import { canAccessRoute, routeAllowsPublicShareAccess } from './router';
@@ -144,6 +154,42 @@ const modalBackgroundRoute = computed<RouteLocationNormalizedLoaded | null>(() =
 const showImageModal = computed(
   () => route.name === 'image' && modalBackgroundRoute.value !== null && modalBackgroundRoute.value.fullPath !== route.fullPath
 );
+const familyPresentation = useFamilyPresentation();
+const showFamilyImageModal = computed(() => showImageModal.value && familyPresentation.value);
+const imageModalElement = ref<HTMLElement | null>(null);
+let familyImageOpener: HTMLElement | null = null;
+function handleFamilyImageModalKeys(event: KeyboardEvent) {
+  if (!showFamilyImageModal.value || !imageModalElement.value) return;
+  const dialog = imageModalElement.value;
+  if (event.key === 'Escape' && !dialog.querySelector('.viewer--family')) {
+    event.preventDefault();
+    void closeImageModal();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(element => !element.closest('[inert]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden');
+  const first = focusable[0], last = focusable.at(-1), active = document.activeElement;
+  if (!first || !last) { event.preventDefault(); dialog.focus(); return; }
+  if (event.shiftKey && (active === first || active === dialog || !dialog.contains(active))) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && (active === last || active === dialog || !dialog.contains(active))) { event.preventDefault(); first.focus(); }
+}
+watch(showFamilyImageModal, async (visible, wasVisible) => {
+  if (visible) {
+    familyImageOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    await nextTick();
+    if (showFamilyImageModal.value) imageModalElement.value?.focus({ preventScroll: true });
+  } else if (wasVisible) {
+    const opener = familyImageOpener;
+    familyImageOpener = null;
+    await nextTick();
+    if (!showFamilyImageModal.value) {
+      const target = opener?.isConnected ? opener : document.querySelector<HTMLElement>('.app__background-route a[href^="/post/"], .family-mobile-nav [aria-current="page"], .family-desktop-nav [aria-current="page"]');
+      target?.focus({ preventScroll: true });
+    }
+  }
+}, { flush: 'sync' });
 const reelBackgroundRoute = computed<RouteLocationNormalizedLoaded | null>(() =>
   appStore.reelModalBackgroundPath ? resolveDisplayRoute(appStore.reelModalBackgroundPath) : null
 );
@@ -468,4 +514,7 @@ async function closeImageModal() {
   overscroll-behavior: contain;
 }
 
+.app__image-modal-layer--family { background: #111214; color: #fff; }
+.app__image-modal-layer--family:focus { outline: none; }
+.app__family-photo-close { position: fixed; z-index: 56; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 12px; background: transparent; color: #fff; cursor: pointer; }
 </style>

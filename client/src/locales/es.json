@@ -1,5 +1,8 @@
 {
   "familyGallery": {
+    "photoActions": "Acciones de foto",
+    "details": "Detalles",
+    "photoViewer": "Visor de fotos",
     "albums": "Álbumes",
     "favorites": "Favoritos",
     "homeTitle": "Tu galería",

@@ -5,6 +5,7 @@
       'viewer relative',
       {
         'viewer--modal': isModal,
+        'viewer--family': familyViewer,
         'viewer--details-docked': isModal && !isModalSidebarCollapsible && isSidebarExpanded,
       },
     ]"
@@ -30,9 +31,42 @@
       </svg>
     </button>
 
+    <div v-if="familyViewer" class="viewer__family-title">
+      <span>{{ displayFolderTitle }}</span>
+      <small>{{ formattedDate }}</small>
+    </div>
+    <div v-if="familyViewer" v-show="!isSidebarExpanded" class="viewer__family-toolbar" role="group" :aria-label="t('familyGallery.photoActions')">
+      <button type="button" class="viewer__family-action viewer__family-arrow" :disabled="!previousNavigationImageId"
+        :aria-label="t('post.viewer.previous')" @click="navigateByDirection('previous')">
+        <span class="i-fluent-chevron-left-24-regular" aria-hidden="true"/>
+      </button>
+      <button v-if="authStore.canUseSavedItems" type="button" class="viewer__family-action"
+        :class="{'viewer__family-action--liked': likesStore.isLiked(image.id)}"
+        :aria-label="likesStore.toggleAriaLabel(likesStore.isLiked(image.id))"
+        :aria-pressed="likesStore.isLiked(image.id)" :disabled="likesStore.isPending(image.id)"
+        @click="likesStore.toggleLike(image)">
+        <span :class="likesStore.isLiked(image.id) ? 'i-fluent-heart-24-filled' : 'i-fluent-heart-24-regular'" aria-hidden="true"/>
+        <small>{{ t('familyGallery.favorites') }}</small>
+      </button>
+      <button type="button" class="viewer__family-action" :aria-label="t('comments.title')"
+        @click="openFamilyPanel('comments')">
+        <span class="i-fluent-chat-24-regular" aria-hidden="true"/>
+        <small>{{ t('comments.title') }}</small>
+      </button>
+      <button ref="familyDetailsButton" type="button" class="viewer__family-action"
+        :aria-label="t('post.viewer.showDetails')" @click="openFamilyPanel('details')">
+        <span class="i-fluent-info-24-regular" aria-hidden="true"/>
+        <small>{{ t('familyGallery.details') }}</small>
+      </button>
+      <button type="button" class="viewer__family-action viewer__family-arrow" :disabled="!nextNavigationImageId"
+        :aria-label="t('post.viewer.next')" @click="navigateByDirection('next')">
+        <span class="i-fluent-chevron-right-24-regular" aria-hidden="true"/>
+      </button>
+    </div>
+
     <!-- Previous nav -->
     <RouterLink
-      v-if="previousNavigationImageId"
+      v-if="!familyViewer && previousNavigationImageId"
       class="viewer__navigation viewer__navigation--previous"
       :class="isModal ? 'viewer__navigation--modal' : 'viewer__navigation--page'"
       :to="{
@@ -54,7 +88,7 @@
       </svg>
     </RouterLink>
 
-    <div :class="isModal ? 'viewer__right-controls' : 'contents'">
+    <div v-if="!familyViewer" :class="isModal ? 'viewer__right-controls' : 'contents'">
       <!-- Next nav -->
       <RouterLink
         v-if="nextNavigationImageId"
@@ -322,8 +356,15 @@
           aria-hidden="true"
         />
 
+        <div v-if="familyViewer" class="viewer__family-panel-header">
+          <h2 ref="familyPanelHeading" tabindex="-1">{{ t(familyPanel === 'comments' ? 'comments.title' : 'familyGallery.details') }}</h2>
+          <button type="button" class="viewer__family-panel-close" :aria-label="t('post.viewer.hideDetails')" @click="closeSidebar()">
+            <span class="i-fluent-dismiss-24-regular" aria-hidden="true"/>
+          </button>
+        </div>
+
         <!-- Header -->
-        <div
+        <div v-if="!familyViewer || familyPanel === 'details'"
           class="viewer__sidebar-header flex items-center justify-between gap-4 border-b border-border px-5 pt-[1.1rem] pb-4"
         >
           <RouterLink
@@ -340,7 +381,7 @@
               <h2 class="viewer__sidebar-title m-0 text-[0.9rem] font-semibold truncate">
                 {{ displayFolderTitle }}
               </h2>
-              <p class="viewer__sidebar-breadcrumb m-0 text-muted truncate">
+              <p v-if="!familyViewer" class="viewer__sidebar-breadcrumb m-0 text-muted truncate">
                 {{ folderBreadcrumbLabel }}
               </p>
             </div>
@@ -351,7 +392,7 @@
         </div>
 
         <!-- Description -->
-        <div class="viewer__sidebar-summary grid gap-[0.3rem] px-5 pt-[1.1rem]">
+        <div v-if="!familyViewer || familyPanel === 'details'" class="viewer__sidebar-summary grid gap-[0.3rem] px-5 pt-[1.1rem]">
           <div class="flex items-start gap-[0.35rem]">
             <p class="viewer__sidebar-caption m-0 text-text">
               <strong class="mr-[0.35rem]">{{ displayFolderTitle }}</strong>
@@ -368,16 +409,16 @@
               <span class="i-fluent-edit-16-regular w-4 h-4" aria-hidden="true" />
             </button>
           </div>
-          <p class="viewer__sidebar-path mt-3 text-muted">
+          <p v-if="!familyViewer" class="viewer__sidebar-path mt-3 text-muted">
             <span class="viewer__sidebar-path-label">{{ t('post.viewer.folderPath') }}</span>
             <span class="viewer__sidebar-path-value">{{ image.relativePath }}</span>
           </p>
         </div>
 
-        <FamilyComments v-if="!isModal || isSidebarExpanded" :post-id="image.id" />
+        <FamilyComments v-if="(!isModal || isSidebarExpanded) && (!familyViewer || familyPanel === 'comments')" :post-id="image.id" :embedded="familyViewer" />
 
         <!-- Quick stats -->
-        <dl class="viewer__sidebar-stats m-0 px-5 pt-[0.9rem]">
+        <dl v-if="!familyViewer || familyPanel === 'details'" class="viewer__sidebar-stats m-0 px-5 pt-[0.9rem]">
           <div class="viewer__sidebar-stat">
             <dt class="viewer__sidebar-stat-label">
               {{ t('post.viewer.stats.dimensions') }}
@@ -431,7 +472,7 @@
 
         <!-- Metadata -->
         <dl
-          v-if="exifDetails.length > 0"
+          v-if="exifDetails.length > 0 && (!familyViewer || familyPanel === 'details')"
           class="viewer__sidebar-metadata m-0 px-5 pt-[0.75rem]"
         >
           <div
@@ -449,16 +490,16 @@
           </div>
         </dl>
 
-        <FamilyReactionSummary :post-id="image.id" class="px-5 pt-3" />
+        <FamilyReactionSummary v-if="!familyViewer || familyPanel === 'details'" :post-id="image.id" class="px-5 pt-3" />
 
         <!-- Actions -->
         <div
-          class="viewer__sidebar-actions flex items-center justify-between gap-3 px-5 pt-[0.7rem] pb-5 mt-auto"
+          v-if="!familyViewer || familyPanel === 'details'" class="viewer__sidebar-actions flex items-center justify-between gap-3 px-5 pt-[0.7rem] pb-5 mt-auto"
         >
           <div class="viewer__sidebar-actions-group flex items-center gap-[0.55rem]">
             <!-- Like -->
             <button
-              v-if="authStore.canUseSavedItems"
+              v-if="!familyViewer && authStore.canUseSavedItems"
               class="viewer__sidebar-action inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer transition-[opacity,transform,color] duration-180 hover:opacity-72 hover:-translate-y-px disabled:opacity-45 disabled:cursor-wait disabled:transform-none"
               :class="{ 'text-[#e5484d]': likesStore.isLiked(image.id) }"
               type="button"
@@ -500,7 +541,7 @@
             <!-- Download original -->
             <a
               class="viewer__sidebar-action inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer text-text transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
-              v-if="image?.originalDownloadsAllowed !== false"
+              v-if="!authStore.externalFamilyAccess && image?.originalDownloadsAllowed !== false"
               :href="downloadOriginalMediaUrl"
               download
               :aria-label="t('post.viewer.downloadOriginalFile')"
@@ -524,7 +565,7 @@
             <!-- Open original -->
             <a
               class="viewer__sidebar-action inline-flex items-center justify-center p-0 border-0 bg-transparent cursor-pointer text-text transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
-              v-if="image?.originalDownloadsAllowed !== false && !isActiveLocalHeic"
+              v-if="!authStore.externalFamilyAccess && image?.originalDownloadsAllowed !== false && !isActiveLocalHeic"
               :href="originalMediaUrl"
               target="_blank"
               rel="noreferrer"
@@ -619,6 +660,7 @@
   import type { ImageDetail, FolderSummary } from "../types/api"
   import { useAppStore } from "../stores/app"
   import { useAuthStore } from "../stores/auth"
+  import { useFamilyPresentation } from '../composables/useFamilyPresentation'
   import { useLikesStore } from "../stores/likes"
   import { useFoldersStore } from "../stores/folders"
   import { resolveDisplayCaption } from "../utils/caption"
@@ -644,7 +686,7 @@
     deleting?: boolean
   }>()
 
-  defineEmits<{
+  const emit = defineEmits<{
     close: []
     delete: []
   }>()
@@ -653,6 +695,12 @@
   const appStore = useAppStore()
   const videoMuteStorage = createVideoMuteStorage(() => appStore.videoMuted)
   const authStore = useAuthStore()
+  const familyPresentation = useFamilyPresentation()
+  const familyViewer = computed(() => props.isModal === true && familyPresentation.value)
+  const familyPanel = ref<'comments' | 'details'>('details')
+  const familyDetailsButton = ref<HTMLButtonElement | null>(null)
+  const familyPanelHeading = ref<HTMLElement | null>(null)
+  let familyPanelOpener: HTMLElement | null = null
   const foldersStore = useFoldersStore()
   const route = useRoute()
   const router = useRouter()
@@ -1169,7 +1217,8 @@
     }
 
     void nextTick(() => {
-      sidebarToggleElement.value?.focus()
+      if (familyViewer.value) (familyPanelOpener?.isConnected ? familyPanelOpener : familyDetailsButton.value)?.focus({ preventScroll: true })
+      else sidebarToggleElement.value?.focus()
     })
   }
 
@@ -1234,7 +1283,7 @@
   }
 
   function shouldUseSidebarDrawer() {
-    return window.innerWidth <= MODAL_SIDEBAR_COLLAPSE_BREAKPOINT || window.innerHeight > window.innerWidth
+    return familyViewer.value || window.innerWidth <= MODAL_SIDEBAR_COLLAPSE_BREAKPOINT || window.innerHeight > window.innerWidth
   }
 
   function updateSidebarLayout() {
@@ -1265,6 +1314,15 @@
 
     resetSidebarSheetGesture()
     isSidebarExpanded.value = true
+  }
+
+  async function openFamilyPanel(panel: 'comments' | 'details') {
+    familyPanelOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    familyPanel.value = panel
+    openSidebar()
+    await nextTick()
+    if (sidebarElement.value) sidebarElement.value.scrollTop = 0
+    familyPanelHeading.value?.focus({ preventScroll: true })
   }
 
   function toggleSidebar() {
@@ -1299,6 +1357,11 @@
 
   function handleMediaPointerdown(event: PointerEvent) {
     if (isCarousel.value) return
+    if (familyViewer.value && !event.isPrimary) {
+      swipeNavigation.onPointercancel()
+      resetMediaSheetRevealGesture()
+      return
+    }
     swipeNavigation.onPointerdown(event)
     handleMediaSheetRevealPointerdown(event)
   }
@@ -1717,6 +1780,14 @@
     if (!props.isModal || !props.image || event.defaultPrevented) {
       return
     }
+
+    if (familyViewer.value && event.key === 'Escape') {
+      event.preventDefault()
+      if (isSidebarExpanded.value) closeSidebar()
+      else emit('close')
+      return
+    }
+    if (familyViewer.value && isSidebarExpanded.value) return
 
     if (isEditingCaption.value || isGestureIgnoredTarget(event.target)) {
       return

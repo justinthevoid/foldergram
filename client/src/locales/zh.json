@@ -1,5 +1,8 @@
 {
   "familyGallery": {
+    "photoActions": "照片操作",
+    "details": "详情",
+    "photoViewer": "照片查看器",
     "albums": "相册",
     "favorites": "收藏",
     "homeTitle": "你的图库",

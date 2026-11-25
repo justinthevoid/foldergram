@@ -1,8 +1,8 @@
 <template>
   <section v-if="scope" class="grid gap-3 px-5 pt-5 pb-2" data-test="family-comments">
     <header class="flex items-center justify-between gap-2">
-      <h3 class="m-0 text-sm font-semibold">{{ t('comments.title') }}</h3>
-      <button type="button" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted hover:bg-surface-alt disabled:opacity-50"
+      <h3 :class="embedded ? 'sr-only' : 'm-0 text-sm font-semibold'">{{ t('comments.title') }}</h3>
+      <button type="button" class="ml-auto inline-flex items-center justify-center w-11 h-11 rounded-lg text-muted hover:bg-surface-alt disabled:opacity-50"
         :aria-label="t('comments.refresh')" :title="t('comments.refresh')" :disabled="loading || busy" @click="load(false)">
         <span class="i-fluent-arrow-clockwise-20-regular w-5 h-5" aria-hidden="true" />
       </button>
@@ -62,7 +62,7 @@ interface Comment {
   canDelete: boolean;
 }
 interface CommentPage { items: Comment[]; nextBeforeId: number | null }
-const props = defineProps<{ postId: number }>();
+const props = defineProps<{ postId: number; embedded?: boolean }>();
 const auth = useAuthStore();
 const { t, locale } = useI18n();
 const scope = computed(() => {
