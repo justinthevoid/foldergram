@@ -48,7 +48,7 @@
         </div>
         <section class="mx-auto w-[min(100%,66.5625rem)]">
             <div
-              v-if="!familyPresentation && folderStoriesStore.highlights.length"
+              v-if="folderStoriesStore.highlights.length"
               class="story-rail-shell mb-5"
               :aria-label="t('folder.header.openStories')"
             >

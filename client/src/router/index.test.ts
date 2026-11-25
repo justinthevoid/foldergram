@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 
 import { pinia } from '../stores/pinia';
+import { useAppStore } from '../stores/app';
 
 vi.mock('../views/HomeView.vue', async () => {
   const { defineComponent } = await import('vue');
@@ -313,6 +314,22 @@ describe('router', () => {
     await flushPromises();
     expect(router.currentRoute.value.name).toBe('collection');
     expect(router.currentRoute.value.params.slug).toBe('saved');
+  });
+
+  it('lets the existing modal scroll lock restore album position even on browser Back', async () => {
+    const app=useAppStore(pinia);
+    const album=router.resolve('/f/weekend');
+    const photo=router.resolve({name:'image',params:{id:'123'}});
+    app.setImageModalBackground(album.fullPath);
+    const scroll=router.options.scrollBehavior!;
+    type To=Parameters<typeof scroll>[0];
+    type From=Parameters<typeof scroll>[1];
+    try {
+      expect(await scroll(photo as To,album as From,{left:0,top:0})).toBe(false);
+      expect(await scroll(album as To,photo as From,{left:0,top:0})).toBe(false);
+      expect(await scroll(router.resolve({name:'image',params:{id:'124'}}) as To,photo as From,{left:0,top:0})).toBe(false);
+    } finally { app.clearImageModalBackground(); }
+    expect(await scroll(album as To,photo as From,{left:0,top:300})).toEqual({left:0,top:300});
   });
 
   it('keeps shared folder routes outside normal app capability checks', () => {

@@ -64,8 +64,38 @@
           <p>{{ t('familyGallery.albumsUnavailable') }}</p>
           <button type="button" class="btn-ghost" @click="foldersStore.fetchFolders(true)">{{ t('common.retry') }}</button>
         </div>
+        <section v-if="displayMomentItems.length" class="family-home-stories min-w-0" :aria-label="momentsStore.displayRailTitle">
+          <div class="family-home-heading">
+            <h2>{{ momentsStore.displayRailTitle }}</h2>
+            <RouterLink v-if="(appStore.stats?.indexedVideos ?? 0) > 0" class="family-home-all" :to="{name:'reels'}">{{ t('nav.reels') }}</RouterLink>
+          </div>
+          <div class="story-rail-shell">
+            <div class="story-rail">
+              <div class="story-rail__track">
+                <button v-for="moment in displayMomentItems" :key="moment.id" type="button"
+                  class="story-rail__item story-rail__button"
+                  :title="moment.title + ' · ' + moment.subtitle"
+                  @click="openRailViewer(moment.id)">
+                  <div class="story-rail__ring" style="background: var(--story-ring);">
+                    <div class="story-rail__ring-inner">
+                      <Avatar class="story-rail__avatar" :name="moment.title" :src="moment.coverImage.thumbnailUrl" />
+                    </div>
+                  </div>
+                  <span class="story-rail__label">{{ moment.title }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
         <div class="family-home-heading family-home-heading--photos">
-          <h2>{{ t('familyGallery.recentPhotos') }}</h2>
+          <h2>{{ feedStore.mode === 'recent' ? t('familyGallery.recentPhotos') : feedModes.find(mode => mode.id === feedStore.mode)?.label }}</h2>
+          <div class="family-home-feed-controls">
+            <RouterLink v-if="!displayMomentItems.length && (appStore.stats?.indexedVideos ?? 0) > 0" :to="{name:'reels'}" class="family-home-all">{{ t('nav.reels') }}</RouterLink>
+            <select class="family-home-feed-select" :aria-label="t('familyGallery.feedMode')" :value="feedStore.mode"
+              :disabled="feedStore.loading" @change="selectMode(($event.target as HTMLSelectElement).value as FeedMode)">
+              <option v-for="mode in feedModes" :key="mode.id" :value="mode.id">{{ mode.label }}</option>
+            </select>
+          </div>
         </div>
       </header>
       <section v-else-if="!appStore.isLibraryUnavailable && !showSourceOutageState" class="home-layout__header home-layout__feed-width grid min-w-0 gap-[0.6875rem] mb-5 mx-auto w-full max-w-[39.375rem]">
@@ -654,16 +684,20 @@ onMounted(async () => {
     return;
   }
 
-  feedStore.initializeMode(familyPresentation.value ? 'recent' : appStore.defaultHomeFeedMode);
+  // Keep an explicitly chosen family feed mode while browsing other screens.
+  // A protected-state reset makes initialized false for the next account.
+  if (!familyPresentation.value || !feedStore.initialized) {
+    feedStore.initializeMode(familyPresentation.value ? 'recent' : appStore.defaultHomeFeedMode);
+  }
   if (sourcesStore.allContentUnavailable) return;
-  await Promise.all([feedStore.loadInitial(), familyPresentation.value ? foldersStore.fetchFolders() : momentsStore.fetchMoments()]);
+  await Promise.all([feedStore.loadInitial(), momentsStore.fetchMoments(), ...(familyPresentation.value ? [foldersStore.fetchFolders()] : [])]);
 });
 
 watch(
   () => sourcesStore.allContentUnavailable,
   async (unavailable, wasUnavailable) => {
     if (!unavailable && wasUnavailable && !appStore.isLibraryUnavailable) {
-      await Promise.all([feedStore.loadInitial(true), familyPresentation.value ? foldersStore.fetchFolders(true) : momentsStore.fetchMoments(true)]);
+      await Promise.all([feedStore.loadInitial(true), momentsStore.fetchMoments(true), ...(familyPresentation.value ? [foldersStore.fetchFolders(true)] : [])]);
     }
   }
 );
@@ -692,7 +726,7 @@ watch(
       await feedStore.loadInitial(true);
     }
 
-    if (!familyPresentation.value && indexedImages > 0 && momentsStore.items.length === 0 && !momentsStore.loadingList) {
+    if (indexedImages > 0 && momentsStore.items.length === 0 && !momentsStore.loadingList) {
       await momentsStore.fetchMoments(true);
     }
   }
@@ -757,6 +791,11 @@ onUnmounted(() => {
 .family-home-heading h2 { font-size: 1.2rem; font-weight: 650; margin: 0; line-height: 1.3; }
 .family-home-heading--photos { margin: 0; border-top: 1px solid var(--border); padding-top: 18px; }
 .family-home-all { color: var(--accent-strong); font-size: .86rem; font-weight: 600; display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.family-home-stories .story-rail { padding: 0 0 4px; }
+.family-home-stories .story-rail__track { justify-content: flex-start; }
+.family-home-feed-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.family-home-feed-select { min-height: 44px; max-width: 130px; padding: 6px 8px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: .85rem; }
+.family-home-feed-select:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 .family-home-album-error { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:.85rem; }
 @media (max-width: 767.98px) {
   .family-home-header { gap: 18px; }

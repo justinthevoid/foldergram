@@ -4,7 +4,15 @@
       <span class="i-fluent-chevron-left-20-regular w-5 h-5" aria-hidden="true"/>
       {{ t('familyGallery.albumBack') }}
     </RouterLink>
-    <h1>{{ displayFolderTitle }}</h1>
+    <div class="family-folder-header__title">
+      <h1>{{ displayFolderTitle }}</h1>
+      <button v-if="hasAvatarStory" type="button" class="family-folder-header__story" :aria-label="t('folder.header.openStories')" @click="emit('openAvatarStory')">
+        <span class="family-folder-header__story-ring">
+          <Avatar class="w-11 h-11" :name="displayFolderTitle" :src="folder.avatarUrl" />
+        </span>
+        <span>{{ t('familyGallery.stories') }}</span>
+      </button>
+    </div>
     <p class="family-folder-header__meta">
       {{ t(folder.imageCount === 1 ? 'familyGallery.itemOne' : 'familyGallery.itemOther', {count: folder.imageCount}) }}
       <span v-if="folder.latestImageMtimeMs"> · {{ t('familyGallery.updated', {date:formattedUpdatedDate}) }}</span>
@@ -327,6 +335,10 @@ onBeforeUnmount(() => {
 .family-folder-header { padding: 0 0 20px; display: grid; gap: 7px; }
 .family-folder-header__back { display:inline-flex; align-items:center; gap:5px; width:fit-content; min-height:44px; color:var(--accent-strong); font-size:.88rem; font-weight:600; text-decoration:none; }
 .family-folder-header h1 { font-size:clamp(1.55rem,3vw,2rem); line-height:1.2; font-weight:650; letter-spacing:-.025em; margin:0; overflow-wrap:anywhere; }
+.family-folder-header__title { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.family-folder-header__story { flex-shrink:0; display:flex; align-items:center; gap:6px; min-height:44px; border:0; background:transparent; color:var(--text); font-size:.8rem; font-weight:600; cursor:pointer; }
+.family-folder-header__story-ring { padding:2px; border-radius:50%; background:var(--story-ring); }
+.family-folder-header__story:focus-visible { outline:2px solid var(--accent-strong); outline-offset:2px; }
 .family-folder-header__meta { color:var(--muted); font-size:.9rem; margin:0; }
 .family-folder-header__description { margin:5px 0 0; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; max-width:65ch; }
 .folder-description--collapsed,

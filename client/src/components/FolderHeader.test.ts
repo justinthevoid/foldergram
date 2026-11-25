@@ -40,6 +40,23 @@ describe('FolderHeader', () => {
     setActivePinia(createPinia());
   });
 
+  it('makes existing album stories accessible from the family header', async () => {
+    useAuthStore().applyStatus({
+      enabled:true,authenticated:true,role:'viewer',accessMode:'off',likesMode:'family',defaultLocale:null,publicDemoMode:false,
+      externalFamilyAccess:true,familyMember:{id:'fixture-family',name:'Family'},
+      capabilities:{canManageLibrary:false,canDeleteMedia:false,canAccessSettings:false,canUseSharedLikes:false,canUseLocalFavorites:false,canUseSharedCollections:false,canUseLocalCollections:true}
+    });
+    const wrapper=mount(FolderHeader,{props:{folder:createFolder(),hasAvatarStory:true},global:{stubs:{Avatar:true,RouterLink:{template:'<a><slot /></a>'}}}});
+    const story=wrapper.get('.family-folder-header__story');
+    expect(story.text()).toContain('Stories');
+    await story.trigger('click');
+    expect(wrapper.emitted('openAvatarStory')).toHaveLength(1);
+    await wrapper.setProps({hasAvatarStory:false});
+    expect(wrapper.find('.family-folder-header__story').exists()).toBe(false);
+    expect(wrapper.find('button[aria-label="Share folder"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it('shows the share button only to admins', async () => {
     const adminWrapper = mount(FolderHeader, {
       props: {

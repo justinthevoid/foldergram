@@ -9,6 +9,8 @@
     "save": "保存封面"
   },
   "familyGallery": {
+    "feedMode": "动态排序",
+    "stories": "故事",
     "photoActions": "照片操作",
     "details": "详情",
     "photoViewer": "照片查看器",

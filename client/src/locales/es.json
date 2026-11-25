@@ -9,6 +9,8 @@
     "save": "Guardar portada"
   },
   "familyGallery": {
+    "feedMode": "Orden de fotos",
+    "stories": "Historias",
     "photoActions": "Acciones de foto",
     "details": "Detalles",
     "photoViewer": "Visor de fotos",

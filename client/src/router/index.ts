@@ -179,11 +179,16 @@ export const router = createRouter({
     }
   ],
   scrollBehavior(to, from, savedPosition) {
+    // The modal scroll lock owns this scroll position, including browser Back.
+    if (shouldPreserveModalScroll(to, from)) {
+      return false;
+    }
+
     if (savedPosition) {
       return savedPosition;
     }
 
-    if ((to.name === 'settings' && from.name === 'settings') || shouldPreserveModalScroll(to, from)) {
+    if (to.name === 'settings' && from.name === 'settings') {
       return false;
     }
 

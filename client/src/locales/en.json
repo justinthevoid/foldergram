@@ -9,6 +9,8 @@
     "save": "Save cover"
   },
   "familyGallery": {
+    "feedMode": "Feed order",
+    "stories": "Stories",
     "photoActions": "Photo actions",
     "details": "Details",
     "photoViewer": "Photo viewer",

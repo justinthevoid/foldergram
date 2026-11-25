@@ -5,6 +5,8 @@ import { defineComponent } from 'vue';
 
 import { DEFAULT_LOCALE, i18n } from '../locales';
 import { useAppStore } from '../stores/app';
+import { useAuthStore } from '../stores/auth';
+import { useFoldersStore } from '../stores/folders';
 import { useFeedStore } from '../stores/feed';
 import { useMomentsStore } from '../stores/moments';
 import { useSourcesStore } from '../stores/sources';
@@ -298,6 +300,39 @@ describe('HomeView', () => {
     await flushPromises();
 
     expect(wrapper.get('[data-test="initial-scan-phase"]').text()).toBe('Derivatives');
+  });
+
+  it('keeps moments, Reels and discovery feed modes accessible in the simplified family experience', async () => {
+    useAuthStore().applyStatus({
+      enabled:true,authenticated:true,role:'viewer',accessMode:'off',likesMode:'family',defaultLocale:null,publicDemoMode:false,
+      externalFamilyAccess:true,familyMember:{id:'fixture-family',name:'Family'},
+      capabilities:{canManageLibrary:false,canDeleteMedia:false,canAccessSettings:false,canUseSharedLikes:false,canUseLocalFavorites:false,canUseSharedCollections:false,canUseLocalCollections:true}
+    });
+    useAppStore().stats={...createAppStatus({isScanning:false}),indexedImages:10,indexedVideos:1};
+    const feed=useFeedStore(),moments=useMomentsStore();
+    const fetch=vi.spyOn(moments,'fetchMoments').mockResolvedValue();
+    vi.spyOn(useFoldersStore(),'fetchFolders').mockResolvedValue();
+    vi.spyOn(feed,'loadInitial').mockImplementation(async()=>{feed.initialized=true;feed.hasMore=false;});
+    moments.$patch({items:[createMomentCapsule('moment-1','One')]});
+    const wrapper=mountHomeView();
+    await flushPromises();
+    expect(fetch).toHaveBeenCalled();
+    expect(wrapper.get('.family-home-stories').text()).toContain('One');
+    expect(wrapper.get('.family-home-stories').text()).toContain('Reels');
+    expect(wrapper.get('select[aria-label="Feed order"]').element.value).toBe('recent');
+    await wrapper.get('.family-home-stories button').trigger('click');
+    expect(wrapper.find('stories-modal-stub').exists()).toBe(true);
+    await wrapper.get('select[aria-label="Feed order"]').setValue('rediscover');
+    await flushPromises();
+    expect(feed.mode).toBe('rediscover');
+    wrapper.unmount();
+    const revisited=mountHomeView();
+    await flushPromises();
+    expect(revisited.get('select[aria-label="Feed order"]').element.value).toBe('rediscover');
+    moments.items=[];
+    await flushPromises();
+    expect(revisited.find('.family-home-stories').exists()).toBe(false);
+    revisited.unmount();
   });
 
   it('renders the home stories rail with a dedicated horizontal scroll track', async () => {
