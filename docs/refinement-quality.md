@@ -227,6 +227,36 @@ or session remains, the owner can reissue an invitation for the same
 member. Rollback must suspend external access and rotate auth secrets
 before an older build that does not enforce current revocation rules.
 
+## Reels playback scheduling and scroll pass (Q2)
+
+The Reel deck mounts at most five nearby players (two on either side of
+the active panel) to preserve smooth transitions, but the custom video
+provider previously started a one-second health-monitor interval for
+every mounted player, even when it was inactive and had no attached
+media. A five-player fixture reproduced five recurring timers. Monitoring
+now starts only after a provider successfully attaches its media, and is
+stopped whenever that player suspends, detaches or is destroyed. Paused
+but attached sessions retain their lease and stall checks; the active
+provider resumes monitoring when it becomes playable again. The regression
+verifies five mounted providers create zero monitors before attachment,
+one while active, and none while suspended.
+
+Active-panel selection previously built and scanned a metrics array for
+every queued Reel on each animation-frame scroll update. The deck now
+binary-searches the monotonically ordered panel centers directly through
+its element map. A 1,024-panel fixture matches the linear reference across
+variable heights and scroll positions, with at most 13 panel reads for
+one selection instead of 1,024. This avoids per-frame O(n) array mapping,
+filtering and scanning without changing scroll-snap geometry or paging.
+
+Existing video preparation, encoder-capacity checks, HLS windowing,
+quality selection, original playback and no-store behavior are unchanged.
+The HLS growth/resume browser test and Home Reel overlay history/scroll
+restoration test both passed. Focused provider/Reel tests passed (49),
+the full client suite passed (482 tests, 3 skipped), and the full
+production build passed. Real-device cellular and Safari playback timing
+remain Q2 validation items.
+
 ### Remaining boundaries
 
 - Chromium viewport simulation is not physical Safari, installed PWA, or a

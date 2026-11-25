@@ -106,6 +106,31 @@ describe('Vidstack local video delivery', () => {
     expect(f.load).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps playback health monitoring only on the currently attached Reel', async () => {
+    vi.useFakeTimers();
+    mockRequests();
+    const intervals = vi.spyOn(globalThis, 'setInterval');
+    const clears = vi.spyOn(globalThis, 'clearInterval');
+    const cards = Array.from({ length: 5 }, (_, index) => fixture(index === 0));
+    cards.forEach(card => card.delivery.setup());
+    const monitorCalls = () => intervals.mock.calls.filter(([, delay]) => delay === 1000).length;
+    expect(monitorCalls()).toBe(0);
+    await start(cards[0]!.delivery);
+    expect(monitorCalls()).toBe(1);
+    const firstMonitor = intervals.mock.results.find((_, index) => intervals.mock.calls[index]?.[1] === 1000)!.value;
+    cards[0]!.setActive(false);
+    cards[0]!.delivery.syncAvailability();
+    expect(clears).toHaveBeenCalledWith(firstMonitor);
+    cards[0]!.setActive(true);
+    cards[0]!.delivery.syncAvailability();
+    await vi.waitFor(() => expect(monitorCalls()).toBe(2));
+    const monitorHandles = intervals.mock.results
+      .filter((_, index) => intervals.mock.calls[index]?.[1] === 1000)
+      .map(result => result.value);
+    expect(monitorHandles).toHaveLength(2);
+    expect(monitorHandles.filter(handle => !clears.mock.calls.some(([cleared]) => cleared === handle))).toHaveLength(1);
+  });
+
   it('negotiates a Reel during settling and only opens a session if it stays active', async () => {
     vi.useFakeTimers();
     mockRequests();

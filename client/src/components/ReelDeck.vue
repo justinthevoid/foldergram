@@ -47,7 +47,7 @@ import { useI18n } from 'vue-i18n';
 
 import type { FeedItem, FolderSummary } from '../types/api';
 import { ReelVideoPreparation } from '../utils/local-video-provider';
-import { getActiveReelId, shouldPrefetchReels } from '../utils/reels';
+import { getActiveReelIdByIndex, shouldPrefetchReels } from '../utils/reels';
 import ReelPlayerCard from './ReelPlayerCard.vue';
 
 const { t } = useI18n();
@@ -114,21 +114,14 @@ function updateActiveReel() {
   const { scrollPaddingTop, scrollPaddingBottom } = getComputedStyle(scroller);
   const topInset = parseFloat(scrollPaddingTop) || 0;
   const bottomInset = parseFloat(scrollPaddingBottom) || 0;
-  const activeReelId = getActiveReelId(
-    props.items
-      .map((item) => {
-        const panel = panelElements.get(item.id);
-        if (!panel) {
-          return null;
-        }
-
-        return {
-          id: item.id,
-          offsetTop: panel.offsetTop,
-          offsetHeight: panel.offsetHeight
-        };
-      })
-      .filter((panel): panel is { id: number; offsetTop: number; offsetHeight: number } => panel !== null),
+  const activeReelId = getActiveReelIdByIndex(
+    props.items.length,
+    index => {
+      const item = props.items[index];
+      if (!item) return null;
+      const panel = panelElements.get(item.id);
+      return panel ? { id: item.id, offsetTop: panel.offsetTop, offsetHeight: panel.offsetHeight } : null;
+    },
     scroller.scrollTop + topInset,
     scroller.clientHeight - topInset - bottomInset
   );

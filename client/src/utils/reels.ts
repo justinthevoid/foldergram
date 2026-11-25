@@ -31,29 +31,45 @@ export function resolveReelsAffinitySnapshot(
   };
 }
 
+export function getActiveReelIdByIndex(
+  panelCount: number,
+  getPanel: (index: number) => ReelPanelMetrics | null,
+  scrollTop: number,
+  viewportHeight: number
+): number | null {
+  if (panelCount <= 0) return null;
+
+  const viewportCenter = scrollTop + viewportHeight / 2;
+  let low = 0;
+  let high = panelCount;
+
+  // Reel panels follow DOM order and have monotonically increasing centers.
+  // Find the first center at or after the viewport center in O(log n).
+  while (low < high) {
+    const middle = low + Math.floor((high - low) / 2);
+    const panel = getPanel(middle);
+    if (!panel) return null;
+    const panelCenter = panel.offsetTop + panel.offsetHeight / 2;
+    if (panelCenter < viewportCenter) low = middle + 1;
+    else high = middle;
+  }
+
+  const before = low > 0 ? getPanel(low - 1) : null;
+  const after = low < panelCount ? getPanel(low) : null;
+  if (!before) return after?.id ?? null;
+  if (!after) return before.id;
+
+  const beforeOffset = Math.abs(before.offsetTop + before.offsetHeight / 2 - viewportCenter);
+  const afterOffset = Math.abs(after.offsetTop + after.offsetHeight / 2 - viewportCenter);
+  return beforeOffset <= afterOffset ? before.id : after.id;
+}
+
 export function getActiveReelId(
   panels: ReelPanelMetrics[],
   scrollTop: number,
   viewportHeight: number
 ): number | null {
-  if (panels.length === 0) {
-    return null;
-  }
-
-  const viewportCenter = scrollTop + viewportHeight / 2;
-  let activePanel = panels[0] ?? null;
-  let smallestOffset = Number.POSITIVE_INFINITY;
-
-  for (const panel of panels) {
-    const panelCenter = panel.offsetTop + panel.offsetHeight / 2;
-    const centerOffset = Math.abs(panelCenter - viewportCenter);
-    if (centerOffset < smallestOffset) {
-      smallestOffset = centerOffset;
-      activePanel = panel;
-    }
-  }
-
-  return activePanel?.id ?? null;
+  return getActiveReelIdByIndex(panels.length, index => panels[index] ?? null, scrollTop, viewportHeight);
 }
 
 export function shouldPrefetchReels(activeIndex: number, totalItems: number, remainingThreshold = 3): boolean {

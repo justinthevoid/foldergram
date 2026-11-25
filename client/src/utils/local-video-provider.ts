@@ -144,7 +144,6 @@ export class LocalVideoDelivery {
     player.addEventListener('keydown', this.onControlPress, true);
     this.video.addEventListener('pause', this.onNativePause);
     this.video.addEventListener('loadeddata', this.onLoadedData);
-    this.monitor = setInterval(() => this.checkPlayback(), 1000);
     this.syncAvailability();
   }
 
@@ -182,6 +181,19 @@ export class LocalVideoDelivery {
       this.settleTimer = undefined;
       if (this.phase === 'idle') void this.resume();
     }, delay);
+  }
+
+  private startMonitor() {
+    if (this.monitor === undefined) {
+      this.monitor = setInterval(() => this.checkPlayback(), 1000);
+    }
+  }
+
+  private stopMonitor() {
+    if (this.monitor !== undefined) {
+      clearInterval(this.monitor);
+      this.monitor = undefined;
+    }
   }
 
   private clearSettleTimer() {
@@ -340,6 +352,7 @@ export class LocalVideoDelivery {
   }
 
   private detach() {
+    this.stopMonitor();
     this.clearSettleTimer();
     this.negotiation?.controller.abort();
     this.negotiation = undefined;
@@ -445,6 +458,7 @@ export class LocalVideoDelivery {
       await this.load(source, signal, this.relativeStartPosition());
       if (signal.aborted) return;
       this.attached = true;
+      this.startMonitor();
       this.lastFrame = this.lastTick = Date.now();
       this.lastLocalTime = -1;
     } catch {
@@ -670,7 +684,6 @@ export class LocalVideoDelivery {
     if (this.disposed) return;
     this.disposed = true;
     this.observer?.disconnect();
-    clearInterval(this.monitor);
     document.removeEventListener('visibilitychange', this.syncAvailability);
     window.removeEventListener('pagehide', this.suspend);
     window.removeEventListener('pageshow', this.syncAvailability);
