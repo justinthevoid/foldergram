@@ -332,6 +332,20 @@ describe('HomeView', () => {
     moments.items=[];
     await flushPromises();
     expect(revisited.find('.family-home-stories').exists()).toBe(false);
+    const shuffle = revisited.get('button.family-home-shuffle');
+    expect(shuffle.text()).toBe('Shuffle');
+    const setMode = vi.spyOn(feed, 'setMode');
+    await shuffle.trigger('click');
+    await flushPromises();
+    expect(feed.mode).toBe('random');
+    expect(revisited.get('select[aria-label="Feed order"]').element.value).toBe('random');
+    await shuffle.trigger('click');
+    await flushPromises();
+    expect(setMode.mock.calls).toEqual([['random'], ['random']]);
+    expect(feed.loadInitial).toHaveBeenLastCalledWith(true);
+    feed.loading = true;
+    await flushPromises();
+    expect(shuffle.attributes('disabled')).toBeDefined();
     revisited.unmount();
   });
 

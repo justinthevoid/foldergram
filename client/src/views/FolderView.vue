@@ -28,6 +28,12 @@
             @open-avatar-story="openAvatarStory"
           />
         </div>
+        <div v-if="activeTab === 'posts' && foldersStore.currentFolder.imageCount > 0" class="flex justify-center mb-3">
+          <button type="button" class="btn-ghost inline-flex items-center gap-2 min-h-11" @click="slideshowOpen = true">
+            <span class="i-fluent-play-circle-24-filled w-5 h-5" aria-hidden="true" />
+            {{ t('slideshow.title') }}
+          </button>
+        </div>
         <div
           v-if="folderStoriesStore.listError"
           class="mx-auto mb-5 grid w-[min(100%,66.5625rem)] gap-[0.75rem] rounded-[1rem] border border-[rgba(214,48,49,0.24)] bg-[rgba(214,48,49,0.08)] px-4 py-[0.95rem] text-[#c0392b]"
@@ -183,6 +189,8 @@
           </section>
       </div>
 
+      <LivingRoomSlideshow v-if="slideshowOpen && foldersStore.currentFolder.slug === props.slug"
+        :slug="props.slug" :album-name="foldersStore.currentFolder.name" @close="slideshowOpen = false" />
       <StoriesModal
         v-if="activeStoryViewerId && folderStoriesStore.items.length"
         :items="folderStoriesStore.items"
@@ -215,6 +223,7 @@
   import FolderHeader from "../components/FolderHeader.vue"
   import Avatar from "../components/Avatar.vue"
   import StoriesModal from "../components/StoriesModal.vue"
+  import LivingRoomSlideshow from "../components/LivingRoomSlideshow.vue"
   import { useAppStore } from "../stores/app"
   import { useAuthStore } from "../stores/auth"
   import { useFamilyPresentation } from '../composables/useFamilyPresentation';
@@ -238,6 +247,7 @@
   const { t } = useI18n()
   const hasLoadedOnce = ref(false)
   const activeStoryViewerId = ref<string | null>(null)
+  const slideshowOpen = ref(false)
   const activeTab = computed<"posts" | "reels" | "likes">(() =>
     route.query.tab === "reels"
       ? "reels"
@@ -373,6 +383,7 @@
     async () => {
       hasLoadedOnce.value = false
       activeStoryViewerId.value = null
+      slideshowOpen.value = false
       await loadFolder()
     },
   )

@@ -86,6 +86,85 @@ async function mockGallery(page: Page, theme?: 'light' | 'dark') {
   }));
 }
 
+for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
+  test(`Living Room slideshow fits the viewport and keeps its controls accessible at ${viewport.width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport);
+    await mockGallery(page, 'dark');
+    const portrait = { ...panorama, id: 2, filename: 'portrait.jpg', width: 1000, height: 1600, thumbnailUrl: '/thumbnails/portrait.svg', previewUrl: '/previews/portrait.svg' };
+    await page.route(/\/(thumbnails|previews)\/portrait\.svg/, route => route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1600"><rect width="1000" height="1600" fill="#a77c62"/></svg>'
+    }));
+    await page.route('**/api/folders/panoramas/images?*', route => route.fulfill({
+      json: { folder: { ...folder, imageCount: 2 }, items: [panorama, portrait], page: 1, limit: 24, total: 2, hasMore: false }
+    }));
+    await page.goto('/f/panoramas');
+    const launch = page.getByRole('button', { name: 'Slideshow', exact: true });
+    await launch.click();
+    const dialog = page.getByRole('dialog', { name: 'Panoramas' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByAltText('panorama.jpg', { exact: true })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Pause', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Next', exact: true }).click();
+    await expect(dialog.getByAltText('portrait.jpg', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Photo 2', { exact: true })).toBeVisible();
+    const bounds = await dialog.boundingBox();
+    expect(bounds?.width).toBe(viewport.width);
+    expect(bounds?.height).toBe(viewport.height);
+    const stage = await dialog.locator('.living-room__stage').boundingBox();
+    const controls = await dialog.locator('.living-room__footer').boundingBox();
+    expect(stage!.y + stage!.height).toBeLessThanOrEqual(controls!.y + 1);
+    await dialog.getByRole('button', { name: 'Previous', exact: true }).click();
+    await expect(dialog.getByAltText('panorama.jpg', { exact: true })).toBeVisible();
+    await expect(dialog.getByAltText('panorama.jpg', { exact: true })).toHaveAttribute('data-loaded', 'true');
+    await page.screenshot({ path: testInfo.outputPath('slideshow.png') });
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(launch).toBeFocused();
+  });
+}
+
+test('family Home Shuffle requests a fresh random seed on repeated taps', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page);
+  await page.route('**/api/auth/status', route => route.fulfill({
+    json: {
+      enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family', defaultLocale: 'en',
+      publicDemoMode: false, externalFamilyAccess: true, familyMember: { id: 'fixture', name: 'Family' },
+      capabilities: {
+        canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false, canUseSharedLikes: false,
+        canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true
+      }
+    }
+  }));
+  await page.route('**/api/feed?*', route => route.fulfill({
+    json: { items: [panorama], page: 1, limit: 18, total: 1, hasMore: false }
+  }));
+  await page.goto('/');
+  const shuffle = page.getByRole('button', { name: 'Shuffle', exact: true });
+  await expect(page.getByLabel('Feed order')).toHaveValue('recent');
+  await expect(shuffle).toBeEnabled();
+  const randomSeed = (url: string) => {
+    const parsed = new URL(url);
+    return parsed.pathname === '/api/feed' && parsed.searchParams.get('mode') === 'random'
+      ? parsed.searchParams.get('seed') : null;
+  };
+  const firstRequest = page.waitForResponse(response => !!randomSeed(response.url()));
+  await shuffle.click();
+  const first = randomSeed((await firstRequest).url());
+  await expect(page.getByLabel('Feed order')).toHaveValue('random');
+  await expect(shuffle).toBeEnabled();
+  const secondRequest = page.waitForResponse(response => {
+    const seed = randomSeed(response.url());
+    return !!seed && seed !== first;
+  });
+  await shuffle.click();
+  const second = randomSeed((await secondRequest).url());
+  expect(first).toBeTruthy();
+  expect(second).toBeTruthy();
+  expect(second).not.toBe(first);
+});
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

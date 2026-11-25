@@ -8,8 +8,22 @@
     "saveError": "No se pudo guardar la portada del álbum.",
     "save": "Guardar portada"
   },
+  "slideshow": {
+    "title": "Presentación",
+    "close": "Cerrar",
+    "position": "Foto {current}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa",
+    "empty": "No hay fotos en este álbum.",
+    "loadError": "No se pudieron cargar más fotos."
+  },
   "familyGallery": {
     "feedMode": "Orden de fotos",
+    "shufflePhotos": "Mezclar",
     "stories": "Historias",
     "photoActions": "Acciones de foto",
     "details": "Detalles",

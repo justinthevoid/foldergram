@@ -8,8 +8,22 @@
     "saveError": "Could not save the album cover.",
     "save": "Save cover"
   },
+  "slideshow": {
+    "title": "Slideshow",
+    "close": "Close",
+    "position": "Photo {current}",
+    "previous": "Previous",
+    "next": "Next",
+    "play": "Play",
+    "pause": "Pause",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "empty": "No photographs in this album.",
+    "loadError": "Couldn't load more photographs."
+  },
   "familyGallery": {
     "feedMode": "Feed order",
+    "shufflePhotos": "Shuffle",
     "stories": "Stories",
     "photoActions": "Photo actions",
     "details": "Details",

@@ -8,8 +8,22 @@
     "saveError": "Das Albumcover konnte nicht gespeichert werden.",
     "save": "Cover speichern"
   },
+  "slideshow": {
+    "title": "Diashow",
+    "close": "Schließen",
+    "position": "Foto {current}",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "fullscreen": "Vollbild",
+    "exitFullscreen": "Vollbild verlassen",
+    "empty": "Keine Fotos in diesem Album.",
+    "loadError": "Weitere Fotos konnten nicht geladen werden."
+  },
   "familyGallery": {
     "feedMode": "Feed-Reihenfolge",
+    "shufflePhotos": "Mischen",
     "stories": "Stories",
     "photoActions": "Fotoaktionen",
     "details": "Details",

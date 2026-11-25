@@ -91,6 +91,11 @@
           <h2>{{ feedStore.mode === 'recent' ? t('familyGallery.recentPhotos') : feedModes.find(mode => mode.id === feedStore.mode)?.label }}</h2>
           <div class="family-home-feed-controls">
             <RouterLink v-if="!displayMomentItems.length && (appStore.stats?.indexedVideos ?? 0) > 0" :to="{name:'reels'}" class="family-home-all">{{ t('nav.reels') }}</RouterLink>
+            <button v-if="(appStore.stats?.indexedImages ?? 0) + (appStore.stats?.indexedVideos ?? 0) > 0 || feedStore.items.length > 0"
+              class="family-home-shuffle" type="button" :disabled="feedStore.loading" @click="selectMode('random')">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h3c5 0 7 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 4-3 5-5m2-2c1-2 3-5 5-5h3m-4-4 4 4-4 4"/></svg>
+              {{ t('familyGallery.shufflePhotos') }}
+            </button>
             <select class="family-home-feed-select" :aria-label="t('familyGallery.feedMode')" :value="feedStore.mode"
               :disabled="feedStore.loading" @change="selectMode(($event.target as HTMLSelectElement).value as FeedMode)">
               <option v-for="mode in feedModes" :key="mode.id" :value="mode.id">{{ mode.label }}</option>
@@ -794,7 +799,12 @@ onUnmounted(() => {
 .family-home-all { color: var(--accent-strong); font-size: .86rem; font-weight: 600; display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .family-home-stories .story-rail { padding: 0 0 4px; }
 .family-home-stories .story-rail__track { justify-content: flex-start; }
-.family-home-feed-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.family-home-heading--photos { flex-wrap: wrap; }
+.family-home-feed-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
+.family-home-shuffle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--accent-strong); font-size: .85rem; font-weight: 600; cursor: pointer; }
+.family-home-shuffle:hover:not(:disabled) { background: var(--surface-hover); }
+.family-home-shuffle:disabled { opacity: .5; cursor: default; }
+.family-home-shuffle:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 .family-home-feed-select { min-height: 44px; max-width: 130px; padding: 6px 8px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: .85rem; }
 .family-home-feed-select:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 .family-home-album-error { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:.85rem; }

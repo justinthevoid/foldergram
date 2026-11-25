@@ -8,8 +8,22 @@
     "saveError": "无法保存相册封面。",
     "save": "保存封面"
   },
+  "slideshow": {
+    "title": "幻灯片",
+    "close": "关闭",
+    "position": "照片 {current}",
+    "previous": "上一张",
+    "next": "下一张",
+    "play": "播放",
+    "pause": "暂停",
+    "fullscreen": "全屏",
+    "exitFullscreen": "退出全屏",
+    "empty": "此相册没有照片。",
+    "loadError": "无法加载更多照片。"
+  },
   "familyGallery": {
     "feedMode": "动态排序",
+    "shufflePhotos": "随机浏览",
     "stories": "故事",
     "photoActions": "照片操作",
     "details": "详情",
