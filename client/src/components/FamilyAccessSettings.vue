@@ -28,9 +28,11 @@
         <input :value="link" readonly :aria-label="t('family.invitation')" class="min-w-0 border border-border rounded-lg p-2 bg-surface text-text text-sm" @focus="($event.target as HTMLInputElement).select()" />
         <div class="flex flex-wrap gap-2">
           <button class="btn-primary" type="button" @click="copy">{{ t(copied ? 'family.copied' : 'family.copy') }}</button>
+          <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium" type="button" :aria-expanded="showCard" @click="showCard = !showCard">{{ t(showCard ? 'inviteCard.hide' : 'inviteCard.create') }}</button>
           <button class="px-3 py-2 text-sm font-medium text-muted" type="button" @click="invite = null">{{ t('family.dismiss') }}</button>
         </div>
       </div>
+      <InvitationCard v-if="invite && showCard" :key="invite.token" :link="link" :recipient="invite.member.name" :expires-at="invite.expiresAt" />
       <p v-if="loading" class="m-0 text-sm text-muted">{{ t('family.loading') }}</p>
       <p v-else-if="!members.length" class="m-0 text-sm text-muted">{{ t('family.empty') }}</p>
       <div v-for="member in members" :key="member.id" class="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
@@ -54,11 +56,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth';
 import { requestJson } from '../api/http';
 import type { FamilyInvite, FamilyMember } from '../types/api';
+const InvitationCard = defineAsyncComponent(() => import('./InvitationCard.vue'));
 
 const { t } = useI18n();
 const auth = useAuthStore();
@@ -71,6 +74,8 @@ const enabled = ref(false);
 const loading = ref(false);
 const busy = ref(false);
 const copied = ref(false);
+const showCard = ref(false);
+watch(() => invite.value?.token, () => { showCard.value = false; });
 const error = ref('');
 const confirmId = ref<string | null>(null);
 const https = window.location.protocol === 'https:';

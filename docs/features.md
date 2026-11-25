@@ -390,6 +390,11 @@ Current non-admin behavior:
 | Regenerate Thumbnails | Clears generated thumbnails and video poster images, then rebuilds them from indexed media only. |
 | Rebuild Library Index | Clears indexed folders, posts, likes, folder scan state, and scan history, then rescans the active gallery root and reuses matching cached derivatives when possible. In lazy derivative mode it does not pre-generate missing thumbnails or previews. |
 
+## Printable family invitation cards (photography fork)
+
+In Settings → Security & Access, create or renew a family invitation and choose Create QR card. The card editor uses the current invitation's destination, recipient and expiry; opening the editor does not issue another invitation. Select warm paper or midnight film, personalize the headline and message, and optionally choose a photograph from the existing gallery. The default illustration is generated locally. Photos retain their proportions inside the instant-film frame.
+
+The PNG is 1200 × 1800 pixels, designed for a 4 × 6 inch print. The Print card action opens an isolated print view; select the appropriate paper size in the printer dialog. QR codes are generated in the browser using a pinned QR encoder, with a white quiet zone and error correction. No external QR service receives invitation URLs or photographs. Keep the downloaded or printed card private: its QR code contains the same single-use bearer invitation and expires on the original date. Reissue a new link/card for another device or an expired invitation.
 ## Restricted internet family access (photography fork)
 
 The external gallery uses one-time private invitations, not email accounts or passwords. An invitation contains a random 256-bit bearer token in its URL fragment, which is not sent in HTTP requests. An explicit Open gallery action redeems it, avoiding accidental redemption by link previews. Invitations expire after seven days; family sessions are host-only, HttpOnly, Secure over HTTPS, and last up to 90 days. Revocation is enforced on every protected request.
