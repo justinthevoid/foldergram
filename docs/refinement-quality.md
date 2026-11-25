@@ -168,11 +168,9 @@ the welcome screen, explicit redemption, and return on reload. The
 startup budget still passed (1,157,386 decoded JS bytes). These tests
 use disposable databases and mocked browser credentials.
 
-Remaining Q5 work: physical iPhone camera scans and Home Screen session
-storage; recovery when no device remains signed in (administrator
-reissue is currently required); evaluate synchronized passkeys as a
-long-term recovery option without reusable bearer links. Automatic
-session renewal is not included.
+Remaining Q5 work: physical iPhone camera scans, Home Screen session
+storage, and actual passkey synchronization/recovery with Apple Passwords
+or other credential providers. Automatic session renewal is not included.
 
 ### Individual device management
 
@@ -191,6 +189,43 @@ not appear in the inventory; member-wide revoke still covers them.
 The targeted server suite (family, external ingress, push, devices,
 migration bootstrap) passed 27 tests. Existing member-wide revocation
 and generation rotation continue to invalidate all credentials.
+
+### Passkey recovery
+
+Migration 000019 adds public WebAuthn credentials, with counter, backup
+state, creation and last-use metadata, bound to the named family member,
+authentication generation and configured external HTTPS origin.
+SimpleWebAuthn server 14.1.0 and browser 14.0.0 are pinned. Enrollment
+requires a currently signed-in named viewer, explicit user action and
+user verification. Authentication uses discoverable credentials, so
+no public member list, email, or password is needed. A random, host-only
+Secure/HttpOnly challenge cookie binds a five-minute, single-use server
+challenge to the browser; registration also binds to the issuing session.
+Both ceremonies verify the exact origin and RP ID. Challenge state is
+bounded in memory and may be lost on restart; retry is safe.
+
+The family Devices & sign-in dialog has passkey setup and removal. The
+external welcome screen offers passkey sign-in when supported, alongside
+invitations. Admin Family access → Devices includes passkey removal.
+Removing a passkey disables future sign-in with that credential, including
+synced copies, but does not delete it from the provider or revoke existing
+browser sessions. Disconnect those separately. Member revocation or auth
+generation rotation invalidates all associated credentials and sessions.
+The server stores no biometric data or private key. Browser credentials
+can be synchronized only when the user's provider supports it.
+
+The targeted cryptographic test uses genuine P-256 assertions and none
+attestation, exercises rejection of wrong origin, missing user
+verification, invalid signatures, mismatched identity, missing/replayed
+challenge and removed credentials. A separate Chromium virtual
+authenticator browser test at a synthetic HTTPS origin exercises actual
+browser enrollment and authentication with mocked server endpoints.
+The startup budget, device linking and invite redemption regressions
+also passed (four browser tests). Physical Safari and synchronized
+credential-provider behavior still need testing. If no usable passkey
+or session remains, the owner can reissue an invitation for the same
+member. Rollback must suspend external access and rotate auth secrets
+before an older build that does not enforce current revocation rules.
 
 ### Remaining boundaries
 

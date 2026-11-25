@@ -30,6 +30,7 @@ import { familyCommentsRouter } from './family-comments.js';
 import { publicationRouter } from './publication.js';
 import { familyActivityRouter } from './family-activity.js';
 import { familyPushRouter } from './family-push.js';
+import { familyPasskeysRouter } from './family-passkeys.js';
 import { familyPush } from '../services/family-push.js';
 import { listFamilyDevices, findFamilyDevice } from '../services/family-devices.js';
 import { externalFamilyOrigin, isExternalFamilyRequest } from '../middleware/external-family-access.js';
@@ -39,6 +40,7 @@ router.use(familyCommentsRouter);
 router.use(publicationRouter);
 router.use(familyActivityRouter);
 router.use(familyPushRouter);
+router.use(familyPasskeysRouter);
 router.get('/branding', (_request, response) => {
   response.json(getPublicBranding());
 });

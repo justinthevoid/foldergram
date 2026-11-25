@@ -12,6 +12,7 @@
     "test:browser": "playwright test"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "14.0.0",
     "hls.js": "^1.6.19",
     "jsqr": "1.4.0",
     "pinia": "^3.0.1",

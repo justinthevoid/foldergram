@@ -516,6 +516,7 @@ test('family can explicitly create a temporary device link from More', async ({ 
       canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
   }}));
   await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  await page.route('**/api/family/passkeys', route => route.fulfill({ json: { items: [] } }));
   const fakeToken = 'A'.repeat(43);
   let linkRequests = 0;
   let disconnectRequests = 0;
@@ -600,6 +601,100 @@ test('family welcome screen explains device linking and redeems only after an ex
   await page.reload();
   await expect(page.locator('.family-header')).toBeVisible();
   expect(redemptions).toBe(1);
+});
+
+test('family passkeys enroll and sign in through a virtual WebAuthn authenticator', async ({ page, baseURL }) => {
+  const origin = 'https://gallery.example.test';
+  const rpID = 'gallery.example.test';
+  // Serve the built client at an isolated synthetic HTTPS origin; mock API
+  // responses independently from the real server cryptographic tests.
+  await page.route(origin + '/**', async route => {
+    const requested = new URL(route.request().url());
+    const upstream = new URL(requested.pathname + requested.search, baseURL!);
+    await route.fulfill({ response: await route.fetch({ url: upstream.href }) });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page, 'light');
+  const viewer = { enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  };
+  let joined = true;
+  let credentialId = '';
+  let registered = 0;
+  let signedIn = 0;
+  const challenge = (byte: number) => Buffer.alloc(32, byte).toString('base64url');
+  const userHandle = Buffer.from('fixture').toString('base64url');
+  await page.route('**/api/auth/status', route => route.fulfill({ json: joined ? viewer : {
+    ...viewer, authenticated: false, role: 'anonymous', likesMode: 'local', familyMember: undefined
+  }}));
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  await page.route('**/api/family/devices', route => route.fulfill({ json: { items: [] } }));
+  await page.route('**/api/family/passkeys', route => route.fulfill({ json: { items: registered ? [
+    { id: 'fixture-key', label: 'iphone', createdAt: Date.now(), lastUsedAt: null, backedUp: false, synced: false }
+  ] : [] } }));
+  await page.route('**/api/family/passkeys/register/options', route => route.fulfill({ json: {
+    rp: { name: 'Foldergram', id: rpID }, user: { id: userHandle, name: 'Family', displayName: 'Family' },
+    challenge: challenge(1), pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+    timeout: 60000, attestation: 'none', authenticatorSelection: { residentKey: 'required', userVerification: 'required' }
+  }}));
+  await page.route('**/api/family/passkeys/register/verify', route => {
+    const body = route.request().postDataJSON();
+    expect(body.type).toBe('public-key');
+    expect(body.response.attestationObject).toBeTruthy();
+    const clientData = JSON.parse(Buffer.from(body.response.clientDataJSON, 'base64url').toString());
+    expect(clientData).toMatchObject({ type: 'webauthn.create', origin, challenge: challenge(1) });
+    credentialId = body.id;
+    registered++;
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.route('**/api/auth/family-passkey/options', route => route.fulfill({ json: {
+    rpId: rpID, challenge: challenge(2), timeout: 60000, userVerification: 'required'
+  }}));
+  await page.route('**/api/auth/family-passkey/verify', route => {
+    const body = route.request().postDataJSON();
+    expect(body.id).toBe(credentialId);
+    expect(body.response.userHandle).toBe(userHandle);
+    expect(body.response.signature).toBeTruthy();
+    const clientData = JSON.parse(Buffer.from(body.response.clientDataJSON, 'base64url').toString());
+    expect(clientData).toMatchObject({ type: 'webauthn.get', origin, challenge: challenge(2) });
+    signedIn++;
+    joined = true;
+    return route.fulfill({ json: { ok: true, auth: viewer } });
+  });
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('WebAuthn.enable');
+  const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', { options: {
+    protocol: 'ctap2', transport: 'internal', hasResidentKey: true,
+    hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true
+  }});
+  try {
+    await page.goto(origin + '/');
+    await page.getByRole('button', { name: 'More', exact: true }).click();
+    await page.getByRole('button', { name: 'Devices & sign-in', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Devices & sign-in' });
+    await expect(dialog.getByText('No passkeys set up yet.')).toBeVisible();
+    expect(registered).toBe(0);
+    await dialog.getByRole('button', { name: 'Set up a passkey', exact: true }).click();
+    await expect(dialog.getByText('Passkey saved. You can use it to sign in again.')).toBeVisible({ timeout: 10000 });
+    expect(registered).toBe(1);
+    const credentials = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
+    expect(credentials.credentials).toHaveLength(1);
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+    joined = false;
+    await page.reload();
+    const signIn = page.getByRole('button', { name: 'Sign in with a passkey', exact: true });
+    await expect(signIn).toBeVisible();
+    expect(signedIn).toBe(0);
+    await signIn.click();
+    await expect(page.locator('.family-header')).toBeVisible({ timeout: 10000 });
+    expect(signedIn).toBe(1);
+  } finally {
+    await cdp.send('WebAuthn.removeVirtualAuthenticator', { authenticatorId });
+    await cdp.send('WebAuthn.disable');
+  }
 });
 
 async function expectReadableBetweenStickyBars(target: Locator) {

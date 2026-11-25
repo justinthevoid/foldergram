@@ -18,7 +18,7 @@ function isPublicApiRoute(request: express.Request): boolean {
 
   return (
     (method === 'GET' && (path === '/health' || path === '/auth/status' || path === '/appearance' || path === '/branding')) ||
-    (method === 'POST' && (path === '/auth/login' || path === '/auth/logout' || path === '/auth/unlock-admin' || path === '/auth/family-invite')) ||
+    (method === 'POST' && (path === '/auth/login' || path === '/auth/logout' || path === '/auth/unlock-admin' || path === '/auth/family-invite' || path === '/auth/family-passkey/options' || path === '/auth/family-passkey/verify')) ||
     isShareReadRoute ||
     (path.startsWith('/share/') && isPlaybackSessionMutation(method, path)) ||
     isShareUnlockRoute

@@ -69,6 +69,10 @@ export function restrictExternalFamilyAccess(request: express.Request, response:
     if (path.endsWith('family-invite') && auth.authenticated) { deny(); return; }
     next(); return;
   }
+  if (method === 'POST' && (path === '/api/auth/family-passkey/options' || path === '/api/auth/family-passkey/verify')) {
+    if (auth.authenticated) { deny(); return; }
+    next(); return;
+  }
   const lower = path.toLowerCase();
   if (lower === '/api' || lower.startsWith('/api/') || /^\/(?:thumbnails|previews)(?:\/|$)/i.test(path)) {
     if (!named) { response.setHeader('x-foldergram-auth-required', '1'); deny(401); return; }
@@ -83,7 +87,10 @@ export function restrictExternalFamilyAccess(request: express.Request, response:
     const deviceInvite = method === 'POST' && path === '/api/family/device-invite';
     const devices = (read(method) && path === '/api/family/devices') ||
       (method === 'DELETE' && /^\/api\/family\/devices\/[0-9a-f-]{36}$/.test(path));
-    if (ownReaction || comment || playback || push || deviceInvite || devices) { next(); return; }
+    const passkeys = (read(method) && path === '/api/family/passkeys') ||
+      (method === 'DELETE' && /^\/api\/family\/passkeys\/[0-9a-f-]{36}$/.test(path)) ||
+      (method === 'POST' && (path === '/api/family/passkeys/register/options' || path === '/api/family/passkeys/register/verify'));
+    if (ownReaction || comment || playback || push || deviceInvite || devices || passkeys) { next(); return; }
     deny(); return;
   }
   // The public bootstrap serves only the compiled client and known navigation

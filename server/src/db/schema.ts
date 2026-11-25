@@ -331,6 +331,21 @@ CREATE TABLE IF NOT EXISTS family_device_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_family_device_sessions_member ON family_device_sessions(member_id, generation, expires_at);
 CREATE INDEX IF NOT EXISTS idx_family_device_sessions_expiry ON family_device_sessions(expires_at);
+CREATE TABLE IF NOT EXISTS family_passkeys (
+  id TEXT PRIMARY KEY,
+  credential_id TEXT NOT NULL UNIQUE,
+  member_id TEXT NOT NULL,
+  generation TEXT NOT NULL,
+  origin TEXT NOT NULL,
+  public_key BLOB NOT NULL,
+  counter INTEGER NOT NULL,
+  device_label TEXT NOT NULL,
+  credential_device_type TEXT NOT NULL,
+  backed_up INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  last_used_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_family_passkeys_member ON family_passkeys(member_id, generation, origin);
 CREATE TABLE IF NOT EXISTS family_release_seen (
   post_id INTEGER PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
   noticed_at INTEGER NOT NULL

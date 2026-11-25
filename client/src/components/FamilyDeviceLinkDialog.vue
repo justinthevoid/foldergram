@@ -5,7 +5,8 @@
       <button type="button" class="btn-ghost min-h-11" autofocus @click="emit('close')">{{ t('common.close') }}</button>
     </header>
     <div class="device-link__body">
-      <FamilyDeviceSessions />
+      <FamilyPasskeysPanel />
+      <div class="border-t border-border pt-3"><FamilyDeviceSessions /></div>
       <div class="border-t border-border pt-3 grid gap-2">
         <h3 class="m-0 text-base font-semibold">{{ t('deviceLink.add') }}</h3>
         <p class="m-0">{{ t('deviceLink.description') }}</p>
@@ -35,6 +36,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n';
 import jsQR from 'jsqr';
 import FamilyDeviceSessions from './FamilyDeviceSessions.vue';
+import FamilyPasskeysPanel from './FamilyPasskeysPanel.vue';
 import { requestJson } from '../api/http';
 import { invitationQrRaster, invitationUrl } from '../utils/invitation-card';
 

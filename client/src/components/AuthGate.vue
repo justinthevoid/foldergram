@@ -24,6 +24,7 @@
         <button v-if="!authStore.externalFamilyAccess" class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''">{{ t('family.usePassword') }}</button>
       </div>
       <form v-else-if="authStore.externalFamilyAccess" class="mt-6 grid gap-3" @submit.prevent="pasteInvite">
+        <button v-if="passkeysSupported" class="btn-primary min-h-11" type="button" :disabled="submitting" @click="signInWithPasskey">{{ t('passkeys.signIn') }}</button>
         <label class="grid gap-2 text-sm font-medium">
           {{ t('family.pasteInvite') }}
           <input v-model="pastedInvite" type="text" autocomplete="off" class="border border-border rounded-lg p-3 bg-surface text-text" :disabled="submitting" />
@@ -57,12 +58,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import BrandMark from './BrandMark.vue';
 import { useBrandingStore } from '../stores/branding';
 import { useAuthStore } from '../stores/auth';
+import { signInFamilyPasskey, supportsFamilyPasskeys } from '../utils/family-passkeys';
 
 const branding = useBrandingStore();
 
@@ -72,6 +74,27 @@ const password = ref('');
 const inviteToken = ref('');
 const inviteError = ref('');
 const pastedInvite = ref('');
+const passkeysSupported = supportsFamilyPasskeys();
+let passkeyController: AbortController | null = null;
+async function signInWithPasskey() {
+  if (submitting.value || !passkeysSupported || !authStore.externalFamilyAccess) return;
+  submitting.value = true;
+  inviteError.value = '';
+  const request = new AbortController();
+  passkeyController = request;
+  try {
+    const result = await signInFamilyPasskey(request.signal);
+    if (request.signal.aborted) return;
+    authStore.applyStatus(result.auth);
+    authStore.clearError();
+  } catch {
+    if (!request.signal.aborted) inviteError.value = t('passkeys.signInError');
+  } finally {
+    if (passkeyController === request) passkeyController = null;
+    submitting.value = false;
+  }
+}
+onBeforeUnmount(() => { passkeyController?.abort(); });
 async function pasteInvite() {
   try {
     const value = pastedInvite.value.trim();
