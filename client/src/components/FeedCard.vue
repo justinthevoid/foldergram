@@ -4,7 +4,7 @@
       <div class="feed-card__folder flex items-center gap-[0.72rem] min-w-0">
         <button
           v-if="showHomeStoryAvatar"
-          class="block rounded-full border-0 bg-transparent p-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          class="inline-flex min-w-11 min-h-11 items-center justify-center rounded-full border-0 bg-transparent p-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           type="button"
           :aria-label="folderStoriesLabel"
           :title="folderStoriesLabel"
@@ -18,7 +18,7 @@
         </button>
         <RouterLink
           v-else
-          class="block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          class="inline-flex min-w-11 min-h-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           :to="{ name: 'folder', params: { slug: item.folderSlug } }"
           :aria-label="folderAvatarLabel"
           :title="folderAvatarLabel"
@@ -26,14 +26,14 @@
           <Avatar class="w-8 h-8" :name="displayFolderTitle" :src="avatarUrl" />
         </RouterLink>
         <div class="min-w-0">
-          <RouterLink class="block min-w-0 text-inherit no-underline" :to="{ name: 'folder', params: { slug: item.folderSlug } }">
+          <RouterLink class="flex min-h-11 min-w-0 items-center text-inherit no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg" :to="{ name: 'folder', params: { slug: item.folderSlug } }">
             <h3 class="m-0 text-[0.88rem] font-semibold truncate">
               {{ displayFolderTitle }}
             </h3>
           </RouterLink>
           <RouterLink
             v-if="item.place"
-            class="block truncate text-[0.78rem] font-medium text-muted no-underline hover:text-text"
+            class="flex min-h-11 items-center truncate text-[0.78rem] font-medium text-muted no-underline hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             :to="{ name: 'place', params: { slug: item.place.slug } }"
           >
             {{ item.place.name }}
@@ -41,7 +41,7 @@
         </div>
       </div>
       <button
-        class="inline-flex items-center justify-center w-8 h-8 p-0 border-0 text-muted bg-transparent cursor-pointer"
+        class="inline-flex items-center justify-center w-11 h-11 p-0 border-0 text-muted bg-transparent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         type="button"
         :aria-label="t('post.feedCard.moreOptions')"
         :title="t('post.feedCard.moreOptions')"
@@ -232,7 +232,7 @@
         <div class="flex items-center gap-[0.65rem]">
           <button
             v-if="authStore.canUseSavedItems"
-            class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px disabled:opacity-50 disabled:cursor-wait disabled:transform-none"
+            class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px disabled:opacity-50 disabled:cursor-wait disabled:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             :class="{ 'text-[#e5484d]': likesStore.isLiked(item.id) }"
             type="button"
             :aria-label="likeActionLabel"
@@ -247,11 +247,11 @@
               aria-hidden="true"
             />
           </button>
-          <FamilyCommentAction :post-id="item.id" class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit hover:opacity-72"/>
+          <FamilyCommentAction :post-id="item.id" class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit hover:opacity-72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"/>
           <RouterLink custom :to="imageRoute" v-slot="{ href, navigate }">
             <a
               :href="href"
-              class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
+              class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
               :aria-label="openMediaLabel"
               :title="openMediaLabel"
               @click="handleImageNavigation($event, navigate)"
@@ -270,7 +270,7 @@
             </a>
           </RouterLink>
           <RouterLink
-            class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
+            class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             :to="{ name: 'folder', params: { slug: item.folderSlug } }"
             :aria-label="t('post.viewer.openFolder')"
             :title="t('post.viewer.openFolder')"
@@ -281,7 +281,7 @@
         <div class="flex items-center gap-[0.65rem]">
           <a
             v-if="isHomeContext && !authStore.externalFamilyAccess && item.originalDownloadsAllowed !== false"
-            class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
+            class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             :href="downloadOriginalMediaUrl"
             download
             :aria-label="t('post.viewer.downloadOriginalFile')"
@@ -299,7 +299,7 @@
             </svg>
           </a>
           <a
-            class="inline-flex items-center justify-center w-8 h-8 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px"
+            class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit transition-[opacity,transform] duration-180 hover:opacity-72 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             v-if="!authStore.externalFamilyAccess && item?.originalDownloadsAllowed !== false && !isActiveLocalHeic"
             :href="originalMediaUrl"
             target="_blank"

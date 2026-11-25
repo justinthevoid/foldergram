@@ -9,7 +9,7 @@
       >
         <button
           v-if="showSearchChrome"
-          class="inline-flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent p-0 text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-text"
+          class="inline-flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent p-0 text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           type="button"
           :aria-label="t('explore.back')"
           @click="closeSearch"
@@ -62,6 +62,7 @@
             maxlength="160"
             v-model="searchQuery"
             class="w-full border-0 bg-transparent p-0 text-[1rem] text-text outline-none placeholder:text-muted"
+            :aria-label="t('explore.searchPlaceholder')"
             type="search"
             :placeholder="t('explore.searchPlaceholder')"
             spellcheck="false"
@@ -71,7 +72,7 @@
           />
           <button
             v-if="searchQuery.length > 0"
-            class="inline-flex h-6 w-6 items-center justify-center rounded-full border-0 bg-surface-hover p-0 text-muted transition-colors duration-150 hover:bg-border hover:text-text"
+            class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-0 bg-surface-hover p-0 text-muted transition-colors duration-150 hover:bg-border hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             type="button"
             :aria-label="t('explore.clearSearch')"
             @click="clearSearch"
@@ -669,6 +670,16 @@ function parseSearchTab(value: unknown): SearchTab {
 <style scoped>
 .explore-view__search {
   box-shadow: inset 0 1px 0 var(--border);
+}
+
+.explore-view__search:focus-within {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.explore-view__tab:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
 }
 
 .explore-view__tabs {

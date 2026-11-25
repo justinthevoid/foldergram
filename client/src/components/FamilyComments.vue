@@ -17,18 +17,18 @@
       </div>
       <p class="m-0 text-sm leading-relaxed whitespace-pre-wrap break-words">{{ comment.body }}</p>
       <div v-if="comment.canEdit || comment.canDelete" class="flex gap-3">
-        <button v-if="comment.canEdit" type="button" class="text-xs font-medium text-muted hover:text-text min-h-7" :disabled="busy" @click="startEdit(comment)">{{ t('comments.edit') }}</button>
-        <button v-if="comment.canDelete" type="button" class="text-xs font-medium text-muted hover:text-red-500 min-h-7" :disabled="busy" @click="confirmId = comment.id">{{ t('comments.delete') }}</button>
+        <button v-if="comment.canEdit" type="button" class="inline-flex min-h-11 min-w-11 items-center justify-center text-xs font-medium text-muted hover:text-text" :disabled="busy" @click="startEdit(comment)">{{ t('comments.edit') }}</button>
+        <button v-if="comment.canDelete" type="button" class="inline-flex min-h-11 min-w-11 items-center justify-center text-xs font-medium text-muted hover:text-red-500" :disabled="busy" @click="confirmId = comment.id">{{ t('comments.delete') }}</button>
       </div>
       <div v-if="confirmId === comment.id" class="grid gap-2 rounded-lg border border-border bg-surface-alt p-3">
         <p class="m-0 text-sm">{{ t('comments.deleteConfirm') }}</p>
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="rounded-lg border border-border px-3 py-2 text-sm" @click="confirmId = null" :disabled="busy">{{ t('comments.cancel') }}</button>
-          <button type="button" class="rounded-lg bg-[#d93025] text-white px-3 py-2 text-sm font-semibold" :disabled="busy" @click="remove(comment)">{{ t('comments.delete') }}</button>
+          <button type="button" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 py-2 text-sm" @click="confirmId = null" :disabled="busy">{{ t('comments.cancel') }}</button>
+          <button type="button" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#d93025] text-white px-3 py-2 text-sm font-semibold" :disabled="busy" @click="remove(comment)">{{ t('comments.delete') }}</button>
         </div>
       </div>
     </article>
-    <button v-if="nextBeforeId !== null" type="button" class="self-start text-sm font-semibold text-accent py-2" :disabled="loading || busy" @click="load(true)">{{ t('comments.older') }}</button>
+    <button v-if="nextBeforeId !== null" type="button" class="inline-flex min-h-11 items-center self-start text-sm font-semibold text-accent py-2" :disabled="loading || busy" @click="load(true)">{{ t('comments.older') }}</button>
     <form class="grid gap-2" @submit.prevent="submit">
       <label class="grid gap-1">
         <span class="text-xs font-medium text-muted">{{ t(editId === null ? 'comments.compose' : 'comments.editing') }}</span>
@@ -37,8 +37,8 @@
       </label>
       <p v-if="editId === null" class="m-0 text-xs text-muted">{{ t('comments.privacy') }}</p>
       <div class="flex justify-end gap-2">
-        <button v-if="editId !== null" type="button" class="rounded-lg border border-border px-3 py-2 text-sm" :disabled="busy" @click="cancelEdit">{{ t('comments.cancel') }}</button>
-        <button type="submit" class="btn-primary min-h-10" :disabled="busy || loading || !draft.trim()">{{ t(editId === null ? 'comments.post' : 'comments.save') }}</button>
+        <button v-if="editId !== null" type="button" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 py-2 text-sm" :disabled="busy" @click="cancelEdit">{{ t('comments.cancel') }}</button>
+        <button type="submit" class="btn-primary min-h-11" :disabled="busy || loading || !draft.trim()">{{ t(editId === null ? 'comments.post' : 'comments.save') }}</button>
       </div>
     </form>
     <p v-if="error" role="alert" class="m-0 text-sm text-red-500">{{ error }}</p>

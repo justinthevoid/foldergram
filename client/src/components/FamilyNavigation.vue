@@ -130,7 +130,7 @@ onUnmounted(() => {
 <style scoped>
 .family-header { position: relative; z-index: 35; flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--surface); }
 .family-header__inner { position: relative; display: flex; align-items: center; gap: 20px; min-height: 64px; max-width: 1200px; padding: 8px clamp(16px, 4vw, 36px); margin: auto; }
-.family-brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; color: var(--text); text-decoration: none; }
+.family-brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; min-height: 44px; color: var(--text); text-decoration: none; }
 .family-brand__mark { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; }
 .family-brand__mark :deep(svg), .family-brand__mark :deep(img) { width: 100%; height: 100%; object-fit: contain; }
 .family-brand__name { font-size: 1.1rem; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -2,20 +2,15 @@ import { defineStore } from 'pinia';
 import { requestJson } from '../api/http';
 import { useAppStore } from './app';
 import { useAuthStore } from './auth';
+import { accentColors, darkAccentColors, type Accent } from '../utils/appearance-colors';
+export { accentColors, darkAccentColors } from '../utils/appearance-colors';
+export type { Accent } from '../utils/appearance-colors';
 
 export type InstanceTheme = 'system' | 'light' | 'dark';
 export type BrowserTheme = 'instance' | InstanceTheme;
-export type Accent = 'blue' | 'purple' | 'green' | 'orange' | 'rose';
 export interface Appearance { theme: InstanceTheme; accent: Accent }
 const THEME_STORAGE_KEY = 'foldergram-theme';
 const APPEARANCE_REQUEST_TIMEOUT_MS = 5000;
-
-export const accentColors: Record<Accent, string> = {
-  blue: '#1769d4', purple: '#7c3aed', green: '#15803d', orange: '#b45309', rose: '#be185d'
-};
-const darkColors: Record<Accent, string> = {
-  blue: '#4cb5f9', purple: '#b794ff', green: '#4ade80', orange: '#fbbf24', rose: '#fb92b4'
-};
 
 export const useAppearanceStore = defineStore('appearance', {
   state: () => ({
@@ -59,7 +54,7 @@ export const useAppearanceStore = defineStore('appearance', {
       const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
       useAppStore().setTheme(dark ? 'dark' : 'light');
       const root = document.documentElement;
-      const color = (dark ? darkColors : accentColors)[this.accent];
+      const color = (dark ? darkAccentColors : accentColors)[this.accent];
       root.style.setProperty('--accent-rgb', [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16)).join(','));
       root.style.setProperty('--sidebar-active-background', 'color-mix(in srgb, var(--accent) 10%, var(--surface))');
       root.style.setProperty('--accent', color);

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative h-full w-full min-h-0 min-w-0 overflow-hidden bg-surface-alt outline-none select-none"
+    class="carousel-media-stage relative h-full w-full min-h-0 min-w-0 overflow-hidden bg-surface-alt outline-none select-none"
     :style="{ aspectRatio: fitContainer ? 'auto' : aspectRatio, touchAction: activeItem?.mediaType === 'image' ? 'pan-y pinch-zoom' : undefined }"
     role="group"
     aria-roledescription="carousel"
@@ -51,7 +51,7 @@
 
     <button
       v-if="activeIndex > 0"
-      class="absolute left-3 top-1/2 z-2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/55 text-white shadow-lg cursor-pointer"
+      class="absolute left-3 top-1/2 z-2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/55 text-white shadow-lg cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       type="button"
       :aria-label="t('post.carousel.previousItem')"
       data-swipe-ignore="true"
@@ -61,7 +61,7 @@
     </button>
     <button
       v-if="activeIndex < items.length - 1"
-      class="absolute right-3 top-1/2 z-2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/55 text-white shadow-lg cursor-pointer"
+      class="absolute right-3 top-1/2 z-2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/55 text-white shadow-lg cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       type="button"
       :aria-label="t('post.carousel.nextItem')"
       data-swipe-ignore="true"

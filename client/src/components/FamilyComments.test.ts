@@ -29,6 +29,13 @@ describe('FamilyComments', () => {
     await flushPromises();
     expect(wrapper.text()).toContain(comment.body);
     expect(wrapper.find('img').exists()).toBe(false);
+    for (const control of wrapper.findAll('button')) {
+      expect(control.classes().some(name => name === 'h-11' || name === 'min-h-11')).toBe(true);
+      expect(control.attributes('aria-label') || control.text().trim()).not.toBe('');
+    }
+    for (const control of wrapper.findAll('button').filter(button => ['Edit', 'Delete'].includes(button.text().trim()))) {
+      expect(control.classes()).toContain('min-w-11');
+    }
     const button = (label:string) => wrapper.findAll('button').find(b => b.text()===label)!;
     await button('Edit').trigger('click');
     expect(wrapper.get('textarea').element.value).toBe(comment.body);
@@ -40,6 +47,9 @@ describe('FamilyComments', () => {
     expect(wrapper.text()).toContain('Edited');
     await button('Delete').trigger('click');
     expect(wrapper.text()).toContain('Delete this comment?');
+    for (const control of wrapper.findAll('button').filter(b => ['Cancel', 'Delete'].includes(b.text().trim()))) {
+      expect(control.classes()).toContain('min-h-11');
+    }
     vi.mocked(requestJson).mockResolvedValueOnce({ok:true});
     await wrapper.findAll('button').filter(b=>b.text()==='Delete').at(-1)!.trigger('click');
     await flushPromises();

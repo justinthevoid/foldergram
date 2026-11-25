@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { useAppearanceStore } from './appearance';
+import { accentColors, darkAccentColors, useAppearanceStore } from './appearance';
 
 const mocks = vi.hoisted(() => ({ request: vi.fn(), setTheme: vi.fn(), canWrite: true }));
 vi.mock('../api/http', () => ({ requestJson: mocks.request }));
@@ -20,6 +20,32 @@ describe('appearance', () => {
     vi.restoreAllMocks();
     vi.useRealTimers();
     vi.unstubAllGlobals();
+  });
+
+  it('keeps every light and dark accent above WCAG AA on neutral surfaces and buttons', () => {
+    const surfaces = ['#f4f5f7', '#ffffff', '#eef1f4', '#eceff3'];
+    const darkSurfaces = ['#0d1014', '#121212', '#0a0a0a', '#1d1d1d'];
+    const luminance = (hex: string) => {
+      const channels = [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16) / 255)
+        .map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * channels[0]! + 0.7152 * channels[1]! + 0.0722 * channels[2]!;
+    };
+    const contrast = (foreground: string, background: string) => {
+      const [high, low] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+      return (high + 0.05) / (low + 0.05);
+    };
+    for (const [name, accent] of Object.entries(accentColors)) {
+      for (const surface of surfaces) {
+        expect(contrast(accent, surface), `light ${name} on ${surface}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(contrast('#ffffff', accent), `light ${name} button label`).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const [name, accent] of Object.entries(darkAccentColors)) {
+      for (const surface of darkSurfaces) {
+        expect(contrast(accent, surface), `dark ${name} on ${surface}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(contrast('#111827', accent), `dark ${name} button label`).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   it('keeps the browser preference through instance refreshes and admin role changes', async () => {

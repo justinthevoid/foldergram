@@ -54,8 +54,13 @@ describe('CarouselMediaStage', () => {
     expect(player.props('autoplay')).toBe(true);
     expect(player.props('load')).toBe('eager');
 
+    const stage = wrapper.get('[aria-roledescription="carousel"]');
+    expect(stage.classes()).toContain('carousel-media-stage');
     const nextBtn = wrapper.find('button[aria-label="Next carousel item"]');
     expect(nextBtn.exists()).toBe(true);
+    expect(nextBtn.classes()).toContain('h-11');
+    expect(nextBtn.classes()).toContain('w-11');
+    expect(nextBtn.classes()).toContain('focus-visible:outline-2');
     await nextBtn.trigger('click');
 
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([1]);

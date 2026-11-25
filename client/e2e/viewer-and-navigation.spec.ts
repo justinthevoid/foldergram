@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { accentColors, darkAccentColors } from '../src/utils/appearance-colors';
 
 const folder = {
   id: 1, slug: 'panoramas', name: 'Panoramas', description: null,
@@ -295,7 +296,9 @@ test('family refinement audit captures primary phone screens and measures menu r
     await expect(menu).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath(theme + '-' + viewport.width + '-more.png') });
     await page.keyboard.press('Tab');
-    await expect(menu.getByRole('link', { name: 'Reels', exact: true })).toBeFocused();
+    const reelsLink = menu.getByRole('link', { name: 'Reels', exact: true });
+    await expect(reelsLink).toBeFocused();
+    await expect.poll(() => reelsLink.evaluate(element => getComputedStyle(element).outlineWidth)).toBe('2px');
     audit.push(await page.evaluate(() => {
       const menu = document.querySelector('.family-menu')!;
       const active = document.activeElement;
@@ -375,6 +378,15 @@ test('family photo viewer preserves the browsing position and remains closable d
   const dialog = page.getByRole('dialog', { name: 'Photo viewer' });
   await expect(dialog.getByAltText('photo-19.jpg', { exact: true })).toBeVisible();
   await expect(dialog.locator('.viewer__family-photo img[data-loaded="true"]')).toBeVisible();
+  const closePost = dialog.getByRole('button', { name: 'Close post', exact: true });
+  const closeBounds = await closePost.boundingBox();
+  expect(closeBounds!.width).toBeGreaterThanOrEqual(44);
+  expect(closeBounds!.height).toBeGreaterThanOrEqual(44);
+  await closePost.focus();
+  await expect.poll(() => closePost.evaluate(element => Number.parseFloat(getComputedStyle(element).outlineWidth)))
+    .toBeGreaterThanOrEqual(2);
+  const familyAction = dialog.locator('.viewer__family-toolbar button').first();
+  expect((await familyAction.boundingBox())!.height).toBeGreaterThanOrEqual(56);
   const media = dialog.locator('.viewer__media');
   const prevented = await media.evaluate(element => {
     const event = new WheelEvent('wheel', { ctrlKey: true, deltaY: 180, bubbles: true, cancelable: true });
@@ -493,6 +505,15 @@ test('family carousel feed measures offscreen photo requests', async ({ page }) 
   const last = page.getByAltText('perf-18-0.jpg', { exact: true });
   await expect(first).toHaveAttribute('data-loaded', 'true');
   await expect(last).toBeAttached();
+  const firstStage = first.locator('..');
+  await firstStage.focus();
+  await expect.poll(() => firstStage.evaluate(element => getComputedStyle(element).outlineWidth)).toBe('2px');
+  const nextArrow = firstStage.getByRole('button', { name: 'Next carousel item', exact: true });
+  const arrowBounds = await nextArrow.boundingBox();
+  expect(arrowBounds!.width).toBeGreaterThanOrEqual(44);
+  expect(arrowBounds!.height).toBeGreaterThanOrEqual(44);
+  await nextArrow.focus();
+  await expect.poll(() => nextArrow.evaluate(element => getComputedStyle(element).outlineWidth)).toBe('2px');
   await page.waitForTimeout(800);
   const initialRequests = [...requests].filter(path => path.startsWith('/previews/')).length;
   console.log('FAMILY_CAROUSEL_PERFORMANCE ' + JSON.stringify({ initialRequests, totalPosts: 18 }));
@@ -590,7 +611,9 @@ test('family welcome screen explains device linking and redeems only after an ex
     return route.fulfill({ json: { ok: true, auth: viewer } });
   });
   await page.goto('/#family-invite=' + token);
-  await expect(page.getByRole('button', { name: 'Open gallery', exact: true })).toBeVisible();
+  const accept = page.getByRole('button', { name: 'Open gallery', exact: true });
+  await expect(accept).toBeVisible();
+  expect((await accept.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByText(/Already signed in on another device/)).toBeVisible();
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => location.hash)).toBe('');
@@ -778,6 +801,14 @@ for (const theme of ['light', 'dark'] as const) {
       expect(dialogBox.x + dialogBox.width / 2).toBeCloseTo(width / 2, 0);
       expect(dialogBox.y + dialogBox.height / 2).toBeCloseTo(360, 0);
       const toggle = dialog.getByRole('switch', { name: 'Show suggested folders on desktop' });
+      for (const preference of [toggle, dialog.getByRole('switch', { name: 'Fit tall media to screen', exact: true })]) {
+        const bounds = (await preference.boundingBox())!;
+        expect(bounds.width).toBeGreaterThanOrEqual(44);
+        expect(bounds.height).toBeGreaterThanOrEqual(44);
+        expect(Number.parseFloat(await preference.evaluate(element => getComputedStyle(element, '::after').height))).toBe(28);
+      }
+      const done = dialog.getByRole('button', { name: 'Done', exact: true });
+      expect((await done.boundingBox())!.height).toBeGreaterThanOrEqual(44);
       await expect(toggle).toHaveAttribute('aria-checked', 'true');
       await expect(dialog.getByRole('switch', { name: 'Fit tall media to screen', exact: true })).toHaveAttribute('aria-checked', 'false');
       await expect(dialog.getByRole('combobox', { name: 'Appearance', exact: true })).toBeFocused();
@@ -950,6 +981,141 @@ test('family destination titles share one typography scale', async ({ page }) =>
     expect(favoritesStyle).toEqual(albumsStyle);
   }
 });
+
+test('family accessibility audit reports unnamed controls and compact touch targets', async ({ page }) => {
+  await mockGallery(page, 'light');
+  const viewer = { ...adminAuthStatus, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    externalFamilyAccess: true, familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  };
+  await page.route('**/api/auth/status', route => route.fulfill({ json: viewer }));
+  await page.route('**/api/family/likes**', route => route.fulfill({ json: { items: [panorama] } }));
+  const results: unknown[] = [];
+  for (const [name, path] of [['home', '/'], ['albums', '/library'], ['album', '/f/panoramas'],
+    ['favorites', '/likes/posts'], ['search', '/explore']] as const) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(path);
+    await expect(page.locator('.family-header')).toBeVisible();
+    const audit = await page.evaluate(() => {
+      const controls = [...document.querySelectorAll<HTMLElement>('button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], [role="switch"]')];
+      const visible = controls.filter(element => {
+        const style = getComputedStyle(element), rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' &&
+          !element.closest('[aria-hidden="true"], [inert]');
+      });
+      return visible.map(element => {
+        const labels = element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement
+          ? [...(element.labels ?? [])].map(label => label.textContent?.trim()).filter(Boolean).join(' ') : '';
+        const labelledBy = (element.getAttribute('aria-labelledby') ?? '').split(/\s+/).filter(Boolean)
+          .map(id => document.getElementById(id)?.textContent?.trim()).filter(Boolean).join(' ');
+        const name = element.getAttribute('aria-label') || labelledBy || labels ||
+          element.getAttribute('title') || element.textContent?.trim() ||
+          element.querySelector('img[alt]')?.getAttribute('alt') || '';
+        const rect = element.getBoundingClientRect();
+        return { tag: element.tagName.toLowerCase(), role: element.getAttribute('role') ?? '',
+          name: name.replace(/\s+/g, ' ').slice(0, 90), width: Math.round(rect.width), height: Math.round(rect.height),
+          focusable: element.tabIndex >= 0, disabled: 'disabled' in element && Boolean((element as HTMLButtonElement).disabled) };
+      });
+    });
+    const unnamed = audit.filter(item => !(item as {name:string}).name);
+    const compact = audit.filter(item => {
+      const value = item as {tag:string;width:number;height:number;name:string};
+      return (value.tag === 'button' || value.tag === 'a') && (value.width < 44 || value.height < 44);
+    });
+    expect(unnamed, `${name} controls must have accessible names`).toEqual([]);
+    expect(compact, `${name} buttons and links must have 44px targets`).toEqual([]);
+    results.push({ page: name, count: audit.length, unnamed, compact });
+  }
+  console.log('FAMILY_A11Y_AUDIT ' + JSON.stringify(results));
+});
+
+test('reduced motion preferences suppress nonessential family animations and transitions', async ({ page }) => {
+  await mockGallery(page, 'light');
+  const viewer = { ...adminAuthStatus, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    externalFamilyAccess: true, familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  };
+  await page.route('**/api/auth/status', route => route.fulfill({ json: viewer }));
+  await page.route('**/api/family/likes**', route => route.fulfill({ json: { items: [] } }));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  const heart = page.locator('.feed-card__heart-burst').first();
+  await expect(heart).toBeAttached();
+  await heart.evaluate(element => element.classList.add('feed-card__heart-burst--active'));
+  const animation = await heart.evaluate(element => {
+    const style = getComputedStyle(element);
+    return { duration: style.animationDuration, iterations: style.animationIterationCount };
+  });
+  const seconds = (value: string) => value.trim().endsWith('ms')
+    ? Number.parseFloat(value) / 1000 : Number.parseFloat(value);
+  expect(seconds(animation.duration)).toBeLessThanOrEqual(0.001);
+  expect(animation.iterations).toBe('1');
+  await page.goto('/explore');
+  await page.getByRole('searchbox').fill('Panoramas');
+  const tab = page.locator('.explore-view__tab').first();
+  await expect(tab).toBeVisible();
+  const transition = await tab.evaluate(element => getComputedStyle(element).transitionDuration);
+  expect(Math.max(...transition.split(',').map(seconds))).toBeLessThanOrEqual(0.001);
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
+});
+
+async function getThemeContrastPairs(page: Page) {
+  return page.evaluate(() => {
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:fixed;left:-10000px;top:0';
+    document.body.append(probe);
+    const color = (token: string) => {
+      probe.style.color = 'var(' + token + ')';
+      return getComputedStyle(probe).color;
+    };
+    const background = (token: string) => {
+      probe.style.backgroundColor = 'var(' + token + ')';
+      return getComputedStyle(probe).backgroundColor;
+    };
+    const parse = (value: string) => value.match(/[\d.]+/g)?.map(Number).slice(0, 3) ?? [0, 0, 0];
+    const luminance = (value: string) => {
+      const channels = parse(value).map(channel => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0]! + 0.7152 * channels[1]! + 0.0722 * channels[2]!;
+    };
+    const ratio = (foreground: string, backdrop: string) => {
+      const values = [luminance(foreground), luminance(backdrop)].sort((a, b) => b - a);
+      return Number(((values[0]! + 0.05) / (values[1]! + 0.05)).toFixed(2));
+    };
+    const muted = color('--muted'), text = color('--text'), accent = color('--accent-strong');
+    const pairs = ['--bg', '--surface', '--surface-alt', '--surface-hover'].flatMap(token => {
+      const backdrop = background(token);
+      return [{ pair: 'muted/' + token, ratio: ratio(muted, backdrop) },
+        { pair: 'accent/' + token, ratio: ratio(accent, backdrop) }];
+    });
+    pairs.push({ pair: 'on-accent/accent', ratio: ratio(color('--on-accent'), background('--accent')) });
+    pairs.push({ pair: 'text/bg', ratio: ratio(text, background('--bg')) });
+    probe.remove();
+    return pairs;
+  });
+}
+
+for (const theme of ['light', 'dark'] as const) {
+  test(`family ${theme} theme accent palette meets WCAG AA contrast`, async ({ page }) => {
+    await mockGallery(page, theme);
+    await page.goto('/');
+    const palette = theme === 'dark' ? darkAccentColors : accentColors;
+    for (const [name, value] of Object.entries(palette)) {
+      await page.evaluate(color => {
+        document.documentElement.style.setProperty('--accent', color);
+        document.documentElement.style.setProperty('--accent-strong', color);
+      }, value);
+      const pairs = await getThemeContrastPairs(page);
+      for (const pair of pairs) {
+        expect(pair.ratio, `${theme} ${name} ${pair.pair}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+}
 
 async function mockPortraitFeed(page: Page, width = 600, height = 3000) {
   const clip = Buffer.from(await readFile(new URL('./fixtures/tall-feed-video.mp4.base64', import.meta.url), 'utf8'), 'base64');

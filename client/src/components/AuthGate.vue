@@ -19,7 +19,7 @@
         <h2 class="m-0 text-lg font-semibold">{{ t('family.joinTitle') }}</h2>
         <p class="m-0 text-sm text-muted">{{ t('family.joinHelp') }}</p>
         <p v-if="inviteError" role="alert" class="m-0 text-sm text-red-500">{{ inviteError }}</p>
-        <button class="btn-primary" type="button" :disabled="submitting" @click="acceptInvite">{{ t('family.accept') }}</button>
+        <button class="btn-primary min-h-11" type="button" :disabled="submitting" @click="acceptInvite">{{ t('family.accept') }}</button>
         <button v-if="authStore.externalFamilyAccess" class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''; inviteError = ''">{{ t('family.anotherInvite') }}</button>
         <button v-if="!authStore.externalFamilyAccess" class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''">{{ t('family.usePassword') }}</button>
       </div>
@@ -30,7 +30,7 @@
           <input v-model="pastedInvite" type="text" autocomplete="off" class="border border-border rounded-lg p-3 bg-surface text-text" :disabled="submitting" />
         </label>
         <p v-if="inviteError" role="alert" class="m-0 text-sm text-red-500">{{ inviteError }}</p>
-        <button class="btn-primary" type="submit" :disabled="submitting || !pastedInvite.trim()">{{ t('family.accept') }}</button>
+        <button class="btn-primary min-h-11" type="submit" :disabled="submitting || !pastedInvite.trim()">{{ t('family.accept') }}</button>
       </form>
       <form v-else class="mt-6 grid gap-4" @submit.prevent="submitLogin">
         <label class="grid gap-[0.45rem]">

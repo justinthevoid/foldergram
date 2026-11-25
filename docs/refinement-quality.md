@@ -25,7 +25,7 @@ existing exact-revision Linux build gate and the private deployment runbook.
 | Q1. Mobile interaction and layout | Audit phone and desktop navigation; all existing controls remain reachable in portrait and landscape; no horizontal document overflow; safe-area-aware header/nav and overlays; keyboard focus remains coherent; gesture interactions preserve existing photo/reel behavior. Test installed Safari on a real iPhone separately. | In progress |
 | Q2. Perceived performance | Measure the existing feed, albums, viewer, and Reels under controlled latency; compare request counts, time to useful photo, layout shifts, and media decode; eliminate avoidable work and preserve photo quality. Keep bounded loading and private-cache rules. | In progress |
 | Q3. Visual consistency | Audit existing screens in light/dark mode; standardize typography, spacing, actions, dialogs and feedback using existing tokens; remove duplicate visual affordances without removing their functions. Review mobile and desktop screenshots. | In progress |
-| Q4. Accessibility and ease of use | Check keyboard and screen-reader names, focus, larger text, contrast, reduced motion, touch targets, simple language and error states. Test with a family member unfamiliar with the app when available. | Planned |
+| Q4. Accessibility and ease of use | Check keyboard and screen-reader names, focus, larger text, contrast, reduced motion, touch targets, simple language and error states. Test with a family member unfamiliar with the app when available. | In progress |
 | Q5. Invitation and return journey | Exercise existing one-time links, geometric QR verification, explicit redemption, expired/reused links, Home Screen installation, and session return. Verify no uninvited user can read protected content. Keep named identities and support independently revocable device sessions and self-service device linking. | In progress |
 | Q6. Reliability and release hygiene | Check source outage recovery, retry behavior, session revocation, service worker cache/update, actual production release build, database backup and rollback. Preserve the existing private gateway and tunnel restrictions. | Planned |
 
@@ -275,8 +275,55 @@ rendered button heights at 390 and 320 px and checks document overflow.
 Albums and Favorites also used separate heading declarations. Both now use
 the same shared family-page-title token for font size, weight, line height,
 and tracking. A browser regression compares computed styles at 390 and
-1440 px. Both Q3 browser regressions passed. The broader Settings, collection,
-places and all dialog surfaces still need a complete pass.
+1440 px. Both Q3 browser regressions passed. The full admin Settings, collection,
+places and remaining dialog surfaces still need a complete pass.
+
+## Family accessibility pass (Q4)
+
+A browser audit of visible controls on Home, Albums, album detail, Favorites
+and Search found no missing accessible names and no visible button or link
+smaller than 44×44 px at 390×844. To reach that baseline, increase the
+Home feed's avatar, folder, place, like, comment, open-photo, download and
+more controls to consistent 44 px hit areas; do the same for album section
+tabs, the Family brand link, and the search clear control. The search field
+now has an explicit accessible name. These changes preserve the visual
+size of the small avatar and icons inside their larger hit areas.
+
+Add visible keyboard focus treatment to FeedCard actions, album tabs,
+search controls and collection-bookmark actions. The existing More menu
+keyboard regression now verifies a 2 px focus outline on the focused link.
+Collection rows and popover actions no longer suppress their focus outline.
+
+Reduced-motion support previously covered only selected viewer effects.
+A global `prefers-reduced-motion: reduce` rule now caps animation and
+transition duration at 0.01 ms, limits animations to one iteration and
+disables smooth scrolling. A browser regression activates the feed's
+heart animation and checks both animation and transition durations as
+well as scroll behavior. No new accessibility dependency was added.
+
+The family control audit now asserts zero unnamed controls and zero
+undersized visible buttons/links on the five primary family destinations.
+The audit also covers the invite acceptance screen, display preferences,
+the photo viewer and carousel navigation. Invite acceptance, display
+preference actions, carousel arrows, photo-viewer close and comment controls
+now have at least 44 px hit areas. The display switches use a 44 px-high
+interactive area while preserving their 28 px visual track. Carousel stages
+and arrows, photo-viewer close actions, feed actions and More navigation
+show visible keyboard focus.
+
+A real contrast calculation found that the original light green and orange
+accent choices were 4.35:1 on hover/alternate surfaces. The light palette
+now uses slightly deeper green (#147a3a) and orange (#a84b08). All five
+accent colors in both light and dark themes are now checked against all
+four neutral surfaces and the corresponding on-accent button text; every
+pair meets 4.5:1. The reduced-motion, touch-target, contrast and keyboard
+checks run in Chromium. Still open: real VoiceOver/Safari testing, larger
+text and zoom, systematic contrast review of every component-specific
+color (including photography overlays and status colors), the complete
+admin Settings journey, and physical device testing. The full client suite
+passed (483 tests, 3 skipped), 11 targeted browser regressions passed, and
+the production build passed. This is an initial accessibility pass, not a
+claim of full WCAG conformance.
 
 ### Remaining boundaries
 

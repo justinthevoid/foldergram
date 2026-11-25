@@ -49,7 +49,7 @@
     <p v-if="hasSaveFailure" class="mt-5 mb-0 text-[0.85rem] text-text" role="alert">{{ t('displayPreferences.sessionOnly') }}</p>
     <p v-else class="mt-5 mb-0 min-h-6 text-[0.85rem] text-accent-strong" role="status">{{ saved ? t('displayPreferences.saved') : '' }}</p>
     <div class="mt-5 flex justify-end">
-      <button class="btn-primary" type="button" @click="emit('close')">{{ t('displayPreferences.done') }}</button>
+      <button class="btn-primary min-h-11" type="button" @click="emit('close')">{{ t('displayPreferences.done') }}</button>
     </div>
   </dialog>
 </template>
@@ -106,24 +106,40 @@ onBeforeUnmount(() => {
 .display-preferences-switch {
   position: relative;
   width: 3rem;
-  height: 1.75rem;
-  margin-top: 0.15rem;
+  height: 2.75rem;
+  margin-top: 0;
   padding: 0;
-  border: 1px solid var(--muted);
+  border: 0;
   border-radius: 999px;
-  background: var(--surface-alt);
+  background: transparent;
 }
 
 .display-preferences-switch::before {
   position: absolute;
-  inset: 0.2rem auto 0.2rem 0.2rem;
+  z-index: 1;
+  top: 50%;
+  left: 0.2rem;
   width: 1.2rem;
+  height: 1.2rem;
+  transform: translateY(-50%);
   border-radius: 50%;
   background: var(--text);
   content: '';
 }
 
-.display-preferences-switch--on {
+.display-preferences-switch::after {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 1.75rem;
+  transform: translateY(-50%);
+  border: 1px solid var(--muted);
+  border-radius: 999px;
+  background: var(--surface-alt);
+  content: '';
+}
+
+.display-preferences-switch--on::after {
   border-color: var(--accent);
   background: var(--accent);
 }

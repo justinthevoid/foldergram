@@ -86,7 +86,7 @@
             <div v-if="!familyPresentation || hasReelsTab || hasLikesTab" class="flex justify-center border-b border-border" :aria-label="t('folder.tabs.sections')">
               <div class="flex items-center gap-40 pt-[0.2rem] max-sm:gap-[2.9rem] max-sm:pt-[0.12rem]">
                 <button
-                  class="relative inline-flex h-[2.2rem] w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text"
+                  class="relative inline-flex h-11 min-h-11 w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
                   :class="activeTab === 'posts' ? 'text-text' : ''"
                   type="button"
                   :aria-label="t('folder.tabs.posts')"
@@ -118,7 +118,7 @@
                 </button>
                 <button
                   v-if="hasReelsTab"
-                  class="relative inline-flex h-[2.2rem] w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text"
+                  class="relative inline-flex h-11 min-h-11 w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
                   :class="activeTab === 'reels' ? 'text-text' : ''"
                   type="button"
                   :aria-label="t('folder.tabs.reels')"
@@ -138,7 +138,7 @@
                 </button>
                 <button
                   v-if="hasLikesTab"
-                  class="relative inline-flex h-[2.2rem] w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text"
+                  class="relative inline-flex h-11 min-h-11 w-[3.15rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-muted transition-colors duration-[180ms] hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text/55 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
                   :class="activeTab === 'likes' ? 'text-text' : ''"
                   type="button"
                   :aria-label="likesStore.collectionLabel"
