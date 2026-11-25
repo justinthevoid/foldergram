@@ -11,6 +11,10 @@
       @close="emit('close')"
       @delete="openDeleteDialog"
     />
+    <div v-else-if="viewerStore.loading && modal && familyPresentation" class="family-photo-loading" role="status">
+      <span class="family-photo-loading__indicator" aria-hidden="true"/>
+      {{ t('post.view.loading') }}
+    </div>
     <div v-else-if="viewerStore.loading" class="card p-8 text-center">
       <p class="text-muted">{{ t('post.view.loading') }}</p>
     </div>
@@ -64,6 +68,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import ErrorState from '../components/ErrorState.vue';
 import PostViewer from '../components/PostViewer.vue';
 import { useAppStore } from '../stores/app';
+import { useFamilyPresentation } from '../composables/useFamilyPresentation';
 import { useFeedStore } from '../stores/feed';
 import { useLikesStore } from '../stores/likes';
 import { useFoldersStore } from '../stores/folders';
@@ -81,6 +86,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const appStore = useAppStore();
+const familyPresentation = useFamilyPresentation();
 const sourcesStore = useSourcesStore();
 const feedStore = useFeedStore();
 const likesStore = useLikesStore();
@@ -185,4 +191,8 @@ async function handleDelete() {
 .image-view--page {
   margin: 0 auto;
 }
+.family-photo-loading { display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px; color:#c5c8cd; font-size:.9rem; }
+.family-photo-loading__indicator { width:24px; height:24px; border:2px solid #4a4c50; border-top-color:#fff; border-radius:50%; animation:family-photo-spin .8s linear infinite; }
+@keyframes family-photo-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .family-photo-loading__indicator { animation:none; } }
 </style>

@@ -306,10 +306,21 @@
           v-else
           class="viewer__media-shell viewer__media-shell--image"
         >
+          <ProgressivePhoto
+            v-if="familyViewer"
+            class="viewer__family-photo"
+            :src="image.previewUrl"
+            :thumbnail-src="image.thumbnailUrl"
+            :alt="image.filename"
+            :width="image.width"
+            :height="image.height"
+            :retry-while="appStore.isScanning"
+          />
           <ResilientImage
+            v-else
             class="viewer__media-image"
             :src="image.previewUrl"
-            :fallback-src="getImageViewingFallback(image)"
+            :fallback-src="authStore.externalFamilyAccess ? image.thumbnailUrl : getImageViewingFallback(image)"
             :show-retry="needsWebpViewing(image)"
             :alt="image.filename"
             :width="image.width"
@@ -674,6 +685,7 @@
   import FamilyComments from "./FamilyComments.vue"
   import PostCaptionModal from "./PostCaptionModal.vue"
   import ResilientImage from "./ResilientImage.vue"
+  import ProgressivePhoto from './ProgressivePhoto.vue'
   import { useLocalVideoPlayback } from "../composables/useLocalVideoPlayback"
   import VideoProgressFooter from "./VideoProgressFooter.vue"
   import LocalVideoFeedback from "./LocalVideoFeedback.vue"

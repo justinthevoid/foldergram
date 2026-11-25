@@ -1,5 +1,5 @@
 <template>
-  <div ref="sentinel" class="flex justify-center pt-[1.2rem]">
+  <div ref="sentinel" class="flex justify-center" :class="hasMore || loading || showEnd ? 'pt-[1.2rem]' : 'h-0'">
     <button
       v-if="showButton"
       class="btn-primary min-w-[8.5rem]"
@@ -10,7 +10,7 @@
     </button>
     <span v-else-if="loading" class="text-muted">{{ t('common.loadingMore') }}</span>
     <span v-else-if="hasMore" class="sr-only">{{ t('common.loadingContinues') }}</span>
-    <span v-else class="text-muted">{{ t('common.youAreCaughtUp') }}</span>
+    <span v-else-if="showEnd" class="text-muted">{{ t('common.youAreCaughtUp') }}</span>
   </div>
 </template>
 
@@ -22,8 +22,10 @@ const props = withDefaults(defineProps<{
   loading: boolean;
   hasMore: boolean;
   buttonFallback?: boolean;
+  showEnd?: boolean;
 }>(), {
-  buttonFallback: true
+  buttonFallback: true,
+  showEnd: true
 });
 
 const emit = defineEmits<{
@@ -46,6 +48,7 @@ function maybeLoadMore() {
 }
 
 onMounted(() => {
+  if (typeof IntersectionObserver === 'undefined') return;
   observer = new IntersectionObserver((entries) => {
     isIntersecting.value = entries.some((entry) => entry.isIntersecting);
     maybeLoadMore();

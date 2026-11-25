@@ -1,6 +1,10 @@
 <template>
   <img
     v-if="resolvedSrc"
+    ref="imageElement"
+    :key="resolvedSrc"
+    decoding="async"
+    :fetchpriority="fetchPriority"
     :src="resolvedSrc"
     :alt="alt"
     :width="width"
@@ -35,6 +39,7 @@ const props = withDefaults(
     width?: number;
     height?: number;
     loading?: 'lazy' | 'eager';
+    fetchPriority?: 'high' | 'low' | 'auto';
     retryWhile?: boolean;
     showRetry?: boolean;
     maxRetries?: number;
@@ -50,6 +55,8 @@ const props = withDefaults(
   }
 );
 
+const emit = defineEmits<{ ready: [] }>();
+const imageElement = ref<HTMLImageElement | null>(null);
 const attempt = ref(0);
 const loaded = ref(false);
 const hiddenUntilRetry = ref(false);
@@ -116,12 +123,20 @@ function scheduleRetry() {
   }, props.retryDelayMs);
 }
 
-function handleLoad() {
-  clearRetryTimer();
-  loaded.value = true;
+function isCurrentImage(event: Event) {
+  return event.currentTarget === imageElement.value &&
+    imageElement.value?.getAttribute('src') === resolvedSrc.value;
 }
 
-function handleError() {
+function handleLoad(event: Event) {
+  if (!isCurrentImage(event)) return;
+  clearRetryTimer();
+  loaded.value = true;
+  emit('ready');
+}
+
+function handleError(event: Event) {
+  if (!isCurrentImage(event)) return;
   loaded.value = false;
 
   if (!usingFallback.value && props.fallbackSrc && props.fallbackSrc !== props.src) {

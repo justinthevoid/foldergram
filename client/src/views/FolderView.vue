@@ -174,6 +174,7 @@
                 v-if="activeTab !== 'likes'"
                 :loading="foldersStore.loadingFolder"
                 :has-more="foldersStore.currentHasMore"
+                :show-end="!familyPresentation"
                 @load-more="loadMore"
               />
             </div>

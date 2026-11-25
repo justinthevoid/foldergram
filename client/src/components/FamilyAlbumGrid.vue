@@ -1,10 +1,11 @@
 <template>
   <div :class="['family-album-grid', {'family-album-grid--preview': preview}]">
-    <RouterLink v-for="folder in folders" :key="folder.id" class="family-album"
+    <RouterLink v-for="(folder, index) in folders" :key="folder.id" class="family-album"
       :to="{name:'folder', params:{slug:folder.slug}}">
       <div class="family-album__cover">
-        <ResilientImage v-if="folder.avatarUrl" :src="folder.avatarUrl" alt="" loading="lazy" class="family-album__image"/>
-        <span v-else class="family-album__placeholder i-fluent-image-multiple-24-regular" aria-hidden="true"/>
+        <span class="family-album__placeholder i-fluent-image-multiple-24-regular" aria-hidden="true"/>
+        <ResilientImage v-if="folder.avatarUrl" :src="folder.avatarUrl" alt=""
+          :loading="index < 2 ? 'eager' : 'lazy'" :max-retries="2" class="family-album__image"/>
       </div>
       <div class="family-album__meta">
         <p class="family-album__title">{{ formatFolderTitle(folder, app.nestedFolderTitleFormat) }}</p>
@@ -33,8 +34,11 @@ function formatDate(value:number) { return new Intl.DateTimeFormat(locale.value,
 <style scoped>
 .family-album-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 14px; }
 .family-album { display: block; min-width: 0; color: var(--text); text-decoration: none; }
-.family-album__cover { aspect-ratio: 4/3; background: var(--surface-alt); overflow: hidden; border-radius: 12px; display: grid; place-items: center; }
-.family-album__image { width: 100%; height: 100%; object-fit: cover; }
+.family-album__cover { position: relative; aspect-ratio: 4/3; background: var(--surface-alt); overflow: hidden; border-radius: 12px; display: grid; place-items: center; }
+.family-album__image { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.family-album__image[data-loaded="false"] { opacity: 0; }
+.family-album__image[data-loaded="true"] { opacity: 1; transition: opacity 140ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .family-album__image { transition: none; } }
 .family-album__placeholder { width: 28px; height: 28px; color: var(--muted); }
 .family-album__meta { padding: 9px 1px 0; }
 .family-album__title { margin: 0; font-size: .96rem; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; }

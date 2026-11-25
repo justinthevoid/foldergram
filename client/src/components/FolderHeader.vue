@@ -57,6 +57,9 @@
         >
           {{ t('folder.header.editButton') }}
         </button>
+        <button v-if="authStore.canManageLibrary && !authStore.externalFamilyAccess && folder.imageCount > 0"
+          type="button" class="inline-flex items-center justify-center min-h-10 px-3 text-[0.78rem] font-semibold rounded-lg bg-surface-hover text-text hover:bg-border border border-border cursor-pointer"
+          @click="isChoosingCover = true">{{ t('albumCover.choose') }}</button>
         <span v-if="folder.sourceKind === 'immich'" class="eyebrow">Immich · Read-only source</span>
         <span v-else-if="folder.sourceName" class="eyebrow">{{ folder.sourceName }}</span>
         <button
@@ -112,6 +115,8 @@
     </div>
 
     <Teleport to="body">
+      <AlbumCoverPicker v-if="isChoosingCover && authStore.canManageLibrary && !authStore.externalFamilyAccess"
+        :slug="folder.slug" :current-cover-id="folder.avatarImageId" @close="isChoosingCover = false"/>
       <FolderProfileModal
         v-if="isEditingProfile"
         :initial-name="folder.name"
@@ -138,6 +143,7 @@ import type { FolderSummary } from '../types/api';
 import { formatFolderTitle } from '../utils/folder-titles';
 import Avatar from './Avatar.vue';
 import FolderProfileModal from './FolderProfileModal.vue';
+import AlbumCoverPicker from './AlbumCoverPicker.vue';
 import FolderShareModal from './FolderShareModal.vue';
 import { useAppStore } from '../stores/app';
 import { useAuthStore } from '../stores/auth';
@@ -157,6 +163,7 @@ const appStore = useAppStore();
 const authStore = useAuthStore();
 const familyPresentation = useFamilyPresentation();
 const foldersStore = useFoldersStore();
+const isChoosingCover = ref(false);
 const route = useRoute();
 const { locale, t } = useI18n();
 

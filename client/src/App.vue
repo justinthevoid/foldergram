@@ -190,6 +190,14 @@ watch(showFamilyImageModal, async (visible, wasVisible) => {
     }
   }
 }, { flush: 'sync' });
+watch(() => viewerStore.loading, async (loading) => {
+  if (loading || !showFamilyImageModal.value) return;
+  await nextTick();
+  const dialog = imageModalElement.value;
+  if (dialog && (!document.activeElement || !dialog.contains(document.activeElement))) {
+    dialog.focus({preventScroll:true});
+  }
+});
 const reelBackgroundRoute = computed<RouteLocationNormalizedLoaded | null>(() =>
   appStore.reelModalBackgroundPath ? resolveDisplayRoute(appStore.reelModalBackgroundPath) : null
 );

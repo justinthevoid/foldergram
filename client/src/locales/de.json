@@ -1,4 +1,13 @@
 {
+  "albumCover": {
+    "current": "Aktuelles Cover",
+    "choose": "Albumcover wählen",
+    "description": "Wähle ein Foto als Cover für dieses Album.",
+    "empty": "Keine Fotos verfügbar.",
+    "loadError": "Albumfotos konnten nicht geladen werden.",
+    "saveError": "Das Albumcover konnte nicht gespeichert werden.",
+    "save": "Cover speichern"
+  },
   "familyGallery": {
     "photoActions": "Fotoaktionen",
     "details": "Details",

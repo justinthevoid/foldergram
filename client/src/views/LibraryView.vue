@@ -222,7 +222,7 @@
         <p class="text-muted">{{ directory.error }}</p>
         <button class="btn-primary" type="button" @click="directory.load(true)">{{ t('common.retry') }}</button>
       </div>
-      <InfiniteLoader v-if="directory.items.length" :loading="directory.loading" :has-more="directory.hasMore && !directory.error" @load-more="directory.load()" />
+      <InfiniteLoader v-if="directory.items.length" :show-end="!familyPresentation" :loading="directory.loading" :has-more="directory.hasMore && !directory.error" @load-more="directory.load()" />
     </template>
 
     <!-- Context menu modal -->

@@ -46,6 +46,15 @@ describe('InfiniteLoader', () => {
     expect(wrapper.find('button').exists()).toBe(false);
   });
 
+  it('allows quiet end states without hiding the load-more fallback', async () => {
+    const wrapper=mount(InfiniteLoader,{props:{loading:false,hasMore:false,showEnd:false}});
+    expect(wrapper.text()).toBe('');
+    await wrapper.setProps({hasMore:true});
+    expect(wrapper.get('button').text()).toBe('Load more');
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.emitted('load-more')).toHaveLength(1);
+  });
+
   it('keeps auto-loading while the sentinel remains visible', async () => {
     const wrapper = mount(InfiniteLoader, {
       props: {

@@ -1,4 +1,13 @@
 {
+  "albumCover": {
+    "current": "当前封面",
+    "choose": "选择相册封面",
+    "description": "选择一张照片作为此相册的封面。",
+    "empty": "暂无可用照片。",
+    "loadError": "无法加载相册照片。",
+    "saveError": "无法保存相册封面。",
+    "save": "保存封面"
+  },
   "familyGallery": {
     "photoActions": "照片操作",
     "details": "详情",
