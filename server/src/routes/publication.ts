@@ -29,6 +29,11 @@ publicationRouter.get('/admin/publications',owner,(request,response)=>{
   const q=list.parse(request.query);
   response.json(publicationService.list(q.page,q.limit,q.filter,q.folder));
 });
+const importPolicy=z.object({folder:z.string().trim().min(1).max(240),defaultDraft:z.boolean()}).strict();
+publicationRouter.put('/admin/publications/import-policy',owner,(request,response)=>{
+  const value=importPolicy.parse(request.body);
+  response.json(publicationService.setImportPolicy(value.folder,value.defaultDraft));
+});
 publicationRouter.post('/admin/publications',owner,(request,response)=>{
   const q=mutation.parse(request.body);
   response.json(publicationService.apply(q,q.action,q.publishAt));

@@ -1,5 +1,10 @@
 {
   "publishing": {
+    "importPolicy": "新导入",
+    "defaultDraft": "新帖子默认保存为草稿",
+    "defaultDraftHelp": "仅影响新索引的帖子。照片属于多个相册时，草稿设置优先。现有及已发布帖子保留原状态。",
+    "saveImportPolicy": "保存导入设置",
+    "importPolicySaved": "已保存导入设置。",
     "title": "发布工作室",
     "description": "管理照片在家庭图库中的发布时间，而不修改 Immich 原图。",
     "open": "打开工作室",

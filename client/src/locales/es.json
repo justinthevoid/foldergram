@@ -1,5 +1,10 @@
 {
   "publishing": {
+    "importPolicy": "Nuevas importaciones",
+    "defaultDraft": "Las nuevas publicaciones comienzan como borradores",
+    "defaultDraftHelp": "Solo afecta a las publicaciones nuevas. Si una foto pertenece a varios álbumes, prevalece el modo borrador. Las publicaciones existentes y ya publicadas conservan su estado.",
+    "saveImportPolicy": "Guardar política de importación",
+    "importPolicySaved": "Política de importación guardada.",
     "title": "Estudio de publicación",
     "description": "Controla cuándo aparecen las fotos en la galería familiar sin modificar los originales de Immich.",
     "open": "Abrir estudio",

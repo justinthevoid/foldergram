@@ -23,6 +23,22 @@
           </select>
         </label>
       </div>
+      <section v-if="selectedAlbum" class="rounded-xl border border-border p-4 grid gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="m-0 text-base font-semibold">{{ t('publishing.importPolicy') }}</h3>
+          <span class="text-xs text-muted">{{ selectedAlbum.name }}</span>
+        </div>
+        <label class="flex items-start gap-3 text-sm cursor-pointer">
+          <input v-model="defaultDraft" :aria-label="t('publishing.defaultDraft')" type="checkbox" class="mt-0.5 h-5 w-5 accent-current shrink-0" :disabled="busy||loading" />
+          <span>
+            <span class="block font-medium">{{ t('publishing.defaultDraft') }}</span>
+            <span class="block mt-1 text-xs text-muted">{{ t('publishing.defaultDraftHelp') }}</span>
+          </span>
+        </label>
+        <div class="flex justify-end">
+          <button type="button" class="rounded-lg border border-border px-3 py-2 text-sm font-medium" :disabled="busy||loading||defaultDraft===selectedAlbum.defaultDraft" @click="saveImportPolicy">{{ t('publishing.saveImportPolicy') }}</button>
+        </div>
+      </section>
       <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
         <p class="m-0 text-muted">{{ t('publishing.count',{count:total}) }}</p>
         <button type="button" class="rounded-lg border border-border px-3 py-2" :disabled="busy||loading||!items.length" @click="togglePage">{{ t(allSelected?'publishing.clearSelection':'publishing.selectPage') }}</button>
@@ -96,7 +112,7 @@ import { requestJson } from '../api/http';
 type Filter='all'|'draft'|'scheduled'|'published'|'featured';
 type Action='draft'|'publish'|'schedule'|'feature'|'unfeature';
 interface Item {id:number;filename:string;folderName:string;thumbnailUrl:string;takenAt:number|null;publishedAt:number|null;state:'draft'|'scheduled'|'published';featured:boolean}
-interface Album {slug:string;name:string}
+interface Album {slug:string;name:string;defaultDraft:boolean}
 interface Page {items:Item[];folders:Album[];total:number;hasMore:boolean}
 const {t,locale}=useI18n();
 const auth=useAuthStore();
@@ -104,6 +120,9 @@ const allowed=computed(()=>auth.ready&&auth.enabled&&auth.authenticated&&auth.ro
 const expanded=ref(false), folder=ref(''),filter=ref<Filter>('all'),page=ref(1);
 const items=ref<Item[]>([]),albums=ref<Album[]>([]),total=ref(0),hasMore=ref(false),selected=ref<number[]>([]);
 const target=ref<'selected'|'album'>('selected'),action=ref<Action>('publish'),when=ref('');
+const selectedAlbum=computed(()=>albums.value.find(a=>a.slug===folder.value));
+const defaultDraft=ref(false);
+watch(selectedAlbum,album=>{defaultDraft.value=album?.defaultDraft??false;});
 const loading=ref(false),busy=ref(false),confirm=ref(false),error=ref(''),success=ref('');
 const filters:Filter[]=['all','draft','scheduled','published','featured'];
 const actions:Action[]=['publish','draft','schedule','feature','unfeature'];
@@ -133,6 +152,20 @@ watch([folder,filter],()=>{target.value='selected';if(page.value!==1)page.value=
 watch(page,()=>{void load();});
 watch([target,action,when,selected],()=>{confirm.value=false;},{deep:true});
 onBeforeUnmount(clear);
+async function saveImportPolicy(){
+ const album=selectedAlbum.value;
+ if(!allowed.value||!album||busy.value||loading.value||defaultDraft.value===album.defaultDraft)return;
+ const current=revision;
+ const value=defaultDraft.value;
+ busy.value=true;error.value='';success.value='';confirm.value=false;
+ try{
+   const result=await requestJson<{folder:string;defaultDraft:boolean}>('/api/admin/publications/import-policy',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder:album.slug,defaultDraft:value})});
+   if(current!==revision)return;
+   albums.value=albums.value.map(a=>a.slug===result.folder?{...a,defaultDraft:result.defaultDraft}:a);
+   success.value=t('publishing.importPolicySaved');
+ }catch(e){if(current===revision)error.value=e instanceof Error?e.message:t('publishing.error');}
+ finally{if(current===revision)busy.value=false;}
+}
 async function apply(){
  if(!canApply.value||!confirm.value)return;
  const current=revision;

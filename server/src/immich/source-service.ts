@@ -404,10 +404,16 @@ function commitIndex(source: SourceRecord, assets: Map<string, ImmichAsset>, gro
                 ids.push(folders.get(group.key)!);
                 memberships.set(assetId, ids);
             }
+        const draftFolders = new Set((connection.prepare(
+            'SELECT f.id FROM folders f JOIN album_import_policies p ON p.source_id=f.source_id AND p.folder_path=f.folder_path WHERE f.source_id=?'
+        ).all(source.id) as Array<{id:number}>).map(row=>row.id));
+        const previousPost = connection.prepare('SELECT id FROM posts WHERE source_id=? AND source_path=?');
+        const initialDraft = connection.prepare('INSERT INTO post_publications(post_id,published_at,featured,updated_at) VALUES(?,NULL,0,?) ON CONFLICT(post_id) DO NOTHING');
         for (const asset of assets.values()) {
             const ids = memberships.get(asset.id)!;
             const folderId = ids[0];
             const relative = `immich/${source.id}/assets/${asset.id}`;
+            const draftOnInsert = ids.some(id=>draftFolders.has(id)) && !previousPost.get(source.id,relative);
             const taken = timestamp(typeof asset.exifInfo?.dateTimeOriginal === 'string' ? asset.exifInfo.dateTimeOriginal : asset.fileCreatedAt, timestamp(asset.fileCreatedAt, 0));
             const exif = asset.exifInfo ?? {};
             const exifJson = JSON.stringify({ latitude: exif.latitude, longitude: exif.longitude, cameraMake: exif.make, cameraModel: exif.model, lensModel: exif.lensModel, iso: exif.iso, fNumber: exif.fNumber, exposureTimeSeconds: parseImmichExposureTime(exif.exposureTime), focalLengthMm: exif.focalLength });
@@ -427,6 +433,7 @@ function commitIndex(source: SourceRecord, assets: Map<string, ImmichAsset>, gro
             };
             connection.prepare('INSERT OR IGNORE INTO post_items(post_id,image_id,position) VALUES(?,?,1)').run(post.id, image.id);
             ids.forEach(id => connection.prepare('INSERT INTO folder_media_memberships(folder_id,image_id) VALUES(?,?)').run(id, image.id));
+            if (draftOnInsert) initialDraft.run(post.id, Date.now());
         }
         connection.prepare(`UPDATE folders SET avatar_image_id=NULL,avatar_source='auto' WHERE source_id=? AND avatar_image_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM folder_media_memberships WHERE folder_id=folders.id AND image_id=folders.avatar_image_id)`).run(source.id);
         for (const group of groups.values()) {

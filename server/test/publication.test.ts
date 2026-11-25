@@ -116,5 +116,35 @@ describe.sequential('publishing visibility', () => {
     expect((await get(api+'?filter=draft',admin)).body.items).toMatchObject([{id:101,state:'draft'}]);
     const parallel=await Promise.all([ids(),ids(admin),ids(),ids(admin)]);
     expect(parallel).toEqual([[100],[100,101],[100],[100,101]]);
+
+    const policy=api+'/import-policy';
+    const setPolicy=(defaultDraft:boolean,headers=admin)=>requestTestApp(app,'PUT',policy,headers,{folder:'fixture',defaultDraft});
+    expect((await setPolicy(true,family)).status).toBe(403);
+    expect((await requestTestApp(app,'PUT',policy,intent,{folder:'fixture',defaultDraft:true})).status).toBe(401);
+    expect((await requestTestApp(app,'PUT',policy,admin,{folder:'missing',defaultDraft:true})).status).toBe(400);
+    expect((await setPolicy(true)).body).toEqual({folder:'fixture',defaultDraft:true});
+    expect((await get(api,admin)).body.folders).toContainEqual({slug:'fixture',name:'Fixture',defaultDraft:true});
+    expect(await ids()).toEqual([100]);
+    const insert=(id:number)=>{
+      const rel='fixture/'+id+'.jpg';
+      const conn=databaseManager.connection;
+      conn.prepare(`
+        INSERT INTO images(id,folder_id,filename,extension,relative_path,source_id,absolute_path,file_size,width,height,mime_type,checksum_or_fingerprint,mtime_ms,first_seen_at,sort_timestamp,taken_at,thumbnail_path,preview_path)
+        VALUES(?,100,?,'.jpg',?,?,?,100,80,60,'image/jpeg','fixture',1,'2025-01-01',?,?,?,?)
+      `).run(id,id+'.jpg',rel,source.id,path.join(tempRoot,'gallery',rel),id,id,rel,rel);
+      conn.prepare("INSERT INTO posts(id,folder_id,source_path,source_id,sort_timestamp,taken_at) VALUES(?,100,?,?,?,?)").run(id,rel,source.id,id,id);
+      conn.prepare("INSERT INTO post_items(post_id,image_id,position) VALUES(?,?,1)").run(id,id);
+    };
+    insert(102);
+    expect(await ids()).toEqual([100]);
+    expect((await get(api+'?filter=draft',admin)).body.items.map((p:{id:number})=>p.id).sort()).toEqual([101,102]);
+    expect((await change({ids:[102],action:'publish'})).status).toBe(200);
+    databaseManager.connection.prepare('UPDATE posts SET updated_at=CURRENT_TIMESTAMP WHERE id=102').run();
+    expect(await ids()).toEqual([102,100]);
+    expect((await setPolicy(false)).body.defaultDraft).toBe(false);
+    insert(103);
+    expect((await ids()).sort()).toEqual([100,102,103]);
+    expect((await get(api+'?filter=draft',admin)).body.items).toMatchObject([{id:101,state:'draft'}]);
+    expect((await get(api,admin)).body.folders).toContainEqual({slug:'fixture',name:'Fixture',defaultDraft:false});
   });
 });

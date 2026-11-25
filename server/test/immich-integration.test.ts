@@ -168,6 +168,60 @@ describe.sequential('optional Immich sources', () => {
     const feed = () => gallery.galleryService.getFeed(1, 60, 'recent');
     const rows = () => manager.databaseManager.connection.prepare('SELECT * FROM images WHERE source_id IN (SELECT id FROM media_sources WHERE kind = \'immich\') ORDER BY id').all() as any[];
     async function scan() { await scanner.scannerService.scanAll('immich-isolation-test'); }
+    it('applies draft defaults to new assets in any selected album without resetting existing releases', async () => {
+        const id=add('albums');
+        await sources.syncSource(id);
+        const { publicationService }=await import('../src/services/publication-service.js');
+        const { withPublicationAccess }=await import('../src/db/publication-scope.js');
+        const favorite=gallery.galleryService.listFolders().find(f=>f.name==='Favorites')!;
+        expect(favorite).toBeTruthy();
+        expect(publicationService.setImportPolicy(favorite.slug,true)).toEqual({folder:favorite.slug,defaultDraft:true});
+        expect(publicationService.list(1,60,'all').folders).toContainEqual({slug:favorite.slug,name:'Favorites',defaultDraft:true});
+        const visible=()=>withPublicationAccess(false,()=>feed().items.map(i=>i.filename).sort());
+        const all=()=>publicationService.list(1,60,'all').items;
+        const original=visible();
+        expect(original).toHaveLength(3);
+        expect(all().every(p=>p.state==='published')).toBe(true);
+
+        // The opted-in album is not the primary album for this shared photo.
+        data.push(photo('new-shared'),photo('new-holiday'),photo('new-favorite'));
+        members['album-a'].push('new-shared','new-holiday');
+        members['album-b'].push('two','new-shared','new-favorite');
+        await sources.syncSource(id);
+        const draftNames=()=>publicationService.list(1,60,'draft').items.map(p=>p.filename).sort();
+        expect(draftNames()).toEqual(['new-favorite.jpg','new-shared.jpg']);
+        expect(visible()).toEqual([...original,'new-holiday.jpg'].sort());
+        const hidden=all().find(p=>p.filename==='new-shared.jpg')!;
+        const draftRow=rows().find(r=>r.external_asset_id==='new-shared');
+        expect(hidden.thumbnailUrl).toBe('/api/remote-media/'+id+'/new-shared/thumbnail');
+        expect((await requestTestApp(app,'GET','/api/posts/'+hidden.id)).status).toBe(404);
+        expect((await requestTestApp(app,'GET',hidden.thumbnailUrl)).status).toBe(404);
+        expect((await requestTestApp(app,'GET','/api/remote-media/'+id+'/new-shared/preview')).status).toBe(404);
+        expect(draftRow).toBeTruthy();
+
+        publicationService.apply({ids:[hidden.id]},'publish');
+        await sources.syncSource(id);
+        expect(draftNames()).toEqual(['new-favorite.jpg']);
+        expect(visible()).toContain('new-shared.jpg');
+        expect((await requestTestApp(app,'GET',hidden.thumbnailUrl)).status).toBe(200);
+        expect(all().find(p=>p.id===hidden.id)?.publishedAt).toBeGreaterThan(0);
+
+        // An asset temporarily absent from the selected albums is not new on reappearance.
+        members['album-a']=members['album-a'].filter(a=>a!=='new-shared');
+        members['album-b']=members['album-b'].filter(a=>a!=='new-shared');
+        await sources.syncSource(id);
+        members['album-b'].push('new-shared');
+        await sources.syncSource(id);
+        expect(all().find(p=>p.id===hidden.id)?.state).toBe('published');
+        expect(draftNames()).toEqual(['new-favorite.jpg']);
+
+        publicationService.setImportPolicy(favorite.slug,false);
+        data.push(photo('after-disable'));
+        members['album-b'].push('after-disable');
+        await sources.syncSource(id);
+        expect(visible()).toContain('after-disable.jpg');
+        expect(draftNames()).toEqual(['new-favorite.jpg']);
+    });
     it('keeps local-only startup, scanner, and empty galleries usable', async () => {
         expect(sources.listSources()).toEqual([]);
         await scan();

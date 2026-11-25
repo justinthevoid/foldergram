@@ -1,5 +1,10 @@
 {
   "publishing": {
+    "importPolicy": "New imports",
+    "defaultDraft": "New posts start as drafts",
+    "defaultDraftHelp": "Only newly indexed posts are affected. If a new photo belongs to multiple albums, any draft-default album takes precedence. Existing posts and previously published photos keep their current status.",
+    "saveImportPolicy": "Save import policy",
+    "importPolicySaved": "Import policy saved.",
     "title": "Publishing Studio",
     "description": "Manage when photographs appear in your family gallery, without changing Immich originals.",
     "open": "Open studio",

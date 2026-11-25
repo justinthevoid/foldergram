@@ -63,8 +63,26 @@ export const publicationService = {
     const rows = db().prepare('SELECT ' + fields + ' ' + from + ' WHERE ' + where +
       ' ORDER BY COALESCE(release.published_at,posts.taken_at,posts.sort_timestamp) DESC,posts.id DESC LIMIT ? OFFSET ?')
       .all(...args,limit,(page-1)*limit) as unknown as ReleaseRow[];
-    const folders = galleryService.listFolders().map(f => ({slug:f.slug,name:f.name}));
+    const selected = new Set((db().prepare(
+      'SELECT f.slug FROM folders f JOIN album_import_policies p ON p.source_id=f.source_id AND p.folder_path=f.folder_path'
+    ).all() as Array<{slug:string}>).map(row=>row.slug));
+    const folders = galleryService.listFolders().map(f => ({slug:f.slug,name:f.name,defaultDraft:selected.has(f.slug)}));
     return { page, limit, total, items: rows.map(r=>present(r,now)), folders, hasMore:page*limit<total };
+  },
+
+  setImportPolicy(folder: string, defaultDraft: boolean) {
+    const conn = db();
+    const row = conn.prepare(`SELECT f.source_id, f.folder_path FROM folders f
+      JOIN media_sources s ON s.id=f.source_id
+      WHERE f.slug=? AND f.role='normal' AND s.enabled=1
+      AND (s.kind='local' OR (s.status!='revoked' AND f.remote_visible=1))`).get(folder) as {source_id:number;folder_path:string}|undefined;
+    if (!row) throw new Error('Available album not found.');
+    if (defaultDraft) {
+      conn.prepare('INSERT INTO album_import_policies(source_id,folder_path) VALUES(?,?) ON CONFLICT(source_id,folder_path) DO NOTHING').run(row.source_id,row.folder_path);
+    } else {
+      conn.prepare('DELETE FROM album_import_policies WHERE source_id=? AND folder_path=?').run(row.source_id,row.folder_path);
+    }
+    return {folder,defaultDraft};
   },
 
   apply(target: {ids?: number[]; folder?:string}, action: PublicationAction, publishAt?: number) {

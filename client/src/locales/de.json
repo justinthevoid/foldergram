@@ -1,5 +1,10 @@
 {
   "publishing": {
+    "importPolicy": "Neue Importe",
+    "defaultDraft": "Neue Beiträge als Entwürfe speichern",
+    "defaultDraftHelp": "Gilt nur für neu indizierte Beiträge. Bei mehreren Alben hat die Entwurfseinstellung Vorrang. Bestehende und bereits veröffentlichte Beiträge behalten ihren Status.",
+    "saveImportPolicy": "Importeinstellung speichern",
+    "importPolicySaved": "Importeinstellung gespeichert.",
     "title": "Veröffentlichungsstudio",
     "description": "Bestimme, wann Fotos in der Familiengalerie erscheinen, ohne die Immich-Originale zu ändern.",
     "open": "Studio öffnen",
