@@ -1,5 +1,8 @@
 {
   "inviteCard": {
+    "mosaic": "Bergmosaik · künstlerischer QR-Code",
+    "artVerified": "QR-Code mit Bild geprüft",
+    "verified": "QR-Code geprüft",
     "title": "Einladungskarte",
     "description": "Ein kleines Andenken mit einer privaten QR-Einladung.",
     "preview": "Vorschau der persönlichen Einladungskarte",

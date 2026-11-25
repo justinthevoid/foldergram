@@ -1,5 +1,8 @@
 {
   "inviteCard": {
+    "mosaic": "Mountain mosaic · artistic QR",
+    "artVerified": "Artistic QR verified · artwork inset",
+    "verified": "QR verified for scanning",
     "title": "Invitation card",
     "description": "A little keepsake with a private QR invitation. Make it your own.",
     "preview": "Personalized invitation card preview",

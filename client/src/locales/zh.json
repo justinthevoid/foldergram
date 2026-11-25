@@ -1,5 +1,8 @@
 {
   "inviteCard": {
+    "mosaic": "山景马赛克 · 艺术二维码",
+    "artVerified": "带插图的艺术二维码已验证",
+    "verified": "二维码已验证",
     "title": "邀请卡",
     "description": "带有私密二维码邀请的小小纪念卡，可自由定制。",
     "preview": "个性化邀请卡预览",

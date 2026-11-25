@@ -8,11 +8,13 @@
       <div class="min-w-0 grid justify-items-center gap-2">
         <canvas ref="canvas" width="1200" height="1800" role="img" :aria-label="t('inviteCard.preview')" class="block w-full max-w-[320px] rounded-md shadow-lg aspect-[2/3]" />
         <p class="m-0 text-xs text-muted">{{ t('inviteCard.size') }}</p>
+        <p v-if="theme === 'mosaic' && verified" class="m-0 text-xs text-muted">{{ t(inset ? 'inviteCard.artVerified' : 'inviteCard.verified') }}</p>
       </div>
       <div class="grid min-w-0 gap-3">
         <label class="grid gap-1 text-sm font-medium">
           {{ t('inviteCard.style') }}
           <select v-model="theme" :aria-label="t('inviteCard.style')" class="rounded-lg border border-border p-2 bg-surface text-text">
+            <option value="mosaic">{{ t('inviteCard.mosaic') }}</option>
             <option value="paper">{{ t('inviteCard.paper') }}</option>
             <option value="film">{{ t('inviteCard.film') }}</option>
           </select>
@@ -72,12 +74,16 @@ import { requestJson } from '../api/http';
 import { useBrandingStore } from '../stores/branding';
 import type { FeedItem, FolderSummary } from '../types/api';
 import { localPhotoUrl, renderInvitationCard, type CardTheme } from '../utils/invitation-card';
+import mountainArtUrl from '../assets/invitation-mountain-art.webp';
 
 const props = defineProps<{ link: string; recipient: string; expiresAt: number }>();
 const { t, locale } = useI18n();
 const branding = useBrandingStore();
 const canvas = ref<HTMLCanvasElement|null>(null);
-const theme = ref<CardTheme>('paper');
+const theme = ref<CardTheme>('mosaic');
+const artwork = shallowRef<HTMLImageElement|null>(null);
+const verified = ref(false);
+const inset = ref(false);
 const headline = ref(t('inviteCard.defaultHeadline'));
 const message = ref(t('inviteCard.defaultMessage'));
 const ready = ref(false);
@@ -107,19 +113,29 @@ function draw() {
     return;
   }
   try {
-    renderInvitationCard(canvas.value, {
+    const result = renderInvitationCard(canvas.value, {
       link: props.link, theme: theme.value, galleryName: branding.value.name,
       recipient: t('inviteCard.forRecipient', { name: props.recipient }),
       headline: headline.value, message: message.value,
       action: t('inviteCard.scan'), instruction: t('inviteCard.instructions'),
       expires: t('inviteCard.expires', { date: new Date(props.expiresAt).toLocaleDateString(locale.value, { year:'numeric', month:'short', day:'numeric' }) }),
-      photo: photo.value
+      photo: photo.value,
+      artwork: artwork.value
     });
+    verified.value = result?.verified ?? false;
+    inset.value = result?.artworkInset ?? false;
     ready.value = true;
   } catch { error.value = t('inviteCard.renderError'); }
 }
-watch(() => [props.link, props.recipient, props.expiresAt, theme.value, headline.value, message.value, photo.value, branding.value.name, locale.value, expired.value], draw, { flush: 'post' });
-onMounted(() => { draw(); clock = setInterval(() => {now.value=Date.now();}, 15000); });
+watch(() => [props.link, props.recipient, props.expiresAt, theme.value, headline.value, message.value, photo.value, artwork.value, branding.value.name, locale.value, expired.value], draw, { flush: 'post' });
+onMounted(() => {
+  const image=new Image();
+  image.onload=()=>{if(alive)artwork.value=image;};
+  image.onerror=()=>{if(alive)draw();};
+  image.src=mountainArtUrl;
+  draw();
+  clock=setInterval(()=>{now.value=Date.now();},15000);
+});
 onBeforeUnmount(() => {
   alive=false; listRevision++; photoRevision++;
   if(clock) clearInterval(clock);

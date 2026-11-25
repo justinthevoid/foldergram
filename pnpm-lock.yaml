@@ -17,6 +17,9 @@ importers:
 
   client:
     dependencies:
+      jsqr:
+        specifier: 1.4.0
+        version: 1.4.0
       hls.js:
         specifier: ^1.6.19
         version: 1.6.19
@@ -63,9 +66,6 @@ importers:
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
-      jsqr:
-        specifier: 1.4.0
-        version: 1.4.0
       typescript:
         specifier: ^5.8.2
         version: 5.9.3
