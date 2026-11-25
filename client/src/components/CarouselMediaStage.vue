@@ -27,6 +27,7 @@
         :alt="item.filename"
         :muted="appStore.videoMuted"
         :autoplay="autoplay"
+        :load="loading === 'eager' || autoplay ? 'eager' : 'visible'"
         :stream-on-play="streamOnPlay"
         variant="viewer"
         @mute-change="appStore.setVideoMuted"

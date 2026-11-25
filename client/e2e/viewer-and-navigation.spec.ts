@@ -456,6 +456,55 @@ test('family performance audit measures startup payload and hidden polling', asy
   expect(startup.jsDecodedBytes).toBeLessThan(1250000);
 });
 
+test('family carousel feed measures offscreen photo requests', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page, 'light');
+  await page.route('**/api/auth/status', route => route.fulfill({ json: {
+    enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  }}));
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  const posts = Array.from({ length: 18 }, (_, i) => ({
+    ...panorama, id: i + 1, width: 1200, height: 1600, postType: 'carousel', itemCount: 2,
+    mediaItems: [0, 1].map(j => ({
+      imageId: (i + 1) * 10 + j, position: j, filename: 'perf-' + (i + 1) + '-' + j + '.jpg',
+      mediaType: 'image', width: 1200, height: 1600, durationMs: null,
+      thumbnailUrl: '/thumbnails/perf-' + (i + 1) + '-' + j + '.svg',
+      previewUrl: '/previews/perf-' + (i + 1) + '-' + j + '.svg'
+    }))
+  }));
+  const requests = new Set<string>();
+  await page.route(/\/(?:thumbnails|previews)\/perf-\d+-\d+\.svg(?:\?.*)?$/, async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    requests.add(pathname);
+    await route.fulfill({
+      contentType: 'image/svg+xml', headers: { 'cache-control': 'private, no-store' },
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600"><rect width="1200" height="1600" fill="#527d93"/></svg>'
+    });
+  });
+  await page.route('**/api/feed?*', route => route.fulfill({
+    json: { items: posts, page: 1, limit: 18, total: 18, hasMore: false }
+  }));
+  await page.goto('/');
+  const first = page.getByAltText('perf-1-0.jpg', { exact: true });
+  const last = page.getByAltText('perf-18-0.jpg', { exact: true });
+  await expect(first).toHaveAttribute('data-loaded', 'true');
+  await expect(last).toBeAttached();
+  await page.waitForTimeout(800);
+  const initialRequests = [...requests].filter(path => path.startsWith('/previews/')).length;
+  console.log('FAMILY_CAROUSEL_PERFORMANCE ' + JSON.stringify({ initialRequests, totalPosts: 18 }));
+  expect(initialRequests).toBeLessThanOrEqual(8);
+  expect(requests.has('/previews/perf-18-0.svg')).toBe(false);
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveAttribute('data-loaded', 'true');
+  const lastStage = last.locator('..');
+  await lastStage.getByRole('button', { name: 'Next carousel item', exact: true }).click();
+  await expect(page.getByAltText('perf-18-1.jpg', { exact: true })).toHaveAttribute('data-loaded', 'true');
+});
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

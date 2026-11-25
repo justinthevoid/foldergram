@@ -122,6 +122,39 @@ could simply duplicate transfers; defer that work until a measured
 privacy-preserving approach is justified. Continue Q2 with viewer loading,
 Reels and real device/cellular measurements. No photo-resolution change.
 
+## Feed media scheduling pass (Q2)
+
+The 390×844 Chromium fixture uses 18 two-photo portrait carousels with
+distinct preview URLs and private no-store responses. After the first
+photo is loaded and an 800 ms observation window, the baseline
+(`55e140f`) requested all 18 initial carousel previews. After changing
+the Home carousel loading policy, it requested five: 13 fewer immediate
+preview requests (72% fewer in this fixture). The browser can vary its
+native lazy-load distance by device and connection.
+
+Feed carousels use native lazy image loading and visible video loading;
+fullscreen viewer and shared-post carousels retain eager loading.
+The regression verifies that the last offscreen preview was not
+requested initially, then scrolls to that carousel and advances its
+slide successfully. The previous startup-budget and viewer-outage tests
+also passed. Preview URLs, photo resolution, existing video controls,
+authorization and cache policies are unchanged. The test measures
+request counts, not real photo bytes or cellular timings.
+
+## Family re-entry clarification (Q5 reference)
+
+Existing access is passwordless. An invitation is single-use, valid
+for seven days, and redeemed by the explicit Open gallery action.
+The authenticated device/browser session lasts up to 90 days. For a
+new device, expired session or cleared browser data, use New link on
+the existing family member in Settings → Security & Access → Family
+access. Do not create a duplicate named member. Reissuing invalidates
+an earlier unused invitation for that person but not existing valid
+sessions. Favorites and comments use the existing member identity;
+collections are browser-local. The external URL requires a named
+family session and never accepts the administrator password. Physical
+Home Screen installation/session behavior remains a Q5 test.
+
 ### Remaining boundaries
 
 - Chromium viewport simulation is not physical Safari, installed PWA, or a

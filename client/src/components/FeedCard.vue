@@ -64,7 +64,7 @@
       :prefer-preview="isHomeContext"
       stream-on-play
       :retry-while="appStore.isScanning"
-      :loading="isHomeContext ? 'eager' : 'lazy'"
+      loading="lazy"
       :muted="appStore.videoMuted"
       :double-tap-like="isHomeContext && authStore.canUseSavedItems"
       @double-tap="handleMediaDoubleTap"

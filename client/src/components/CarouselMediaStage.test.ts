@@ -52,12 +52,25 @@ describe('CarouselMediaStage', () => {
     const player = wrapper.findComponent({ name: 'VideoMediaPlayer' });
     expect(player.exists()).toBe(true);
     expect(player.props('autoplay')).toBe(true);
+    expect(player.props('load')).toBe('eager');
 
     const nextBtn = wrapper.find('button[aria-label="Next carousel item"]');
     expect(nextBtn.exists()).toBe(true);
     await nextBtn.trigger('click');
 
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([1]);
+  });
+
+  it('defers feed video loading while retaining eager viewer loading', async () => {
+    const wrapper = mount(CarouselMediaStage, { props: { items: mockItems, modelValue: 0, loading: 'lazy' } });
+    try {
+      const player = wrapper.getComponent({ name: 'VideoMediaPlayer' });
+      expect(player.props('load')).toBe('visible');
+      await wrapper.setProps({ loading: 'eager' });
+      expect(player.props('load')).toBe('eager');
+    } finally {
+      wrapper.unmount();
+    }
   });
 
   it('ignores pointer swipes when initiated on controls with data-swipe-ignore', async () => {
