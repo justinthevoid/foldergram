@@ -214,8 +214,33 @@
     "saveError": "Kommentar konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "deleteError": "Kommentar konnte nicht gelöscht werden. Bitte erneut versuchen."
   },
+  "devices": {
+    "title": "Angemeldete Geräte",
+    "manage": "Geräte",
+    "description": "Es werden nur erfasste Sitzungen angezeigt. Ältere Geräte erscheinen bei der nächsten Rückkehr zur Galerie.",
+    "refresh": "Aktualisieren",
+    "empty": "Noch keine angemeldeten Geräte.",
+    "current": "Dieses Gerät",
+    "firstSeen": "Erstmals gesehen am {date}",
+    "expires": "Zugang bis {date}",
+    "disconnect": "Trennen",
+    "confirm": "Dieses Gerät abmelden? Andere Geräte bleiben angemeldet.",
+    "disconnected": "Gerät getrennt.",
+    "loadError": "Geräte konnten nicht geladen werden. Bitte erneut versuchen.",
+    "disconnectError": "Gerät konnte nicht getrennt werden. Bitte erneut versuchen.",
+    "labels": {
+      "iphone": "iPhone",
+      "ipad": "iPad",
+      "android": "Android",
+      "windows": "Windows-PC",
+      "mac": "Mac",
+      "linux": "Linux-Computer",
+      "browser": "Browser"
+    }
+  },
   "deviceLink": {
-    "title": "Weiteres Gerät hinzufügen",
+    "title": "Geräte und Anmeldung",
+    "add": "Weiteres Gerät hinzufügen",
     "description": "Melde dich auf einem anderen Smartphone, Tablet oder Computer mit einem Einmallink an. Deine Favoriten und Kommentare bleiben erhalten.",
     "privateHelp": "Nutze den Link nur auf einem Gerät, dem du vertraust. Wer ihn hat, kann sich bis zur Nutzung oder zum Ablauf als du anmelden.",
     "generate": "Gerätelink erstellen",
@@ -232,7 +257,7 @@
     "privateLink": "Privates Netzwerk (Tailscale)",
     "externalHelp": "Sende diesen privaten Link direkt an dein Familienmitglied. Keine E-Mail-Adresse, kein Passwort und kein Tailscale erforderlich. Teile den unbenutzten Link nur privat.",
     "pasteInvite": "Einladungslink einfügen",
-    "externalSignIn": "Nutze deine private Einladung. Schon auf einem anderen Gerät angemeldet? Öffne dort Mehr → Weiteres Gerät hinzufügen.",
+    "externalSignIn": "Nutze deine private Einladung. Schon auf einem anderen Gerät angemeldet? Öffne dort Mehr → Geräte und Anmeldung.",
     "anotherInvite": "Andere Einladung verwenden",
     "reactionsBy": "Gefällt {names}",
     "reactionsCount": "Gefällt {count} Familienmitgliedern",

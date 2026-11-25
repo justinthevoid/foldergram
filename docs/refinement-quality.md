@@ -144,7 +144,7 @@ request counts, not real photo bytes or cellular timings.
 ## Family device linking and durable sessions (Q5)
 
 The revised flow keeps the existing named, passwordless identity and
-adds More → Add another device on the external HTTPS gallery. A signed-in
+adds More → Devices & sign-in on the external HTTPS gallery. A signed-in
 viewer explicitly creates a single-use link or verified QR code, then
 accepts it on the other device. No member identifier can be supplied by
 the caller. The link expires within ten minutes and requires the issuing
@@ -171,9 +171,26 @@ use disposable databases and mocked browser credentials.
 Remaining Q5 work: physical iPhone camera scans and Home Screen session
 storage; recovery when no device remains signed in (administrator
 reissue is currently required); evaluate synchronized passkeys as a
-long-term recovery option without reusable bearer links. There is no
-individual lost-device management UI or automatic session renewal in
-this pass.
+long-term recovery option without reusable bearer links. Automatic
+session renewal is not included.
+
+### Individual device management
+
+Migration 000018 adds a session inventory containing only a cookie hash,
+opaque public ID, member, authentication generation, coarse platform,
+first observed time and expiration. New sessions are recorded at issuance;
+existing signed sessions are recorded when they return to auth/status.
+No IP address or raw user agent is retained. Family members manage their
+own sessions under More → Devices & sign-in. The administrator can expand
+Devices on an existing member in Family access. Disconnect revokes only
+the selected session and its push subscriptions; pending links issued
+by that session cannot be redeemed. Current-device logout remains the
+existing Sign out action. Old devices that have not yet returned will
+not appear in the inventory; member-wide revoke still covers them.
+
+The targeted server suite (family, external ingress, push, devices,
+migration bootstrap) passed 27 tests. Existing member-wide revocation
+and generation rotation continue to invalidate all credentials.
 
 ### Remaining boundaries
 

@@ -214,8 +214,33 @@
     "saveError": "Could not save your comment. Please try again.",
     "deleteError": "Could not delete the comment. Please try again."
   },
+  "devices": {
+    "title": "Signed-in devices",
+    "manage": "Devices",
+    "description": "Only observed sessions are listed. An older device appears after it returns to the gallery.",
+    "refresh": "Refresh",
+    "empty": "No signed-in devices yet.",
+    "current": "This device",
+    "firstSeen": "First seen {date}",
+    "expires": "Access until {date}",
+    "disconnect": "Disconnect",
+    "confirm": "Sign out this device? Other devices will stay signed in.",
+    "disconnected": "Device disconnected.",
+    "loadError": "Could not load devices. Try again.",
+    "disconnectError": "Could not disconnect this device. Try again.",
+    "labels": {
+      "iphone": "iPhone",
+      "ipad": "iPad",
+      "android": "Android",
+      "windows": "Windows PC",
+      "mac": "Mac",
+      "linux": "Linux computer",
+      "browser": "Browser"
+    }
+  },
   "deviceLink": {
-    "title": "Add another device",
+    "title": "Devices & sign-in",
+    "add": "Add another device",
     "description": "Sign in on your other phone, tablet, or computer using a one-time link. Your favorites and comments stay with you.",
     "privateHelp": "Only use this link on a device you trust. Anyone with it can sign in as you until it is used or expires.",
     "generate": "Create device link",
@@ -232,7 +257,7 @@
     "privateLink": "Private network (Tailscale)",
     "externalHelp": "Send this private link directly to your family member. No email address, password or Tailscale is needed. Anyone who receives the unused link can accept it, so share it privately.",
     "pasteInvite": "Paste your invitation link",
-    "externalSignIn": "Use your private invitation. Already signed in on another device? Open More → Add another device there.",
+    "externalSignIn": "Use your private invitation. Already signed in on another device? Open More → Devices & sign-in there.",
     "anotherInvite": "Use another invitation",
     "reactionsBy": "Liked by {names}",
     "reactionsCount": "Liked by {count} family members",

@@ -31,6 +31,7 @@ import { publicationRouter } from './publication.js';
 import { familyActivityRouter } from './family-activity.js';
 import { familyPushRouter } from './family-push.js';
 import { familyPush } from '../services/family-push.js';
+import { listFamilyDevices, findFamilyDevice } from '../services/family-devices.js';
 import { externalFamilyOrigin, isExternalFamilyRequest } from '../middleware/external-family-access.js';
 
 const router = express.Router();
@@ -448,6 +449,35 @@ router.post('/family/device-invite', familyDeviceLinkRateLimiter, (request, resp
   return response.json({ ...issueFamilyDeviceInvite(session), origin });
 });
 
+router.get('/family/devices', (request, response) => {
+  authService.setNoStoreHeaders(response);
+  const session = authService.getFamilyPushSession(request);
+  if (!isExternalFamilyRequest(request) || !session) return response.status(403).json({ message: 'Active family gallery session required.' });
+  authService.rememberCurrentFamilyDevice(request);
+  return response.json({ items: listFamilyDevices(session.memberId, session.generation, session.sessionKey) });
+});
+router.delete('/family/devices/:id', (request, response) => {
+  authService.setNoStoreHeaders(response);
+  const session = authService.getFamilyPushSession(request);
+  if (!isExternalFamilyRequest(request) || !session) return response.status(403).json({ message: 'Active family gallery session required.' });
+  const target = findFamilyDevice(session.memberId, session.generation, z.string().uuid().parse(request.params.id));
+  if (!target) return response.status(404).json({ message: 'Device not found.' });
+  if (target.sessionKey === session.sessionKey) return response.status(409).json({ message: 'Use Sign out for this device.' });
+  familyPush.removeSession(target);
+  return response.json({ ok: true });
+});
+router.get('/admin/family/:id/devices', familyAdmin, (request, response) => {
+  authService.setNoStoreHeaders(response);
+  return response.json({ items: listFamilyDevices(z.string().uuid().parse(request.params.id), familyGeneration()) });
+});
+router.delete('/admin/family/:id/devices/:deviceId', familyAdmin, (request, response) => {
+  authService.setNoStoreHeaders(response);
+  const target = findFamilyDevice(z.string().uuid().parse(request.params.id), familyGeneration(), z.string().uuid().parse(request.params.deviceId));
+  if (!target) return response.status(404).json({ message: 'Device not found.' });
+  familyPush.removeSession(target);
+  return response.json({ ok: true });
+});
+
 router.post('/auth/family-invite', authRateLimiter, (request, response) => {
   authService.setNoStoreHeaders(response);
   const generation = authService.getFamilyGeneration();
@@ -462,6 +492,7 @@ router.post('/auth/family-invite', authRateLimiter, (request, response) => {
 });
 router.get('/auth/status', (request, response) => {
   authService.setNoStoreHeaders(response);
+  authService.rememberCurrentFamilyDevice(request);
   response.json(authService.getStatus(request));
 });
 

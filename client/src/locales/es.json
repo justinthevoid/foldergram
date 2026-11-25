@@ -214,8 +214,33 @@
     "saveError": "No se pudo guardar el comentario. Inténtalo de nuevo.",
     "deleteError": "No se pudo eliminar el comentario. Inténtalo de nuevo."
   },
+  "devices": {
+    "title": "Dispositivos conectados",
+    "manage": "Dispositivos",
+    "description": "Solo se muestran las sesiones registradas. Los dispositivos anteriores aparecen al volver a la galería.",
+    "refresh": "Actualizar",
+    "empty": "No hay dispositivos conectados.",
+    "current": "Este dispositivo",
+    "firstSeen": "Visto por primera vez el {date}",
+    "expires": "Acceso hasta el {date}",
+    "disconnect": "Desconectar",
+    "confirm": "¿Cerrar sesión en este dispositivo? Los demás seguirán conectados.",
+    "disconnected": "Dispositivo desconectado.",
+    "loadError": "No se pudieron cargar los dispositivos. Inténtalo de nuevo.",
+    "disconnectError": "No se pudo desconectar el dispositivo. Inténtalo de nuevo.",
+    "labels": {
+      "iphone": "iPhone",
+      "ipad": "iPad",
+      "android": "Android",
+      "windows": "PC con Windows",
+      "mac": "Mac",
+      "linux": "Ordenador Linux",
+      "browser": "Navegador"
+    }
+  },
   "deviceLink": {
-    "title": "Añadir otro dispositivo",
+    "title": "Dispositivos e inicio de sesión",
+    "add": "Añadir otro dispositivo",
     "description": "Inicia sesión en otro teléfono, tableta u ordenador mediante un enlace de un solo uso. Tus favoritos y comentarios se mantienen.",
     "privateHelp": "Usa el enlace solo en un dispositivo de confianza. Quien lo tenga puede iniciar sesión como tú hasta que se use o caduque.",
     "generate": "Crear enlace de dispositivo",
@@ -232,7 +257,7 @@
     "privateLink": "Red privada (Tailscale)",
     "externalHelp": "Envía este enlace privado directamente a tu familiar. No necesita correo electrónico, contraseña ni Tailscale. Comparte el enlace sin usar solo en privado.",
     "pasteInvite": "Pega tu enlace de invitación",
-    "externalSignIn": "Usa tu invitación privada. ¿Ya has iniciado sesión en otro dispositivo? Abre Más → Añadir otro dispositivo allí.",
+    "externalSignIn": "Usa tu invitación privada. ¿Ya has iniciado sesión en otro dispositivo? Abre Más → Dispositivos e inicio de sesión allí.",
     "anotherInvite": "Usar otra invitación",
     "reactionsBy": "Les gusta a {names}",
     "reactionsCount": "Les gusta a {count} familiares",

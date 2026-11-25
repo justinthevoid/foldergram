@@ -143,6 +143,7 @@ export const familyPush={
   try{
    conn.prepare('INSERT INTO family_push_ended_sessions(session_key,expires_at) VALUES(?,?) ON CONFLICT(session_key) DO NOTHING').run(session.sessionKey,session.expiresAt);
    conn.prepare('DELETE FROM family_push_subscriptions WHERE session_key=?').run(session.sessionKey);
+   conn.prepare('DELETE FROM family_device_sessions WHERE session_key=?').run(session.sessionKey);
    conn.exec('COMMIT');
   }catch(error){conn.exec('ROLLBACK');throw error;}
  },

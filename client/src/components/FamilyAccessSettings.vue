@@ -42,8 +42,10 @@
         </div>
         <div v-if="!member.revokedAt" class="flex flex-wrap gap-2">
           <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium" type="button" :disabled="disabled || !enabled || !https" @click="renew(member)">{{ t('family.newLink') }}</button>
+          <button class="btn-ghost min-h-11" type="button" :aria-expanded="devicesMemberId === member.id" :disabled="disabled" @click="devicesMemberId = devicesMemberId === member.id ? null : member.id">{{ t('devices.manage') }}</button>
           <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium text-red-500" type="button" :disabled="disabled" @click="confirmId = member.id">{{ t('family.revoke') }}</button>
         </div>
+        <FamilyDeviceSessions v-if="!member.revokedAt && devicesMemberId === member.id" :key="member.id" :member-id="member.id" class="w-full" />
         <div v-if="confirmId === member.id" class="w-full flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
           <p class="m-0 text-sm flex-1">{{ t('family.revokeHelp') }}</p>
           <button type="button" class="px-3 py-2 rounded-lg border border-border text-sm" @click="confirmId = null">{{ t('family.cancel') }}</button>
@@ -62,6 +64,8 @@ import { useAuthStore } from '../stores/auth';
 import { requestJson } from '../api/http';
 import type { FamilyInvite, FamilyMember } from '../types/api';
 const InvitationCard = defineAsyncComponent(() => import('./InvitationCard.vue'));
+const FamilyDeviceSessions = defineAsyncComponent(() => import('./FamilyDeviceSessions.vue'));
+const devicesMemberId = ref<string | null>(null);
 
 const { t } = useI18n();
 const auth = useAuthStore();

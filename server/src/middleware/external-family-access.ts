@@ -59,6 +59,7 @@ export function restrictExternalFamilyAccess(request: express.Request, response:
   const auth = authService.getRequestAuthContext(request);
   const named = auth.authenticated && auth.role === 'viewer' && !!auth.familyMember;
   if (read(method) && path === '/api/auth/status') {
+    if (named) authService.rememberCurrentFamilyDevice(request);
     response.json({ ...(named ? auth : authService.getLoggedOutStatus()), externalFamilyAccess: true });
     return;
   }
@@ -80,7 +81,9 @@ export function restrictExternalFamilyAccess(request: express.Request, response:
     const playback = path.startsWith('/api/videos/') && isPlaybackSessionMutation(method, path.slice(4));
     const push = path === '/api/family/push' && ['GET','HEAD','PUT','DELETE'].includes(method);
     const deviceInvite = method === 'POST' && path === '/api/family/device-invite';
-    if (ownReaction || comment || playback || push || deviceInvite) { next(); return; }
+    const devices = (read(method) && path === '/api/family/devices') ||
+      (method === 'DELETE' && /^\/api\/family\/devices\/[0-9a-f-]{36}$/.test(path));
+    if (ownReaction || comment || playback || push || deviceInvite || devices) { next(); return; }
     deny(); return;
   }
   // The public bootstrap serves only the compiled client and known navigation

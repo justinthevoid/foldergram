@@ -16,6 +16,7 @@ import {
 import { appConfig } from '../config/env.js';
 import { appSettingsRepository } from '../db/repositories.js';
 import { getFamilyIdentity, isFamilySessionEnded, type FamilyIdentity } from './family-service.js';
+import { rememberFamilySession } from './family-devices.js';
 
 export type AuthRole = 'admin' | 'viewer' | 'anonymous';
 export type SessionRole = Exclude<AuthRole, 'anonymous'>;
@@ -381,6 +382,11 @@ export const authService = {
       sessionKey:createHash('sha256').update(token).digest('hex')};
   },
 
+  rememberCurrentFamilyDevice(request: express.Request): void {
+    const session = this.getFamilyPushSession(request);
+    if (session) rememberFamilySession(session, request.get('user-agent'));
+  },
+
   getFamilyStatus(identity: FamilyIdentity): AuthStatus {
     const status = createAuthenticatedStatus('viewer');
     // Named family sessions never modify the existing shared likes/collections.
@@ -542,7 +548,14 @@ export const authService = {
     const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
     const signature = signValue(encodedPayload, authConfig.sessionSecret);
 
-    response.cookie(AUTH_SESSION_COOKIE_NAME, `${encodedPayload}.${signature}`, {
+    const token = `${encodedPayload}.${signature}`;
+    if (familyMember) {
+      const generation = this.getFamilyGeneration();
+      if (!generation) throw new Error('Family sign-in is not enabled.');
+      rememberFamilySession({ memberId: familyMember.id, generation, expiresAt: payload.exp,
+        sessionKey: createHash('sha256').update(token).digest('hex') }, request.get('user-agent'));
+    }
+    response.cookie(AUTH_SESSION_COOKIE_NAME, token, {
       encode: (value) => value,
       httpOnly: true,
       maxAge: duration,

@@ -518,6 +518,17 @@ test('family can explicitly create a temporary device link from More', async ({ 
   await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
   const fakeToken = 'A'.repeat(43);
   let linkRequests = 0;
+  let disconnectRequests = 0;
+  const now = Date.now();
+  const phone = { id: 'phone', label: 'iphone', current: true, firstSeenAt: now, expiresAt: now + 86400000 };
+  const ipad = { id: 'tablet', label: 'ipad', current: false, firstSeenAt: now, expiresAt: now + 86400000 };
+  await page.route('**/api/family/devices', route => route.fulfill({ json: { items: disconnectRequests ? [phone] : [phone, ipad] } }));
+  await page.route('**/api/family/devices/tablet', route => {
+    expect(route.request().method()).toBe('DELETE');
+    expect(route.request().headers()['x-foldergram-intent']).toBe('1');
+    disconnectRequests++;
+    return route.fulfill({ json: { ok: true } });
+  });
   await page.route('**/api/family/device-invite', route => {
     linkRequests++;
     expect(route.request().method()).toBe('POST');
@@ -528,10 +539,23 @@ test('family can explicitly create a temporary device link from More', async ({ 
   await page.goto('/');
   const more = page.getByRole('button', { name: 'More', exact: true });
   await more.click();
-  await page.getByRole('button', { name: 'Add another device', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Add another device' });
+  await page.getByRole('button', { name: 'Devices & sign-in', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Devices & sign-in' });
   await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('This device', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('iPad', { exact: true })).toBeVisible();
   expect(linkRequests).toBe(0);
+  await dialog.getByRole('button', { name: 'Disconnect', exact: true }).click();
+  await expect(dialog.getByText('Sign out this device? Other devices will stay signed in.')).toBeVisible();
+  expect(disconnectRequests).toBe(0);
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  expect(disconnectRequests).toBe(0);
+  await dialog.getByRole('button', { name: 'Disconnect', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Disconnect', exact: true }).click();
+  await expect(dialog.getByText('Device disconnected.', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('iPad', { exact: true })).toHaveCount(0);
+  await expect(dialog.getByText('This device', { exact: true })).toBeVisible();
+  expect(disconnectRequests).toBe(1);
   await dialog.getByRole('button', { name: 'Create device link' }).click();
   await expect(dialog.getByRole('textbox', { name: 'Invitation link' })).toHaveValue('https://gallery.example.test/#family-invite=' + fakeToken);
   await expect(dialog.getByRole('img', { name: 'Scan to sign in on another device' })).toBeVisible();

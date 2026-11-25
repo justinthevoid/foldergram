@@ -214,8 +214,33 @@
     "saveError": "无法保存评论，请重试。",
     "deleteError": "无法删除评论，请重试。"
   },
+  "devices": {
+    "title": "已登录设备",
+    "manage": "设备",
+    "description": "仅显示已记录的会话。旧设备再次访问图库时会出现在列表中。",
+    "refresh": "刷新",
+    "empty": "暂无已登录设备。",
+    "current": "此设备",
+    "firstSeen": "首次访问：{date}",
+    "expires": "访问有效期至 {date}",
+    "disconnect": "断开连接",
+    "confirm": "退出此设备？其他设备仍将保持登录。",
+    "disconnected": "设备已断开连接。",
+    "loadError": "无法加载设备，请重试。",
+    "disconnectError": "无法断开设备，请重试。",
+    "labels": {
+      "iphone": "iPhone",
+      "ipad": "iPad",
+      "android": "Android",
+      "windows": "Windows 电脑",
+      "mac": "Mac",
+      "linux": "Linux 电脑",
+      "browser": "浏览器"
+    }
+  },
   "deviceLink": {
-    "title": "添加其他设备",
+    "title": "设备与登录",
+    "add": "添加其他设备",
     "description": "使用一次性链接在其他手机、平板电脑或电脑上登录。你的收藏和评论会保留。",
     "privateHelp": "请仅在信任的设备上使用此链接。任何持有链接的人都能以你的身份登录，直到链接被使用或过期。",
     "generate": "创建设备链接",
@@ -232,7 +257,7 @@
     "privateLink": "私有网络（Tailscale）",
     "externalHelp": "将私密链接直接发送给家庭成员。无需邮箱、密码或 Tailscale。未使用的链接可被收到链接的人接受，请私下分享。",
     "pasteInvite": "粘贴邀请链接",
-    "externalSignIn": "使用私密邀请。已在其他设备登录？请在该设备打开更多 → 添加其他设备。",
+    "externalSignIn": "使用私密邀请。已在其他设备登录？请在该设备打开更多 → 设备与登录。",
     "anotherInvite": "使用其他邀请",
     "reactionsBy": "{names} 赞了这张照片",
     "reactionsCount": "{count} 位家庭成员点赞",
