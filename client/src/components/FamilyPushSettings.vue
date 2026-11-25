@@ -11,9 +11,9 @@
    </div>
   </div>
   <div v-if="supported&&!preparing" class="flex flex-wrap justify-end gap-2">
-   <button v-if="!available" type="button" class="rounded-lg border border-border px-3 py-2 text-xs font-medium" :disabled="busy" @click="prepare">{{ t('push.refresh') }}</button>
-   <button v-else-if="enabled" type="button" class="rounded-lg border border-border px-3 py-2 text-xs font-medium" :disabled="busy" @click="disable">{{ t('push.disable') }}</button>
-   <button v-else type="button" class="btn-primary text-xs" :disabled="busy||permission==='denied'" @click="enable">{{ t('push.enable') }}</button>
+   <button v-if="!available" type="button" class="rounded-lg border border-border min-h-11 px-3 py-2 text-xs font-medium" :disabled="busy" @click="prepare">{{ t('push.refresh') }}</button>
+   <button v-else-if="enabled" type="button" class="rounded-lg border border-border min-h-11 px-3 py-2 text-xs font-medium" :disabled="busy" @click="disable">{{ t('push.disable') }}</button>
+   <button v-else type="button" class="btn-primary min-h-11 text-xs" :disabled="busy||permission==='denied'" @click="enable">{{ t('push.enable') }}</button>
   </div>
   <p v-if="error" role="alert" class="m-0 text-xs text-red-500">{{ error }}</p>
  </section>

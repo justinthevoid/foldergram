@@ -261,6 +261,83 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 
   });
 }
 
+
+test('family refinement audit captures primary phone screens and measures menu reachability', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page);
+  await page.route('**/api/auth/status', route => route.fulfill({ json: {
+    enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  }}));
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [panorama] } }));
+  await page.route('**/api/family/push*', route => route.fulfill({ json: { publicKey: '', enabled: false } }));
+  const audit: unknown[] = [];
+  for (const [theme, viewport] of [
+    ['light', { width: 390, height: 844 }],
+    ['dark', { width: 320, height: 568 }],
+    ['light', { width: 1440, height: 900 }]
+  ] as const) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.evaluate(value => { localStorage.setItem('foldergram-theme', value); }, theme);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    await expect(page.locator('.family-header')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Shuffle', exact: true })).toBeVisible();
+    await expect(page.locator('.family-album__image[data-loaded="true"]').first()).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath(theme + '-' + viewport.width + '-home.png') });
+    const more = page.getByRole('button', { name: 'More', exact: true });
+    await more.click();
+    const menu = page.locator('.family-menu');
+    await expect(menu).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath(theme + '-' + viewport.width + '-more.png') });
+    await page.keyboard.press('Tab');
+    await expect(menu.getByRole('link', { name: 'Reels', exact: true })).toBeFocused();
+    audit.push(await page.evaluate(() => {
+      const menu = document.querySelector('.family-menu')!;
+      const active = document.activeElement;
+      const r = menu.getBoundingClientRect();
+      return { width: innerWidth, height: innerHeight, menuBounds: { x: r.x, y: r.y, bottom: r.bottom, right: r.right },
+        menuScrollHeight: menu.scrollHeight, menuClientHeight: menu.clientHeight,
+        focusInsideMenu: menu.contains(active), focusedText: active?.textContent?.trim().slice(0, 80),
+        documentOverflow: document.documentElement.scrollWidth > innerWidth };
+    }));
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(more).toBeFocused();
+    await more.click();
+    await page.keyboard.press('Shift+Tab');
+    await expect(menu).toHaveCount(0);
+    await expect(more).not.toBeFocused();
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
+    for (const [name, url] of [['albums', '/library'], ['album', '/f/panoramas'], ['favorites', '/likes/posts'], ['search', '/explore']] as const) {
+      await page.goto(url);
+      await expect(page.locator('.family-header')).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      if (name === 'albums') await expect(page.locator('.family-album__image[data-loaded="true"]').first()).toBeVisible();
+      if (name === 'album') await expect(page.getByRole('button', { name: 'Recap', exact: true })).toBeVisible();
+      if (name === 'favorites') await expect(page.getByRole('button', { name: 'Print list', exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.screenshot({ path: testInfo.outputPath(theme + '-' + viewport.width + '-' + name + '.png') });
+    }
+  }
+  console.log('FAMILY_REFINEMENT_AUDIT ' + JSON.stringify(audit));
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto('/');
+  const more = page.getByRole('button', { name: 'More', exact: true });
+  await more.click();
+  const menu = page.locator('.family-menu');
+  await expect(menu).toBeVisible();
+  const bounds = await menu.boundingBox();
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(375);
+  await menu.getByRole('button', { name: 'Sign out', exact: true }).scrollIntoViewIfNeeded();
+  await expect(menu.getByRole('button', { name: 'Sign out', exact: true })).toBeInViewport();
+  await page.screenshot({ path: testInfo.outputPath('landscape-more.png') });
+});
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

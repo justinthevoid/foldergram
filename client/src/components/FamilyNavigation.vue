@@ -19,7 +19,7 @@
         <span class="family-more__label">{{ t('nav.more') }}</span>
       </button>
       <div v-if="menuOpen" class="family-menu-backdrop" @click="closeMenu(false)" aria-hidden="true"/>
-      <section v-if="menuOpen" id="family-navigation-menu" class="family-menu" :aria-label="t('nav.more')">
+      <section v-if="menuOpen" ref="menuElement" id="family-navigation-menu" class="family-menu" :aria-label="t('nav.more')">
         <p class="family-menu__member">{{ auth.familyMember?.name }}</p>
         <RouterLink class="family-menu__link" :to="{name:'reels'}" @click="closeMenu(false)"><span class="i-fluent-play-circle-24-regular family-link__icon" aria-hidden="true"/>{{ t('nav.reels') }}</RouterLink>
         <RouterLink v-if="places.items.length && !places.listError" class="family-menu__link" :to="{name:'places'}" @click="closeMenu(false)"><span class="i-fluent-location-20-regular family-link__icon" aria-hidden="true"/>{{ t('nav.places') }}</RouterLink>
@@ -50,7 +50,7 @@ import { usePlacesStore } from '../stores/places';
 import BrandMark from './BrandMark.vue';
 import FamilyPushSettings from './FamilyPushSettings.vue';
 
-defineProps<{inert?: boolean}>();
+const props = defineProps<{inert?: boolean}>();
 const { t } = useI18n();
 const auth = useAuthStore();
 const branding = useBrandingStore();
@@ -66,6 +66,7 @@ const items = [
 ] as const;
 const menuOpen = ref(false);
 const moreButton = ref<HTMLButtonElement | null>(null);
+const menuElement = ref<HTMLElement | null>(null);
 const signOutError = ref('');
 function isActive(name: string) {
   return route.name === name || (name === 'library' && route.name === 'folder');
@@ -92,9 +93,24 @@ async function signOut() {
 function onKey(event: KeyboardEvent) {
   if (event.key === 'Escape' && menuOpen.value) { event.preventDefault(); closeMenu(); }
 }
+// This is a disclosure, not a modal. Keyboard users can leave it naturally,
+// but the popover must not stay open over the newly focused page content.
+function onFocusIn(event: FocusEvent) {
+  if (!menuOpen.value || !(event.target instanceof Node)) return;
+  if (moreButton.value?.contains(event.target) || menuElement.value?.contains(event.target)) return;
+  closeMenu(false);
+}
 watch(() => route.fullPath, () => closeMenu(false));
-onMounted(() => { void places.fetchPlaces(); window.addEventListener('keydown', onKey); });
-onUnmounted(() => window.removeEventListener('keydown', onKey));
+watch(() => props.inert, value => { if (value) closeMenu(false); });
+onMounted(() => {
+  void places.fetchPlaces();
+  window.addEventListener('keydown', onKey);
+  document.addEventListener('focusin', onFocusIn);
+});
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKey);
+  document.removeEventListener('focusin', onFocusIn);
+});
 </script>
 <style scoped>
 .family-header { position: relative; z-index: 35; flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -110,7 +126,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
 .family-more { margin-left: auto; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; padding: 8px 12px; }
 .family-more[aria-expanded="true"] { background: var(--surface-alt); }
 .family-menu-backdrop { position: fixed; inset: 0; z-index: 1; }
-.family-menu { position: absolute; z-index: 2; top: calc(100% + 4px); right: clamp(12px, 4vw, 36px); width: min(330px, calc(100vw - 24px)); max-height: calc(100dvh - 148px); overflow: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 8px; }
+.family-menu { position: absolute; z-index: 2; top: calc(100% + 4px); right: clamp(12px, 4vw, 36px); width: min(330px, calc(100vw - 24px)); max-height: calc(100dvh - 148px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 8px; }
 .family-menu__member { font-size: .9rem; font-weight: 600; padding: 8px 12px 12px; margin: 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .family-menu__link { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; text-align: left; border: 0; border-radius: 10px; background: transparent; color: var(--text); padding: 10px 12px; font-size: .9rem; text-decoration: none; cursor: pointer; }
 .family-menu__push { margin: 4px 0; }
@@ -121,10 +137,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
 }
 .family-link:focus-visible, .family-more:focus-visible, .family-menu__link:focus-visible, .family-brand:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 @media (max-width: 767.98px) {
-  .family-header__inner { min-height: 56px; gap: 8px; padding: 6px 16px; }
+  .family-header__inner { min-height: 56px; gap: 8px; padding: 6px 16px; padding-top: calc(6px + env(safe-area-inset-top, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .family-desktop-nav, .family-more__label { display: none; }
-  .family-mobile-nav { position: fixed; z-index: 30; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border-top: 1px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 4px; }
-  .family-mobile-nav .family-link { flex-direction: column; min-height: 52px; gap: 4px; padding: 4px 2px; font-size: .72rem; line-height: 1.2; text-align: center; }
+  .family-mobile-nav { position: fixed; z-index: 30; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border-top: 1px solid var(--border); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); gap: 4px; }
+  .family-mobile-nav .family-link { flex-direction: column; min-height: 52px; gap: 4px; padding: 4px 2px; font-size: .78rem; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
   .family-mobile-nav .family-link__icon { width: 23px; height: 23px; }
 }
 </style>
