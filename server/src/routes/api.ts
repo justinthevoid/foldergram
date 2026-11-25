@@ -28,11 +28,13 @@ import { registerVideoPlaybackRoutes } from './video-playback.js';
 import { videoPreviewReclamation } from '../services/video-preview-reclamation.js';
 import { familyCommentsRouter } from './family-comments.js';
 import { publicationRouter } from './publication.js';
+import { familyActivityRouter } from './family-activity.js';
 import { externalFamilyOrigin } from '../middleware/external-family-access.js';
 
 const router = express.Router();
 router.use(familyCommentsRouter);
 router.use(publicationRouter);
+router.use(familyActivityRouter);
 router.get('/branding', (_request, response) => {
   response.json(getPublicBranding());
 });

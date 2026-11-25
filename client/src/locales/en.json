@@ -1,4 +1,25 @@
 {
+  "activity": {
+    "title": "Family activity",
+    "back": "Back to gallery",
+    "description": "Likes and comments from your invited family members.",
+    "refresh": "Refresh",
+    "all": "All",
+    "unread": "Unread",
+    "markAll": "Mark all as read",
+    "loading": "Loading activity…",
+    "caughtUp": "You're all caught up",
+    "empty": "No family activity yet",
+    "emptyHelp": "New likes and comments will appear here.",
+    "unknownMember": "Family member",
+    "liked": "liked your photograph.",
+    "commented": "commented on your photograph.",
+    "viewPhoto": "View photo",
+    "markRead": "Mark as read",
+    "older": "Load older activity",
+    "error": "Could not update activity. Please try again.",
+    "unreadCount": "{count} unread"
+  },
   "publishing": {
     "importPolicy": "New imports",
     "defaultDraft": "New posts start as drafts",

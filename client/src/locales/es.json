@@ -1,4 +1,25 @@
 {
+  "activity": {
+    "title": "Actividad familiar",
+    "back": "Volver a la galería",
+    "description": "Me gusta y comentarios de tus familiares invitados.",
+    "refresh": "Actualizar",
+    "all": "Todo",
+    "unread": "Sin leer",
+    "markAll": "Marcar todo como leído",
+    "loading": "Cargando actividad…",
+    "caughtUp": "Estás al día",
+    "empty": "Todavía no hay actividad familiar",
+    "emptyHelp": "Los nuevos me gusta y comentarios aparecerán aquí.",
+    "unknownMember": "Familiar",
+    "liked": "indicó que le gusta tu foto.",
+    "commented": "comentó tu foto.",
+    "viewPhoto": "Ver foto",
+    "markRead": "Marcar como leído",
+    "older": "Cargar actividad anterior",
+    "error": "No se pudo actualizar la actividad. Inténtalo de nuevo.",
+    "unreadCount": "{count} sin leer"
+  },
   "publishing": {
     "importPolicy": "Nuevas importaciones",
     "defaultDraft": "Las nuevas publicaciones comienzan como borradores",

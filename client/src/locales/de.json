@@ -1,4 +1,25 @@
 {
+  "activity": {
+    "title": "Familienaktivität",
+    "back": "Zurück zur Galerie",
+    "description": "Likes und Kommentare deiner eingeladenen Familienmitglieder.",
+    "refresh": "Aktualisieren",
+    "all": "Alle",
+    "unread": "Ungelesen",
+    "markAll": "Alle als gelesen markieren",
+    "loading": "Aktivitäten werden geladen…",
+    "caughtUp": "Du bist auf dem neuesten Stand",
+    "empty": "Noch keine Familienaktivität",
+    "emptyHelp": "Neue Likes und Kommentare erscheinen hier.",
+    "unknownMember": "Familienmitglied",
+    "liked": "gefällt dein Foto.",
+    "commented": "hat dein Foto kommentiert.",
+    "viewPhoto": "Foto ansehen",
+    "markRead": "Als gelesen markieren",
+    "older": "Ältere Aktivitäten laden",
+    "error": "Aktivitäten konnten nicht aktualisiert werden.",
+    "unreadCount": "{count} ungelesen"
+  },
   "publishing": {
     "importPolicy": "Neue Importe",
     "defaultDraft": "Neue Beiträge als Entwürfe speichern",

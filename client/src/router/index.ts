@@ -105,6 +105,12 @@ export const router = createRouter({
       }
     },
     {
+      path: '/activity',
+      name: 'family-activity',
+      component: () => import('../views/ActivityView.vue'),
+      meta: { requiredCapability: 'canAccessSettings', privateFamilyActivity: true }
+    },
+    {
       path: '/trash',
       name: 'trash',
       component: TrashView,
@@ -204,6 +210,9 @@ export function canAccessRoute(route: Pick<RouteLocationNormalized, 'meta'>): bo
   }
 
   const authStore = useAuthStore(pinia);
+  if (route.meta.privateFamilyActivity === true) {
+    return authStore.enabled && authStore.authenticated && authStore.role==='admin' && authStore.accessMode!=='public' && !authStore.externalFamilyAccess;
+  }
   const requiredCapability = getRouteRequiredCapability(route);
 
   if (requiredCapability) {

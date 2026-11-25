@@ -1,4 +1,25 @@
 {
+  "activity": {
+    "title": "家庭动态",
+    "back": "返回图库",
+    "description": "受邀家庭成员的点赞和评论。",
+    "refresh": "刷新",
+    "all": "全部",
+    "unread": "未读",
+    "markAll": "全部标为已读",
+    "loading": "正在加载动态…",
+    "caughtUp": "已读完所有动态",
+    "empty": "暂无家庭动态",
+    "emptyHelp": "新的点赞和评论会显示在这里。",
+    "unknownMember": "家庭成员",
+    "liked": "赞了你的照片。",
+    "commented": "评论了你的照片。",
+    "viewPhoto": "查看照片",
+    "markRead": "标为已读",
+    "older": "加载较早的动态",
+    "error": "无法更新动态，请重试。",
+    "unreadCount": "{count} 条未读"
+  },
   "publishing": {
     "importPolicy": "新导入",
     "defaultDraft": "新帖子默认保存为草稿",
