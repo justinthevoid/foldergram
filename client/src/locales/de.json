@@ -1,4 +1,26 @@
 {
+  "comments": {
+    "title": "Kommentare",
+    "refresh": "Kommentare aktualisieren",
+    "loading": "Kommentare werden geladen…",
+    "empty": "Noch keine Kommentare. Beginne das Gespräch.",
+    "owner": "Galerie-Inhaber",
+    "edited": "Bearbeitet",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Diesen Kommentar löschen?",
+    "cancel": "Abbrechen",
+    "older": "Ältere Kommentare",
+    "compose": "Kommentar schreiben",
+    "editing": "Kommentar bearbeiten",
+    "placeholder": "Schreib etwas…",
+    "privacy": "Dein Name und Kommentar sind für eingeladene Familienmitglieder sichtbar.",
+    "post": "Posten",
+    "save": "Speichern",
+    "loadError": "Kommentare konnten nicht geladen werden. Bitte aktualisieren.",
+    "saveError": "Kommentar konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "deleteError": "Kommentar konnte nicht gelöscht werden. Bitte erneut versuchen."
+  },
   "family": {
     "reactionsBy": "Gefällt {names}",
     "reactionsCount": "Gefällt {count} Familienmitgliedern",

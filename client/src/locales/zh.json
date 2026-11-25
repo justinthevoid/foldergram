@@ -1,4 +1,26 @@
 {
+  "comments": {
+    "title": "评论",
+    "refresh": "刷新评论",
+    "loading": "正在加载评论…",
+    "empty": "暂无评论，来聊聊吧。",
+    "owner": "图库所有者",
+    "edited": "已编辑",
+    "edit": "编辑",
+    "delete": "删除",
+    "deleteConfirm": "删除这条评论？",
+    "cancel": "取消",
+    "older": "较早的评论",
+    "compose": "发表评论",
+    "editing": "编辑你的评论",
+    "placeholder": "写点什么…",
+    "privacy": "受邀的家庭成员可以看到你的姓名和评论。",
+    "post": "发布",
+    "save": "保存",
+    "loadError": "无法加载评论，请刷新。",
+    "saveError": "无法保存评论，请重试。",
+    "deleteError": "无法删除评论，请重试。"
+  },
   "family": {
     "reactionsBy": "{names} 赞了这张照片",
     "reactionsCount": "{count} 位家庭成员点赞",

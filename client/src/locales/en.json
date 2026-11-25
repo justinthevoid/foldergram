@@ -1,4 +1,26 @@
 {
+  "comments": {
+    "title": "Comments",
+    "refresh": "Refresh comments",
+    "loading": "Loading comments…",
+    "empty": "No comments yet. Start the conversation.",
+    "owner": "Gallery owner",
+    "edited": "Edited",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this comment?",
+    "cancel": "Cancel",
+    "older": "Older comments",
+    "compose": "Leave a comment",
+    "editing": "Edit your comment",
+    "placeholder": "Write something…",
+    "privacy": "Your name and comment are visible to invited family members.",
+    "post": "Post",
+    "save": "Save",
+    "loadError": "Could not load comments. Try refreshing.",
+    "saveError": "Could not save your comment. Please try again.",
+    "deleteError": "Could not delete the comment. Please try again."
+  },
   "family": {
     "reactionsBy": "Liked by {names}",
     "reactionsCount": "Liked by {count} family members",

@@ -374,6 +374,8 @@
           </p>
         </div>
 
+        <FamilyComments v-if="!isModal || isSidebarExpanded" :post-id="image.id" />
+
         <!-- Quick stats -->
         <dl class="viewer__sidebar-stats m-0 px-5 pt-[0.9rem]">
           <div class="viewer__sidebar-stat">
@@ -627,6 +629,7 @@
   import CarouselMediaStage from "./CarouselMediaStage.vue"
   import CollectionBookmark from "./CollectionBookmark.vue"
   import FamilyReactionSummary from "./FamilyReactionSummary.vue"
+  import FamilyComments from "./FamilyComments.vue"
   import PostCaptionModal from "./PostCaptionModal.vue"
   import ResilientImage from "./ResilientImage.vue"
   import { useLocalVideoPlayback } from "../composables/useLocalVideoPlayback"

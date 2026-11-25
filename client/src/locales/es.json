@@ -1,4 +1,26 @@
 {
+  "comments": {
+    "title": "Comentarios",
+    "refresh": "Actualizar comentarios",
+    "loading": "Cargando comentarios…",
+    "empty": "Aún no hay comentarios. Inicia la conversación.",
+    "owner": "Propietario de la galería",
+    "edited": "Editado",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar este comentario?",
+    "cancel": "Cancelar",
+    "older": "Comentarios anteriores",
+    "compose": "Dejar un comentario",
+    "editing": "Editar tu comentario",
+    "placeholder": "Escribe algo…",
+    "privacy": "Tu nombre y comentario son visibles para los familiares invitados.",
+    "post": "Publicar",
+    "save": "Guardar",
+    "loadError": "No se pudieron cargar los comentarios. Intenta actualizar.",
+    "saveError": "No se pudo guardar el comentario. Inténtalo de nuevo.",
+    "deleteError": "No se pudo eliminar el comentario. Inténtalo de nuevo."
+  },
   "family": {
     "reactionsBy": "Les gusta a {names}",
     "reactionsCount": "Les gusta a {count} familiares",

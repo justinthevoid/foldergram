@@ -231,6 +231,17 @@ CREATE TABLE IF NOT EXISTS family_reactions (
 );
 CREATE INDEX IF NOT EXISTS idx_family_reactions_member ON family_reactions(member_id, created_at DESC, post_id DESC);
 
+CREATE TABLE IF NOT EXISTS family_comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  author_key TEXT NOT NULL,
+  author_name TEXT NOT NULL,
+  body TEXT NOT NULL CHECK (length(body) BETWEEN 1 AND 1000),
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_family_comments_post ON family_comments(post_id, id DESC);
+
 CREATE TABLE IF NOT EXISTS collections (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   slug TEXT NOT NULL UNIQUE,

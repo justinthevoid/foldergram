@@ -26,8 +26,10 @@ import { REEL_CURSOR_MAX_LENGTH } from '../utils/reels-utils.js';
 import { serveDerivativeForImage } from './lazy-derivatives.js';
 import { registerVideoPlaybackRoutes } from './video-playback.js';
 import { videoPreviewReclamation } from '../services/video-preview-reclamation.js';
+import { familyCommentsRouter } from './family-comments.js';
 
 const router = express.Router();
+router.use(familyCommentsRouter);
 router.get('/branding', (_request, response) => {
   response.json(getPublicBranding());
 });
