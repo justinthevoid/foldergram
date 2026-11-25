@@ -27,10 +27,12 @@ import { serveDerivativeForImage } from './lazy-derivatives.js';
 import { registerVideoPlaybackRoutes } from './video-playback.js';
 import { videoPreviewReclamation } from '../services/video-preview-reclamation.js';
 import { familyCommentsRouter } from './family-comments.js';
+import { publicationRouter } from './publication.js';
 import { externalFamilyOrigin } from '../middleware/external-family-access.js';
 
 const router = express.Router();
 router.use(familyCommentsRouter);
+router.use(publicationRouter);
 router.get('/branding', (_request, response) => {
   response.json(getPublicBranding());
 });

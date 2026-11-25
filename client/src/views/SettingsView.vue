@@ -1206,6 +1206,7 @@
 
         <!-- CATEGORY: LIBRARY -->
         <template v-if="currentCategory === 'library'">
+          <PublishingStudio />
           <section class="card grid gap-[1.15rem] p-8">
             <div class="flex items-start justify-between gap-4 max-sm:flex-col max-sm:items-start">
               <div>
@@ -1476,6 +1477,7 @@ import { useReelsStore } from '../stores/reels';
 import AppearanceSettings from '../components/AppearanceSettings.vue';
 import BrandingSettings from '../components/BrandingSettings.vue';
 import FamilyAccessSettings from '../components/FamilyAccessSettings.vue';
+import PublishingStudio from '../components/PublishingStudio.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import {
   fetchAdminStats,

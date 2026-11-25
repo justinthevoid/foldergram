@@ -9,6 +9,7 @@ import { requireApiAuthentication, requireMediaAuthentication } from './middlewa
 import { requireTrustedMutationRequest } from './middleware/csrf-protection.js';
 import { blockPublicDemoMutations } from './middleware/public-demo-mode.js';
 import { restrictExternalFamilyAccess } from './middleware/external-family-access.js';
+import { publicationAccess } from './middleware/publication-access.js';
 import { routeTimingMiddleware } from './middleware/route-timing.js';
 import { apiRouter } from './routes/api.js';
 import { authService } from './services/auth-service.js';
@@ -26,6 +27,7 @@ export function createApp() {
 
   app.use(restrictExternalFamilyAccess);
   app.use(express.json());
+  app.use(publicationAccess);
 
   if (appConfig.derivativeMode === 'lazy') {
     app.use('/thumbnails', requireMediaAuthentication, lazyThumbnailsRouter);

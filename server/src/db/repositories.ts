@@ -1,5 +1,6 @@
 import { appConfig } from '../config/env.js';
 import { databaseManager } from './database.js';
+import { visiblePublicationImageSql, visiblePublicationPostSql, publicationDateSql, publicationFeaturedSql } from './publication-scope.js';
 import { isImmichSource, primaryLocalSource } from '../sources/local-source.js';
 import { SCAN_ACKNOWLEDGEMENT_SETTING_PREFIX, SHARE_SESSION_SECRET_SETTING_KEY } from '../constants/app-setting-keys.js';
 import { normalizePath, safeJoin } from '../utils/path-utils.js';
@@ -78,9 +79,9 @@ const NORMAL_FOLDER_ID_SUBQUERY_SQL = `SELECT id FROM folders WHERE ${NORMAL_FOL
 const POST_FOLDER_MEMBERSHIP_SQL = `posts.id IN (SELECT id FROM posts WHERE folder_id=? UNION SELECT membership_items.post_id FROM folder_media_memberships AS memberships JOIN post_items AS membership_items ON membership_items.image_id=memberships.image_id WHERE memberships.folder_id=?)`;
 
 const VISIBLE_IMAGE_WHERE_SQL =
-  `images.is_deleted = 0 AND images.is_trashed = 0 AND (images.source_id IN (${IMMICH_SOURCE_IDS_SQL}) OR LOWER(images.filename) NOT IN (${COVER_FILENAME_SQL})) AND ${NORMAL_FOLDER_ROLE_SQL}`;
+  `images.is_deleted = 0 AND images.is_trashed = 0 AND (images.source_id IN (${IMMICH_SOURCE_IDS_SQL}) OR LOWER(images.filename) NOT IN (${COVER_FILENAME_SQL})) AND ${NORMAL_FOLDER_ROLE_SQL} AND ${visiblePublicationImageSql('images')}`;
 const VISIBLE_IMAGE_WHERE_UNSCOPED_SQL =
-  `is_deleted = 0 AND is_trashed = 0 AND (source_id IN (${IMMICH_SOURCE_IDS_SQL}) OR LOWER(filename) NOT IN (${COVER_FILENAME_SQL})) AND folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL})`;
+  `is_deleted = 0 AND is_trashed = 0 AND (source_id IN (${IMMICH_SOURCE_IDS_SQL}) OR LOWER(filename) NOT IN (${COVER_FILENAME_SQL})) AND folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL}) AND ${visiblePublicationImageSql('images')}`;
 
 const NOT_EXPLICIT_FOLDER_COVER_SQL =
   `NOT EXISTS (` +
@@ -93,12 +94,12 @@ const NOT_EXPLICIT_FOLDER_COVER_SQL =
   `)`;
 
 const VISIBLE_POST_WHERE_SQL =
-  `posts.is_deleted = 0 AND posts.is_trashed = 0 AND ${NORMAL_FOLDER_ROLE_SQL} AND ${NOT_EXPLICIT_FOLDER_COVER_SQL}`;
+  `posts.is_deleted = 0 AND posts.is_trashed = 0 AND ${NORMAL_FOLDER_ROLE_SQL} AND ${NOT_EXPLICIT_FOLDER_COVER_SQL} AND ${visiblePublicationPostSql('posts')}`;
 const VISIBLE_POST_WHERE_UNSCOPED_SQL =
-  `is_deleted = 0 AND is_trashed = 0 AND folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL}) AND ${NOT_EXPLICIT_FOLDER_COVER_SQL}`;
+  `is_deleted = 0 AND is_trashed = 0 AND folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL}) AND ${NOT_EXPLICIT_FOLDER_COVER_SQL} AND ${visiblePublicationPostSql('posts')}`;
 
-const STORY_IMAGE_WHERE_SQL = 'images.is_deleted = 0 AND images.is_trashed = 0';
-const STORY_IMAGE_WHERE_UNSCOPED_SQL = 'is_deleted = 0 AND is_trashed = 0';
+const STORY_IMAGE_WHERE_SQL = `images.is_deleted = 0 AND images.is_trashed = 0 AND ${visiblePublicationImageSql('images')}`;
+const STORY_IMAGE_WHERE_UNSCOPED_SQL = `is_deleted = 0 AND is_trashed = 0 AND ${visiblePublicationImageSql('images')}`;
 
 // Keep the owner-indexed story folders on the outer side even without planner
 // statistics; starting from visible images can scan the whole library per folder.
@@ -110,7 +111,7 @@ const HAS_AVATAR_STORY_SQL = `
     WHERE story_folders.story_owner_folder_id = folders.id
       AND story_folders.role IN ('story_root', 'story_capsule')
       AND story_images.is_deleted = 0
-      AND story_images.is_trashed = 0
+      AND story_images.is_trashed = 0 AND ${visiblePublicationImageSql('story_images')}
     LIMIT 1
   )
 `;
@@ -131,7 +132,7 @@ const ACTIVE_FOLDER_AVATAR_IMAGE_ID_SQL = `
       )
     )
     AND avatar_images.is_deleted = 0
-    AND avatar_images.is_trashed = 0
+    AND avatar_images.is_trashed = 0 AND ${visiblePublicationImageSql('avatar_images')}
   LIMIT 1
 `;
 
@@ -140,7 +141,7 @@ const EXPLICIT_FOLDER_COVER_IMAGE_ID_SQL = `
   FROM images AS cover_images
   WHERE cover_images.source_id IN (${LOCAL_SOURCE_IDS_SQL}) AND cover_images.folder_id = folders.id
     AND cover_images.is_deleted = 0
-    AND cover_images.is_trashed = 0
+    AND cover_images.is_trashed = 0 AND ${visiblePublicationImageSql('cover_images')}
     AND LOWER(cover_images.filename) IN (${COVER_FILENAME_SQL})
   ORDER BY
     CASE LOWER(cover_images.filename)
@@ -163,7 +164,7 @@ const NEWEST_POST_AVATAR_IMAGE_ID_SQL = `
   JOIN images AS fallback_images ON fallback_images.id = pi.image_id
   WHERE p.id IN (SELECT id FROM posts WHERE folder_id=folders.id UNION SELECT post_id FROM folder_media_memberships JOIN post_items ON post_items.image_id=folder_media_memberships.image_id WHERE folder_id=folders.id)
     AND p.is_deleted = 0
-    AND p.is_trashed = 0
+    AND p.is_trashed = 0 AND ${visiblePublicationPostSql('p')}
   ORDER BY p.sort_timestamp DESC, p.id DESC
   LIMIT 1
 `;
@@ -188,7 +189,7 @@ function folderSummaryCtes(whereSql: string): string {
     ), folder_post_ids AS MATERIALIZED (
       SELECT posts.id AS post_id, posts.folder_id AS folder_id
       FROM folder_candidates JOIN posts ON posts.folder_id=folder_candidates.id
-      WHERE posts.is_deleted=0 AND posts.is_trashed=0
+      WHERE posts.is_deleted=0 AND posts.is_trashed=0 AND ${visiblePublicationPostSql('posts')}
       UNION
       SELECT post_items.post_id, memberships.folder_id
       FROM folder_candidates JOIN folder_media_memberships AS memberships ON memberships.folder_id=folder_candidates.id
@@ -207,7 +208,7 @@ function folderSummaryCtes(whereSql: string): string {
         MAX(images.mtime_ms) AS latest_image_mtime_ms
       FROM folder_candidates AS folders
       LEFT JOIN folder_post_ids ON folder_post_ids.folder_id=folders.id
-      LEFT JOIN posts ON posts.id=folder_post_ids.post_id AND posts.is_deleted=0 AND posts.is_trashed=0
+      LEFT JOIN posts ON posts.id=folder_post_ids.post_id AND posts.is_deleted=0 AND posts.is_trashed=0 AND ${visiblePublicationPostSql('posts')}
       LEFT JOIN post_items ON post_items.post_id = posts.id
       LEFT JOIN images ON images.id = post_items.image_id
       GROUP BY folders.id
@@ -892,7 +893,7 @@ export const folderRepository = {
                 folders.source_id IN (${IMMICH_SOURCE_IDS_SQL}) OR EXISTS (
                   SELECT 1
                   FROM posts
-                  WHERE posts.folder_id = folders.id AND posts.is_deleted = 0 AND posts.is_trashed = 0
+                  WHERE posts.folder_id = folders.id AND posts.is_deleted = 0 AND posts.is_trashed = 0 AND ${visiblePublicationPostSql('posts')}
                 )
                 OR EXISTS (
                   SELECT 1
@@ -1422,7 +1423,7 @@ export const postRepository = {
   },
 
   findById(id: number): PostRecord | undefined {
-    return database.prepare('SELECT * FROM posts WHERE id = ?').get(id) as PostRecord | undefined;
+    return database.prepare(`SELECT * FROM posts WHERE id = ? AND ${visiblePublicationPostSql('posts')}`).get(id) as PostRecord | undefined;
   },
 
   findBySourcePath(sourcePath: string, sourceId = primaryLocalSource().id): PostRecord | undefined {
@@ -1693,7 +1694,7 @@ export const postRepository = {
        INNER JOIN posts ON posts.id = post_items.post_id
        WHERE posts.is_deleted = 0
          AND posts.is_trashed = 0
-         AND posts.folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL})`
+         AND posts.folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL}) AND ${visiblePublicationPostSql('posts')}`
     ).get() as { count: number }).count);
   },
 
@@ -1711,7 +1712,7 @@ export const postRepository = {
        INNER JOIN images ON images.id = post_items.image_id
        WHERE posts.is_deleted = 0
          AND posts.is_trashed = 0
-         AND posts.folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL})
+         AND posts.folder_id IN (${NORMAL_FOLDER_ID_SUBQUERY_SQL}) AND ${visiblePublicationPostSql('posts')}
          AND posts.post_type = 'single'
          AND images.media_type = 'video'`
     ).get() as { count: number }).count);
@@ -1764,7 +1765,7 @@ export const postRepository = {
       `
       ${BASE_POST_SELECT_SQL}
       WHERE ${VISIBLE_POST_WHERE_SQL}
-      ORDER BY ${EFFECTIVE_FEED_TIME_SQL} DESC, posts.sort_timestamp DESC, posts.id DESC
+      ORDER BY ${publicationFeaturedSql} DESC, COALESCE(${publicationDateSql}, ${EFFECTIVE_FEED_TIME_SQL}) DESC, posts.sort_timestamp DESC, posts.id DESC
       LIMIT ? OFFSET ?
       `
     ).all(limit, offset) as unknown as FeedPost[];
@@ -2202,7 +2203,7 @@ export const postRepository = {
       JOIN post_items ON post_items.post_id = posts.id AND post_items.position = 1
       JOIN images ON images.id = post_items.image_id
       LEFT JOIN places ON places.id = posts.place_id
-      WHERE posts.id = ? AND posts.is_deleted = 0 AND posts.is_trashed = 0 AND ${NORMAL_FOLDER_ROLE_SQL}
+      WHERE posts.id = ? AND posts.is_deleted = 0 AND posts.is_trashed = 0 AND ${NORMAL_FOLDER_ROLE_SQL} AND ${visiblePublicationPostSql('posts')}
       `
     ).get(resolvedId) as (Omit<PostDetail, 'nextPostId' | 'previousPostId' | 'nextImageId' | 'previousImageId' | 'exif' | 'mediaItems' | 'itemCount'> & { originalUrl: string; exifJson: string | null }) | undefined;
 
@@ -2420,15 +2421,15 @@ export const imageRepository = {
   },
 
   getById(id: number): ImageRecord | undefined {
-    return database.prepare('SELECT * FROM images WHERE id = ?').get(id) as ImageRecord | undefined;
+    return database.prepare(`SELECT * FROM images WHERE id = ? AND ${visiblePublicationImageSql('images')}`).get(id) as ImageRecord | undefined;
   },
 
   getByThumbnailPath(thumbnailPath: string): ImageRecord | undefined {
-    return database.prepare('SELECT * FROM images WHERE thumbnail_path = ?').get(thumbnailPath) as ImageRecord | undefined;
+    return database.prepare(`SELECT * FROM images WHERE thumbnail_path = ? AND ${visiblePublicationImageSql('images')}`).get(thumbnailPath) as ImageRecord | undefined;
   },
 
   getByPreviewPath(previewPath: string): ImageRecord | undefined {
-    return database.prepare('SELECT * FROM images WHERE preview_path = ?').get(previewPath) as ImageRecord | undefined;
+    return database.prepare(`SELECT * FROM images WHERE preview_path = ? AND ${visiblePublicationImageSql('images')}`).get(previewPath) as ImageRecord | undefined;
   },
 
   listDerivativeReferences(): Array<Pick<ImageRecord, 'thumbnail_path' | 'preview_path' | 'is_deleted' | 'deleted_at'>> {
@@ -3242,7 +3243,7 @@ export const imageRepository = {
       `SELECT pi.image_id
        FROM posts p
        JOIN post_items pi ON pi.post_id = p.id AND pi.position = 1
-       WHERE (p.folder_id = ? OR EXISTS (SELECT 1 FROM folder_media_memberships WHERE image_id=pi.image_id AND folder_id=?)) AND p.is_deleted = 0 AND p.is_trashed = 0
+       WHERE (p.folder_id = ? OR EXISTS (SELECT 1 FROM folder_media_memberships WHERE image_id=pi.image_id AND folder_id=?)) AND p.is_deleted = 0 AND p.is_trashed = 0 AND ${visiblePublicationPostSql('p')}
        ORDER BY p.sort_timestamp DESC, p.id DESC LIMIT 1`
     ).get(folderId,folderId) as { image_id: number } | undefined;
     if (row) return row.image_id;

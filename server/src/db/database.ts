@@ -15,10 +15,13 @@ import { log } from '../services/log-service.js';
 import { storageService } from '../services/storage-service.js';
 import { getParentRelativePath } from '../utils/path-utils.js';
 import { getReelRandomRank } from '../utils/reels-utils.js';
+import { publicationOwner } from './publication-scope.js';
 
 const GLOBAL_DB_KEY = Symbol.for('foldergram.database.connection');
 
 function registerSqlFunctions(db: DatabaseSync): void {
+  db.function('publication_owner', () => publicationOwner() ? 1 : 0);
+  db.function('publication_now', () => Date.now());
   // SQLite LOWER only folds ASCII; folder search must match the client's Unicode
   // and whitespace normalization for personal folder names on every platform.
   db.function('folder_search_text', { deterministic: true }, (value) =>

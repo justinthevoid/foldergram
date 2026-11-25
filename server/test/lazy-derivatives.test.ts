@@ -377,7 +377,7 @@ describe.sequential('DERIVATIVE_MODE lazy behavior', () => {
     const requestPath = `/${encodeRelativePath(image.thumbnail_path)}`;
     const firstResponse = await dispatchRoute(lazyThumbnailsRouter, requestPath);
     expect(firstResponse.statusCode).toBe(200);
-    expect(firstResponse.headers.get('cache-control')).toBe('public, max-age=604800, immutable');
+    expect(firstResponse.headers.get('cache-control')).toBe('public, no-cache');
     expect(firstResponse.body).toBe(`thumbnail:${image.relative_path}`);
     expect(generateThumbnailDerivativeMock).toHaveBeenCalledOnce();
 
@@ -522,7 +522,7 @@ describe.sequential('DERIVATIVE_MODE lazy behavior', () => {
     const response = await dispatchRoute(lazyThumbnailsRouter, `/${encodeRelativePath(image.thumbnail_path)}`);
 
     expect(response.statusCode).toBe(200);
-    expect(response.headers.get('cache-control')).toBe('private, max-age=604800, immutable');
+    expect(response.headers.get('cache-control')).toBe('private, no-cache');
     expect(response.headers.get('vary')).toBe('Cookie');
   });
 

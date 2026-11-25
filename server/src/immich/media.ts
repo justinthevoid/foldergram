@@ -40,7 +40,7 @@ export function imageFolderIds(imageId: number): number[] {
     return rows.map(r => r.folder_id);
 }
 export function authorizedImage(request: express.Request, image: ImageRecord, shareOnly = false): boolean {
-    if (image.is_deleted || image.is_trashed || !isSourceVisible(image.source_id))
+    if (!imageRepository.getById(image.id) || image.is_deleted || image.is_trashed || !isSourceVisible(image.source_id))
         return false;
     if (!shareOnly && (!authService.isEnabled() || authService.isAuthenticatedRequest(request) || authService.isPublicViewerAccessEnabled()))
         return true;
