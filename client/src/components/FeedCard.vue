@@ -66,7 +66,15 @@
       :retry-while="appStore.isScanning"
       :loading="isHomeContext ? 'eager' : 'lazy'"
       :muted="appStore.videoMuted"
-    />
+      :double-tap-like="isHomeContext && authStore.canUseSavedItems"
+      @double-tap="handleMediaDoubleTap"
+    >
+      <template #overlay>
+        <div ref="heartBurstEl" class="feed-card__heart-burst" aria-hidden="true">
+          <span class="i-fluent-heart-20-filled feed-card__heart-burst-icon" />
+        </div>
+      </template>
+    </CarouselMediaStage>
 
     <RouterLink v-else-if="!isHomeContext" custom :to="imageRoute" v-slot="{ href, navigate }">
       <a
@@ -239,6 +247,7 @@
               aria-hidden="true"
             />
           </button>
+          <FamilyCommentAction :post-id="item.id" class="inline-flex items-center justify-center w-11 h-11 border-0 bg-transparent cursor-pointer color-inherit hover:opacity-72"/>
           <RouterLink custom :to="imageRoute" v-slot="{ href, navigate }">
             <a
               :href="href"
@@ -473,6 +482,7 @@ import Avatar from './Avatar.vue';
 import CarouselMediaStage from './CarouselMediaStage.vue';
 import CollectionBookmark from './CollectionBookmark.vue';
 import FamilyReactionSummary from './FamilyReactionSummary.vue';
+import FamilyCommentAction from './FamilyCommentAction.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 import PostCaptionModal from './PostCaptionModal.vue';
 import LocalVideoFeedback from './LocalVideoFeedback.vue';
@@ -728,6 +738,12 @@ async function likeFromMedia() {
   await likesStore.toggleLike(props.item);
 }
 
+function handleMediaDoubleTap() {
+  if (!authStore.canUseSavedItems) return;
+  triggerHeartBurst();
+  void likeFromMedia();
+}
+
 function triggerHeartBurst() {
   const el = heartBurstEl.value;
   if (!el) return;
@@ -764,8 +780,7 @@ function handleHomeImageClick(event: MouseEvent) {
   if (lastHomeImageTapAt.value > 0 && now - lastHomeImageTapAt.value <= HOME_IMAGE_DOUBLE_TAP_WINDOW_MS) {
     lastHomeImageTapAt.value = 0;
     clearHomeImageTapResetTimer();
-    triggerHeartBurst();
-    void likeFromMedia();
+    handleMediaDoubleTap();
     return;
   }
 
@@ -1168,6 +1183,10 @@ watch(
 watch(
   () => props.item.id,
   () => {
+    lastHomeImageTapAt.value = 0;
+    clearHomeImageTapResetTimer();
+    carouselIndex.value = 0;
+    heartBurstEl.value?.classList.remove('feed-card__heart-burst--active');
     loadedHomeVideoAspectRatio.value = null;
     isHomeVideoPaused.value = false;
     homeVideoDurationMs.value = props.item.durationMs ?? 0;
@@ -1278,6 +1297,13 @@ onBeforeUnmount(() => {
   will-change: transform, opacity;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .feed-card__heart-burst--active { animation: feed-heart-fade .65s linear forwards; will-change:auto; }
+}
+@keyframes feed-heart-fade {
+  0%, 65% { opacity:1; transform:none; }
+  100% { opacity:0; transform:none; }
+}
 @keyframes feed-heart-burst {
   /* Phase 1 — spring pop-in */
   0%   { opacity: 0;   transform: translateY(0) scale(0) rotate(0deg); }

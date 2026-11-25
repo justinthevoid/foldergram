@@ -90,6 +90,18 @@ describe('ReelActionRail', () => {
     expect(likesStore.isLiked(item.id)).toBe(true);
   });
 
+  it('offers a comment shortcut to named family viewers without advertising blocked downloads', async () => {
+    useAuthStore().applyStatus({
+      enabled:true,authenticated:true,role:'viewer',accessMode:'off',likesMode:'family',defaultLocale:null,publicDemoMode:false,
+      externalFamilyAccess:true,familyMember:{id:'fixture',name:'Family'},
+      capabilities:{canManageLibrary:false,canDeleteMedia:false,canAccessSettings:false,canUseSharedLikes:false,canUseLocalFavorites:false,canUseSharedCollections:false,canUseLocalCollections:true}
+    });
+    const wrapper=mount(ReelActionRail,{props:{item:createFeedItem(22)},global:{stubs:{RouterLink:{template:'<a><slot/></a>'}}}});
+    expect(wrapper.get('button[aria-label="Comments"]').attributes('aria-expanded')).toBe('false');
+    expect(wrapper.find('a[download]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it('renders Bookmark below Like and Download between Details and Folder', () => {
     const item = createFeedItem(22);
 

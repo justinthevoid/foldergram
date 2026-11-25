@@ -6,6 +6,7 @@ import type { MediaStorage } from 'vidstack';
 import { useAppStore } from '../stores/app';
 import { useSourcesStore } from '../stores/sources';
 import { useAuthStore } from '../stores/auth';
+import { useLikesStore } from '../stores/likes';
 import type { FeedItem } from '../types/api';
 import FeedCard from './FeedCard.vue';
 import FeedList from './FeedList.vue';
@@ -591,6 +592,37 @@ describe('FeedCard', () => {
     await avatarButton.trigger('click');
 
     expect(wrapper.emitted('openFolderStory')).toEqual([['phone-clips']]);
+  });
+
+  it('keeps double-tap hearts for still photos and carousel slides, without unliking a liked post', async () => {
+    const item=createImageItem(809);
+    const likes=useLikesStore();
+    const toggle=vi.spyOn(likes,'toggleLike').mockResolvedValue(undefined);
+    likes.likedIds=[];
+    const wrapper=mount(FeedCard,{props:{item,avatarUrl:null,context:'home'},global:{stubs:globalStubs}});
+    const surface=wrapper.get('.feed-card__heart-burst').element.parentElement!;
+    surface.dispatchEvent(new MouseEvent('click',{bubbles:true,button:0}));
+    surface.dispatchEvent(new MouseEvent('click',{bubbles:true,button:0}));
+    expect(toggle).toHaveBeenCalledWith(item);
+    expect(wrapper.get('.feed-card__heart-burst').classes()).toContain('feed-card__heart-burst--active');
+    likes.likedIds=[item.id];
+    surface.dispatchEvent(new MouseEvent('click',{bubbles:true,button:0}));
+    surface.dispatchEvent(new MouseEvent('click',{bubbles:true,button:0}));
+    expect(toggle).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+    const carousel={...createImageItem(810),postType:'carousel' as const,mediaItems:[1,2].map((id,index)=>({
+      imageId:id,position:index+1,filename:id+'.jpg',mediaType:'image' as const,width:1200,height:800,durationMs:null,
+      isAnimated:false,thumbnailUrl:'/thumbs/'+id+'.webp',previewUrl:'/previews/'+id+'.webp',originalUrl:'/originals/'+id+'.jpg'
+    }))};
+    likes.likedIds=[];
+    const slides=mount(FeedCard,{props:{item:carousel,avatarUrl:null,context:'home'},global:{stubs:globalStubs}});
+    const stage=slides.getComponent(CarouselMediaStage);
+    expect(stage.props('doubleTapLike')).toBe(true);
+    stage.vm.$emit('doubleTap');
+    expect(toggle).toHaveBeenLastCalledWith(carousel);
+    expect(slides.get('.feed-card__heart-burst').classes()).toContain('feed-card__heart-burst--active');
+    slides.unmount();
+    toggle.mockRestore();
   });
 
   it('exposes native tooltip titles on the feed card icon controls', async () => {

@@ -16,6 +16,7 @@
       />
     </button>
 
+    <FamilyCommentAction :post-id="item.id" class="reel-action-rail__button" />
     <CollectionBookmark
       :key="item.id"
       :item="item"
@@ -44,6 +45,7 @@
     </div>
 
     <a
+      v-if="!authStore.externalFamilyAccess && item.originalDownloadsAllowed !== false"
       class="reel-action-rail__button"
       :href="downloadOriginalMediaUrl"
       download
@@ -74,6 +76,7 @@ import { useLikesStore } from '../stores/likes';
 import type { FeedItem } from '../types/api';
 import { getOriginalMediaDownloadUrl } from '../utils/original-media';
 import CollectionBookmark from './CollectionBookmark.vue';
+import FamilyCommentAction from './FamilyCommentAction.vue';
 
 const props = defineProps<{
   item: FeedItem;
@@ -118,7 +121,7 @@ async function handleLike() {
   z-index: 7;
 }
 
-.reel-action-rail__button {
+.reel-action-rail__button, :deep(.reel-action-rail__button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -136,7 +139,7 @@ async function handleLike() {
     color 0.16s ease;
 }
 
-.reel-action-rail__button:hover:not(:disabled) {
+.reel-action-rail__button:hover:not(:disabled), :deep(.reel-action-rail__button:hover:not(:disabled)) {
   transform: translateY(-1px);
   opacity: 0.96;
   color: var(--text);

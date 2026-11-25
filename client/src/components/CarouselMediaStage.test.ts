@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
 import { i18n } from '../locales';
@@ -90,6 +90,47 @@ describe('CarouselMediaStage', () => {
 
     // Should NOT have navigated because pointerdown was on an ignored element
     expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+  });
+
+  it('recognizes a deliberate same-slide double tap without liking during swipes, video controls or slide changes', async () => {
+    const items=[mockItems[0]!, mockItems[1]!, {...mockItems[1]!,imageId:3,position:3}];
+    const wrapper=mount(CarouselMediaStage,{props:{items,modelValue:1,doubleTapLike:true}});
+    let now=1000;
+    const clock=vi.spyOn(Date,'now').mockImplementation(()=>now);
+    // jsdom may lack PointerEvent; define the full gesture payload explicitly.
+    const dispatch=async(type:string,x:number,y:number,isPrimary:boolean,pointerId:number)=>{
+      const event=Object.assign(new Event(type,{bubbles:true,cancelable:true}),{
+        pointerId,pointerType:'touch',isPrimary,button:0,clientX:x,clientY:y
+      });
+      wrapper.element.dispatchEvent(event);
+      await wrapper.vm.$nextTick();
+    };
+    const down=async(x=100,y=100,primary=true,pointerId=1)=>dispatch('pointerdown',x,y,primary,pointerId);
+    const up=async(x=100,y=100,pointerId=1)=>dispatch('pointerup',x,y,true,pointerId);
+    const tap=async(x=100,y=100)=>{await down(x,y);now+=30;await up(x,y);now+=90;};
+    try {
+      await tap();await tap();
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+      await tap();await down();await up(30,100);
+      expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([2]);
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+      await wrapper.setProps({modelValue:2});
+      await tap();await down();await up(20,220); // predominantly vertical
+      expect(wrapper.emitted('update:modelValue')).toHaveLength(1);
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+      await tap();
+      await wrapper.setProps({modelValue:1});
+      await tap();
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+      await down();await down(130,100,false,2);await up();await tap();
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+      await wrapper.setProps({modelValue:0});
+      await tap();await tap();
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+      await wrapper.setProps({modelValue:1,doubleTapLike:false});
+      await tap();await tap();
+      expect(wrapper.emitted('doubleTap')).toHaveLength(1);
+    }finally{clock.mockRestore();wrapper.unmount();}
   });
 
   it('shares explicit sound requests with other videos and persists them', async () => {

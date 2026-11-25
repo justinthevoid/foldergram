@@ -46,10 +46,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { requestJson } from '../api/http';
-import { useAuthStore } from '../stores/auth';
+import { useFamilyCommentScope } from '../composables/useFamilyCommentScope';
 
 interface Comment {
   id: number;
@@ -63,12 +63,8 @@ interface Comment {
 }
 interface CommentPage { items: Comment[]; nextBeforeId: number | null }
 const props = defineProps<{ postId: number; embedded?: boolean }>();
-const auth = useAuthStore();
 const { t, locale } = useI18n();
-const scope = computed(() => {
-  if (!auth.ready || !auth.enabled || !auth.authenticated || auth.accessMode === 'public' || auth.publicDemoMode === true) return null;
-  return auth.role === 'admin' ? 'admin' : auth.familyMember?.id ?? null;
-});
+const scope = useFamilyCommentScope();
 const items = ref<Comment[]>([]);
 const draft = ref('');
 const editId = ref<number | null>(null);

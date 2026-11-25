@@ -1,7 +1,7 @@
 <template>
   <div
     class="relative h-full w-full min-h-0 min-w-0 overflow-hidden bg-surface-alt outline-none select-none"
-    :style="{ aspectRatio: fitContainer ? 'auto' : aspectRatio }"
+    :style="{ aspectRatio: fitContainer ? 'auto' : aspectRatio, touchAction: activeItem?.mediaType === 'image' ? 'pan-y pinch-zoom' : undefined }"
     role="group"
     aria-roledescription="carousel"
     :aria-label="t('post.carousel.label', { count: items.length })"
@@ -45,6 +45,8 @@
         draggable="false"
       />
     </template>
+
+    <slot name="overlay" />
 
     <button
       v-if="activeIndex > 0"
@@ -111,6 +113,7 @@ const props = withDefaults(
     autoplay?: boolean;
     streamOnPlay?: boolean;
     fitContainer?: boolean;
+    doubleTapLike?: boolean;
   }>(),
   {
     modelValue: 0,
@@ -119,12 +122,14 @@ const props = withDefaults(
     loading: 'lazy',
     muted: true,
     autoplay: false,
-    fitContainer: false
+    fitContainer: false,
+    doubleTapLike: false
   }
 );
 
 const emit = defineEmits<{
   'update:modelValue': [index: number];
+  doubleTap: [];
 }>();
 
 const { t } = useI18n();
@@ -132,8 +137,13 @@ const appStore = useAppStore();
 const authStore = useAuthStore();
 const pointerId = ref<number | null>(null);
 const pointerStartX = ref(0);
+let pointerStartY = 0;
+let pointerStartedAt = 0;
+let pointerImageId: number | undefined;
+let lastTap: {id:number; at:number; x:number; y:number}|null = null;
 
 const activeIndex = computed(() => Math.min(Math.max(props.modelValue, 0), Math.max(props.items.length - 1, 0)));
+const activeItem = computed(() => props.items[activeIndex.value]);
 const frameItem = computed(() => props.items[0]);
 const aspectRatio = computed(() =>
   frameItem.value
@@ -183,28 +193,52 @@ function handleKeyRight(event: KeyboardEvent) {
 }
 
 function startPointer(event: PointerEvent) {
-  if (event.pointerType === 'mouse' && event.button !== 0) return;
-  if (isGestureIgnored(event.target)) return;
+  if (event.isPrimary === false || pointerId.value !== null) { cancelPointer(); return; }
+  if ((event.pointerType === 'mouse' && event.button !== 0) || isGestureIgnored(event.target)) { lastTap = null; return; }
   pointerId.value = event.pointerId;
   pointerStartX.value = event.clientX;
+  pointerStartY = event.clientY;
+  pointerStartedAt = Date.now();
+  pointerImageId = activeItem.value?.imageId;
   (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
 }
 
 function finishPointer(event: PointerEvent) {
   if (pointerId.value !== event.pointerId) return;
-  const distance = event.clientX - pointerStartX.value;
-  if (Math.abs(distance) >= 48) distance > 0 ? previous() : next();
-  cancelPointer();
+  pointerId.value = null;
+  const dx = event.clientX - pointerStartX.value;
+  const dy = event.clientY - pointerStartY;
+  const item = activeItem.value;
+  if (item?.imageId !== pointerImageId) { lastTap = null; return; }
+  if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy)) {
+    lastTap = null;
+    dx > 0 ? previous() : next();
+    return;
+  }
+  const now = Date.now();
+  if (!props.doubleTapLike || !item || item.mediaType !== 'image' || Math.hypot(dx,dy) > 12 || now - pointerStartedAt > 350) {
+    lastTap = null;
+    return;
+  }
+  if (lastTap && lastTap.id === item.imageId && now - lastTap.at <= 300 &&
+      Math.hypot(event.clientX-lastTap.x,event.clientY-lastTap.y) <= 40) {
+    lastTap = null;
+    emit('doubleTap');
+  } else {
+    lastTap = {id:item.imageId,at:now,x:event.clientX,y:event.clientY};
+  }
 }
 
 function cancelPointer() {
   pointerId.value = null;
+  lastTap = null;
 }
+watch(() => activeItem.value?.imageId, cancelPointer, {flush:'sync'});
 
 watch(
   () => props.items.map((item) => item.imageId).join(','),
   () => {
-    if (activeIndex.value >= props.items.length) emit('update:modelValue', 0);
+    if (props.modelValue >= props.items.length && props.modelValue !== 0) emit('update:modelValue', 0);
   }
 );
 </script>
