@@ -22,6 +22,13 @@
     "deleteError": "无法删除评论，请重试。"
   },
   "family": {
+    "destination": "邀请地址",
+    "externalLink": "互联网访问（邮箱验证码）",
+    "privateLink": "私有网络（Tailscale）",
+    "externalHelp": "只有 Cloudflare Access 批准的邮箱才能使用互联网链接。输入验证码后，如有需要请重新打开或粘贴邀请链接。",
+    "pasteInvite": "粘贴邀请链接",
+    "externalSignIn": "使用私密邀请进入图库。",
+    "anotherInvite": "使用其他邀请",
     "reactionsBy": "{names} 赞了这张照片",
     "reactionsCount": "{count} 位家庭成员点赞",
     "title": "家庭访问",

@@ -22,6 +22,13 @@
     "deleteError": "Could not delete the comment. Please try again."
   },
   "family": {
+    "destination": "Invitation address",
+    "externalLink": "Internet access (email code)",
+    "privateLink": "Private network (Tailscale)",
+    "externalHelp": "Only email addresses approved in Cloudflare Access can use the internet link. After entering the email code, reopen or paste the invitation if necessary.",
+    "pasteInvite": "Paste your invitation link",
+    "externalSignIn": "Use your private invitation to enter the gallery.",
+    "anotherInvite": "Use another invitation",
     "reactionsBy": "Liked by {names}",
     "reactionsCount": "Liked by {count} family members",
     "title": "Family access",

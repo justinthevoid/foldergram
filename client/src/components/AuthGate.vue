@@ -20,8 +20,17 @@
         <p class="m-0 text-sm text-muted">{{ t('family.joinHelp') }}</p>
         <p v-if="inviteError" role="alert" class="m-0 text-sm text-red-500">{{ inviteError }}</p>
         <button class="btn-primary" type="button" :disabled="submitting" @click="acceptInvite">{{ t('family.accept') }}</button>
-        <button class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''">{{ t('family.usePassword') }}</button>
+        <button v-if="authStore.externalFamilyAccess" class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''; inviteError = ''">{{ t('family.anotherInvite') }}</button>
+        <button v-if="!authStore.externalFamilyAccess" class="text-sm text-muted" type="button" :disabled="submitting" @click="inviteToken = ''">{{ t('family.usePassword') }}</button>
       </div>
+      <form v-else-if="authStore.externalFamilyAccess" class="mt-6 grid gap-3" @submit.prevent="pasteInvite">
+        <label class="grid gap-2 text-sm font-medium">
+          {{ t('family.pasteInvite') }}
+          <input v-model="pastedInvite" type="text" autocomplete="off" class="border border-border rounded-lg p-3 bg-surface text-text" :disabled="submitting" />
+        </label>
+        <p v-if="inviteError" role="alert" class="m-0 text-sm text-red-500">{{ inviteError }}</p>
+        <button class="btn-primary" type="submit" :disabled="submitting || !pastedInvite.trim()">{{ t('family.accept') }}</button>
+      </form>
       <form v-else class="mt-6 grid gap-4" @submit.prevent="submitLogin">
         <label class="grid gap-[0.45rem]">
           <span class="text-[0.76rem] font-bold uppercase tracking-[0.08em] text-muted">{{ t('auth.gate.passwordLabel') }}</span>
@@ -62,6 +71,18 @@ const authStore = useAuthStore();
 const password = ref('');
 const inviteToken = ref('');
 const inviteError = ref('');
+const pastedInvite = ref('');
+async function pasteInvite() {
+  try {
+    const value = pastedInvite.value.trim();
+    const url = new URL(value);
+    const match = /^#family-invite=([A-Za-z0-9_-]{43})$/.exec(url.hash);
+    if (url.origin !== window.location.origin || !match) throw new Error('Invalid invitation');
+    inviteToken.value = match[1]!;
+    pastedInvite.value = '';
+    await acceptInvite();
+  } catch { inviteError.value = t('family.joinError'); }
+}
 onMounted(() => {
   const match = /^#family-invite=([A-Za-z0-9_-]{43})$/.exec(window.location.hash);
   if (match) {
@@ -87,7 +108,7 @@ const submitting = ref(false);
 const localError = ref<string | null>(null);
 const errorMessage = computed(() => localError.value ?? authStore.error);
 const description = computed(() =>
-  authStore.accessMode === 'password'
+  authStore.externalFamilyAccess ? t('family.externalSignIn') : authStore.accessMode === 'password'
     ? t('auth.gate.descriptionPassword')
     : t('auth.gate.descriptionAdmin')
 );

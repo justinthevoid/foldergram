@@ -27,6 +27,7 @@ import { serveDerivativeForImage } from './lazy-derivatives.js';
 import { registerVideoPlaybackRoutes } from './video-playback.js';
 import { videoPreviewReclamation } from '../services/video-preview-reclamation.js';
 import { familyCommentsRouter } from './family-comments.js';
+import { externalFamilyOrigin } from '../middleware/external-family-access.js';
 
 const router = express.Router();
 router.use(familyCommentsRouter);
@@ -409,7 +410,7 @@ function familyGeneration() {
 
 router.get('/admin/family', familyAdmin, (_request, response) => {
   const generation = authService.getFamilyGeneration();
-  response.json({ enabled: Boolean(generation), members: listFamilyMembers(generation) });
+  response.json({ enabled: Boolean(generation), members: listFamilyMembers(generation), externalOrigin: generation ? externalFamilyOrigin() : null });
 });
 
 router.post('/admin/family', familyAdmin, (request, response) => {

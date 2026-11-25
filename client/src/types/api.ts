@@ -714,6 +714,7 @@ export interface FamilyInvite {
 }
 
 export interface AuthStatus {
+  externalFamilyAccess?: boolean;
   familyMember?: FamilyIdentity;
   enabled: boolean;
   publicDemoMode?: boolean;

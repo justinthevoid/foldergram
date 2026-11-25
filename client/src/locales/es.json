@@ -22,6 +22,13 @@
     "deleteError": "No se pudo eliminar el comentario. Inténtalo de nuevo."
   },
   "family": {
+    "destination": "Dirección de invitación",
+    "externalLink": "Acceso por internet (código de correo)",
+    "privateLink": "Red privada (Tailscale)",
+    "externalHelp": "Solo las direcciones autorizadas en Cloudflare Access pueden usar el enlace de internet. Tras introducir el código, vuelve a abrir o pega la invitación.",
+    "pasteInvite": "Pega tu enlace de invitación",
+    "externalSignIn": "Usa tu invitación privada para entrar en la galería.",
+    "anotherInvite": "Usar otra invitación",
     "reactionsBy": "Les gusta a {names}",
     "reactionsCount": "Les gusta a {count} familiares",
     "title": "Acceso familiar",

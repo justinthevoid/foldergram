@@ -17,6 +17,14 @@
       <div v-if="invite" class="grid gap-2 rounded-xl border border-border bg-surface-alt p-4">
         <p class="m-0 font-semibold">{{ t('family.linkFor', { name: invite.member.name }) }}</p>
         <p class="m-0 text-sm text-muted">{{ t('family.linkHelp') }}</p>
+        <label v-if="externalOrigin" class="grid gap-1 text-sm font-medium">
+          {{ t('family.destination') }}
+          <select v-model="inviteDestination" class="rounded-lg border border-border bg-surface text-text p-2" @change="copied = false">
+            <option value="external">{{ t('family.externalLink') }}</option>
+            <option value="private">{{ t('family.privateLink') }}</option>
+          </select>
+        </label>
+        <p v-if="externalOrigin && inviteDestination === 'external'" class="m-0 text-sm text-muted">{{ t('family.externalHelp') }}</p>
         <input :value="link" readonly :aria-label="t('family.invitation')" class="min-w-0 border border-border rounded-lg p-2 bg-surface text-text text-sm" @focus="($event.target as HTMLInputElement).select()" />
         <div class="flex flex-wrap gap-2">
           <button class="btn-primary" type="button" @click="copy">{{ t(copied ? 'family.copied' : 'family.copy') }}</button>
@@ -57,6 +65,8 @@ const auth = useAuthStore();
 const name = ref('');
 const members = ref<FamilyMember[]>([]);
 const invite = ref<FamilyInvite | null>(null);
+const externalOrigin = ref<string | null>(null);
+const inviteDestination = ref<'external' | 'private'>('external');
 const enabled = ref(false);
 const loading = ref(false);
 const busy = ref(false);
@@ -65,17 +75,18 @@ const error = ref('');
 const confirmId = ref<string | null>(null);
 const https = window.location.protocol === 'https:';
 const disabled = computed(() => loading.value || busy.value || !auth.canWriteAppearance);
-const link = computed(() => invite.value ? new URL('/#family-invite=' + invite.value.token, window.location.origin).href : '');
+const link = computed(() => invite.value ? new URL('/#family-invite=' + invite.value.token, inviteDestination.value === 'external' && externalOrigin.value ? externalOrigin.value : window.location.origin).href : '');
 async function load() {
   if (!auth.enabled || auth.accessMode === 'public' || !auth.canAccessSettings) {
-    members.value = []; invite.value = null; enabled.value = false; return;
+    members.value = []; invite.value = null; externalOrigin.value = null; enabled.value = false; return;
   }
   loading.value = true;
   try {
-    const result = await requestJson<{ enabled: boolean; members: FamilyMember[] }>('/api/admin/family');
+    const result = await requestJson<{ enabled: boolean; members: FamilyMember[]; externalOrigin?: string | null }>('/api/admin/family');
     if (!auth.canAccessSettings) return;
     members.value = result.members;
     enabled.value = result.enabled;
+    externalOrigin.value = result.externalOrigin ?? null;
   } catch { error.value = t('family.loadError'); }
   finally { loading.value = false; }
 }

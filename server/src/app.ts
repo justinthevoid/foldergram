@@ -8,6 +8,7 @@ import { appConfig, repositoryRoot } from './config/env.js';
 import { requireApiAuthentication, requireMediaAuthentication } from './middleware/auth-protection.js';
 import { requireTrustedMutationRequest } from './middleware/csrf-protection.js';
 import { blockPublicDemoMutations } from './middleware/public-demo-mode.js';
+import { restrictExternalFamilyAccess } from './middleware/external-family-access.js';
 import { routeTimingMiddleware } from './middleware/route-timing.js';
 import { apiRouter } from './routes/api.js';
 import { authService } from './services/auth-service.js';
@@ -23,6 +24,7 @@ export function applyApiNoStoreHeaders(response: Pick<express.Response, 'setHead
 export function createApp() {
   const app = express();
 
+  app.use(restrictExternalFamilyAccess);
   app.use(express.json());
 
   if (appConfig.derivativeMode === 'lazy') {

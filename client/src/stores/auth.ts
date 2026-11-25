@@ -16,6 +16,7 @@ import type { AuthMutationResult, FamilyIdentity } from '../types/api';
 import type { AuthCapabilities, AuthRole, AuthStatus, LikesMode, ViewerAccessMode } from '../types/api';
 
 interface AuthState {
+  externalFamilyAccess: boolean;
   familyMember: FamilyIdentity | null;
   ready: boolean;
   loading: boolean;
@@ -96,6 +97,7 @@ async function clearAppCaches(): Promise<void> {
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
+    externalFamilyAccess: false,
     familyMember: null,
     ready: false,
     loading: false,
@@ -128,11 +130,12 @@ export const useAuthStore = defineStore('auth', {
       state.capabilities.canUseLocalFavorites ||
       state.capabilities.canUseSharedCollections === true ||
       state.capabilities.canUseLocalCollections === true,
-    canUnlockAdmin: (state) => state.enabled && !state.capabilities.canAccessSettings
+    canUnlockAdmin: (state) => state.enabled && !state.externalFamilyAccess && !state.capabilities.canAccessSettings
   },
   actions: {
     applyStatus(status: AuthStatus) {
       this.enabled = status.enabled;
+      this.externalFamilyAccess = status.externalFamilyAccess ?? this.externalFamilyAccess;
       this.familyMember = status.familyMember ?? null;
       this.publicDemoMode = status.publicDemoMode ?? null;
       this.authenticated = status.authenticated;
@@ -149,7 +152,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     openUnlockDialog() {
-      if (!this.enabled || this.capabilities.canAccessSettings) {
+      if (!this.enabled || this.externalFamilyAccess || this.capabilities.canAccessSettings) {
         return;
       }
 
