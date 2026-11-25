@@ -222,6 +222,45 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 
   });
 }
 
+for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  test(`album recap presents uncropped photos and real captions at ${viewport.width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport);
+    await mockGallery(page, viewport.width === 390 ? 'dark' : 'light');
+    const portrait = { ...panorama, id: 2, filename: 'portrait.jpg', width: 1000, height: 1600,
+      thumbnailUrl: '/thumbnails/portrait.svg', previewUrl: '/previews/portrait.svg', caption: 'Family portrait', takenAt: null };
+    await page.route(/\/(thumbnails|previews)\/portrait\.svg/, route => route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1600"><rect width="1000" height="1600" fill="#a77c62"/></svg>'
+    }));
+    await page.route('**/api/folders/panoramas/images?*', route => route.fulfill({
+      json: { folder: { ...folder, imageCount: 3, description: 'A day together' },
+        items: [panorama, portrait, { ...panorama, id: 3, filename: 'clip.mp4', mediaType: 'video' }],
+        page: 1, limit: 24, total: 3, hasMore: false }
+    }));
+    await page.goto('/f/panoramas');
+    const launch = page.getByRole('button', { name: 'Recap', exact: true });
+    await launch.click();
+    const recap = page.getByRole('dialog', { name: 'Panoramas' });
+    await expect(recap).toBeVisible();
+    await expect(recap.getByText('A day together', { exact: true })).toBeVisible();
+    await expect(recap.locator('figure')).toHaveCount(2);
+    await expect(recap.getByText(panorama.caption, { exact: true })).toBeVisible();
+    await expect(recap.getByAltText('clip.mp4')).toHaveCount(0);
+    const hero = recap.getByAltText('panorama.jpg', { exact: true });
+    await expect(hero).toHaveAttribute('data-loaded', 'true');
+    await expect(hero).toHaveCSS('object-fit', 'contain');
+    const bounds = await recap.boundingBox();
+    expect(bounds!.width).toBe(viewport.width);
+    expect(bounds!.height).toBe(viewport.height);
+    await expect(recap.locator('time')).toHaveCount(1);
+    await page.screenshot({ path: testInfo.outputPath('album-recap.png') });
+    await recap.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(recap).toHaveCount(0);
+    await expect(launch).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Slideshow', exact: true })).toBeVisible();
+  });
+}
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

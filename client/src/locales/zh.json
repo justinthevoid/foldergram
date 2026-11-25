@@ -21,6 +21,13 @@
     "empty": "此相册没有照片。",
     "loadError": "无法加载更多照片。"
   },
+  "albumRecap": {
+    "title": "相册回顾",
+    "subtitle": "用这个相册的照片讲述一段小故事。",
+    "empty": "此相册没有照片。",
+    "end": "你已浏览完此回顾。",
+    "loadError": "无法加载更多照片。"
+  },
   "printList": {
     "title": "照片冲印清单",
     "description": "选择想要冲印或装框的收藏照片。",

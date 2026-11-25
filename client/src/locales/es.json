@@ -21,6 +21,13 @@
     "empty": "No hay fotos en este álbum.",
     "loadError": "No se pudieron cargar más fotos."
   },
+  "albumRecap": {
+    "title": "Recuerdo",
+    "subtitle": "Una pequeña historia en fotos de este álbum.",
+    "empty": "No hay fotos en este álbum.",
+    "end": "Has llegado al final de este recuerdo.",
+    "loadError": "No se pudieron cargar más fotos."
+  },
   "printList": {
     "title": "Lista de impresión",
     "description": "Elige tus fotos favoritas para imprimir o enmarcar.",

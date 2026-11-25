@@ -21,6 +21,13 @@
     "empty": "No photographs in this album.",
     "loadError": "Couldn't load more photographs."
   },
+  "albumRecap": {
+    "title": "Recap",
+    "subtitle": "A little photo essay from this album.",
+    "empty": "There are no photographs in this album.",
+    "end": "You've reached the end of this recap.",
+    "loadError": "Couldn't load more photographs."
+  },
   "printList": {
     "title": "Print list",
     "description": "Pick your favorite photographs to print or frame.",

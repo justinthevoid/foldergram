@@ -21,6 +21,13 @@
     "empty": "Keine Fotos in diesem Album.",
     "loadError": "Weitere Fotos konnten nicht geladen werden."
   },
+  "albumRecap": {
+    "title": "Rückblick",
+    "subtitle": "Eine kleine Fotogeschichte aus diesem Album.",
+    "empty": "Dieses Album enthält keine Fotos.",
+    "end": "Du hast das Ende des Rückblicks erreicht.",
+    "loadError": "Weitere Fotos konnten nicht geladen werden."
+  },
   "printList": {
     "title": "Fotodruckliste",
     "description": "Wähle deine Lieblingsfotos zum Drucken oder Einrahmen.",

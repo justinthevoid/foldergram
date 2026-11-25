@@ -160,6 +160,8 @@ Folder pages include:
 - a likes tab on App Folder pages for folders that contain saved posts
 - infinite loading
 
+**Recap** opens a scrollable album photo essay with the album title, description, and existing post captions and known capture dates. It keeps the album's configured order, includes still photographs inside carousels, and lets you reveal or load more photographs without leaving the album. Video posts remain available through the regular posts and Reels views. **Slideshow** plays the album's photographs automatically and can use browser fullscreen where supported.
+
 The reels tab is a filtered view backed by the same folder endpoint using
 `mediaType=video`.
 

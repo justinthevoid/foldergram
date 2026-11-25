@@ -1,4 +1,5 @@
 import type { FeedItem } from '../types/api';
+import { getPostPhotos } from './post-photos';
 
 export interface PrintPhoto {
   key: string;
@@ -15,16 +16,11 @@ export function getPrintPhotos(items: FeedItem[]): PrintPhoto[] {
   const result: PrintPhoto[] = [];
   const seen = new Set<string>();
   for (const post of items) {
-    const media = post.mediaItems?.length
-      ? post.mediaItems
-      : [{ ...post, imageId: post.id, position: 0 }];
-    for (const item of media) {
-      if (item.mediaType !== 'image') continue;
-      const key = post.id + ':' + item.imageId;
-      if (seen.has(key)) continue;
-      seen.add(key);
+    for (const item of getPostPhotos(post)) {
+      if (seen.has(item.key)) continue;
+      seen.add(item.key);
       result.push({
-        key, postId: post.id, slideNumber: post.mediaItems && post.mediaItems.length > 1 ? item.position + 1 : null,
+        key: item.key, postId: post.id, slideNumber: item.slideNumber,
         album: post.folderName, filename: item.filename.split(/[\\/]/).pop() || item.filename,
         thumbnailUrl: item.thumbnailUrl
       });

@@ -51,6 +51,7 @@ import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { fetchFolderImages } from '../api/gallery';
 import ProgressivePhoto from './ProgressivePhoto.vue';
+import { getPostPhotos } from '../utils/post-photos';
 
 const props = defineProps<{ slug: string; albumName: string }>();
 const emit = defineEmits<{ close: [] }>();
@@ -83,17 +84,10 @@ async function loadNextPage() {
     const result = await fetchFolderImages(props.slug, page, 24, 'image');
     if (requestGeneration !== generation) return false;
     for (const post of result.items) {
-      const media = post.mediaItems?.length
-        ? post.mediaItems
-        : [{ ...post, imageId: post.id }];
-      for (const photo of media) {
-        const key = post.id + ':' + photo.imageId;
-        if (photo.mediaType !== 'image' || seen.has(key)) continue;
-        seen.add(key);
-        slides.value.push({
-          key, filename: photo.filename, previewUrl: photo.previewUrl,
-          thumbnailUrl: photo.thumbnailUrl, width: photo.width, height: photo.height
-        });
+      for (const photo of getPostPhotos(post)) {
+        if (seen.has(photo.key)) continue;
+        seen.add(photo.key);
+        slides.value.push(photo);
       }
     }
     page = result.page + 1;

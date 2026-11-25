@@ -28,7 +28,11 @@
             @open-avatar-story="openAvatarStory"
           />
         </div>
-        <div v-if="activeTab === 'posts' && foldersStore.currentFolder.imageCount > 0" class="flex justify-center mb-3">
+        <div v-if="activeTab === 'posts' && foldersStore.currentFolder.slug === props.slug && foldersStore.currentFolder.imageCount > 0" class="flex flex-wrap justify-center gap-2 mb-3">
+          <button type="button" class="btn-ghost inline-flex items-center gap-2 min-h-11" @click="recapOpen = true">
+            <span class="i-fluent-book-open-20-regular w-5 h-5" aria-hidden="true" />
+            {{ t('albumRecap.title') }}
+          </button>
           <button type="button" class="btn-ghost inline-flex items-center gap-2 min-h-11" @click="slideshowOpen = true">
             <span class="i-fluent-play-circle-24-filled w-5 h-5" aria-hidden="true" />
             {{ t('slideshow.title') }}
@@ -179,7 +183,7 @@
                 <button type="button" class="btn-ghost min-h-11" @click="loadMore">{{ t('common.retry') }}</button>
               </div>
               <InfiniteLoader
-                v-else-if="activeTab !== 'likes'"
+                v-else-if="activeTab !== 'likes' && !recapOpen"
                 :loading="foldersStore.loadingFolder"
                 :has-more="foldersStore.currentHasMore"
                 :show-end="!familyPresentation"
@@ -189,6 +193,11 @@
           </section>
       </div>
 
+      <AlbumRecap v-if="recapOpen && foldersStore.currentFolder.slug === props.slug && activeTab === 'posts'"
+        :album-name="foldersStore.currentFolder.name" :description="foldersStore.currentFolder.description"
+        :items="foldersStore.currentImages" :has-more="foldersStore.currentHasMore"
+        :loading="foldersStore.loadingFolder" :page-error="foldersStore.folderPageError"
+        @load-more="loadMore" @close="recapOpen = false" />
       <LivingRoomSlideshow v-if="slideshowOpen && foldersStore.currentFolder.slug === props.slug"
         :slug="props.slug" :album-name="foldersStore.currentFolder.name" @close="slideshowOpen = false" />
       <StoriesModal
@@ -224,6 +233,7 @@
   import Avatar from "../components/Avatar.vue"
   import StoriesModal from "../components/StoriesModal.vue"
   import LivingRoomSlideshow from "../components/LivingRoomSlideshow.vue"
+  import AlbumRecap from "../components/AlbumRecap.vue"
   import { useAppStore } from "../stores/app"
   import { useAuthStore } from "../stores/auth"
   import { useFamilyPresentation } from '../composables/useFamilyPresentation';
@@ -248,6 +258,7 @@
   const hasLoadedOnce = ref(false)
   const activeStoryViewerId = ref<string | null>(null)
   const slideshowOpen = ref(false)
+  const recapOpen = ref(false)
   const activeTab = computed<"posts" | "reels" | "likes">(() =>
     route.query.tab === "reels"
       ? "reels"
@@ -378,12 +389,17 @@
     await redirectInvalidLikesTab()
   })
   watch([() => route.name, likesReady, hasLikesTab, activeTab], redirectInvalidLikesTab)
+  watch([() => authStore.familyMember?.id, () => authStore.accessGranted,
+    () => foldersStore.currentFolder?.slug, () => appStore.isLibraryUnavailable,
+    () => sourcesStore.isUnavailable(foldersStore.currentFolder?.sourceId)],
+    () => { recapOpen.value = false }, { flush: 'sync' })
   watch(
     () => [props.slug, activeTab.value] as const,
     async () => {
       hasLoadedOnce.value = false
       activeStoryViewerId.value = null
       slideshowOpen.value = false
+      recapOpen.value = false
       await loadFolder()
     },
   )
