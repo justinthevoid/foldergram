@@ -157,8 +157,7 @@
     "updated": "Updated {count} posts."
   },
   "inviteCard": {
-    "mosaic": "Mountain mosaic · artistic QR",
-    "artVerified": "Artistic QR verified · artwork inset",
+    "mosaic": "Geometric · clean QR",
     "verified": "QR verified for scanning",
     "title": "Invitation card",
     "description": "A little keepsake with a private QR invitation. Make it your own.",

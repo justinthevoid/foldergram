@@ -8,7 +8,7 @@
       <div class="min-w-0 grid justify-items-center gap-2">
         <canvas ref="canvas" width="1200" height="1800" role="img" :aria-label="t('inviteCard.preview')" class="block w-full max-w-[320px] rounded-md shadow-lg aspect-[2/3]" />
         <p class="m-0 text-xs text-muted">{{ t('inviteCard.size') }}</p>
-        <p v-if="theme === 'mosaic' && verified" class="m-0 text-xs text-muted">{{ t(inset ? 'inviteCard.artVerified' : 'inviteCard.verified') }}</p>
+        <p v-if="verified && ready" class="m-0 text-xs text-muted" role="status">{{ t('inviteCard.verified') }}</p>
       </div>
       <div class="grid min-w-0 gap-3">
         <label class="grid gap-1 text-sm font-medium">
@@ -27,7 +27,7 @@
           {{ t('inviteCard.message') }}
           <textarea v-model="message" maxlength="140" rows="3" class="rounded-lg border border-border p-2 bg-surface text-text resize-y" />
         </label>
-        <div class="flex flex-wrap items-center gap-2">
+        <div v-if="theme !== 'mosaic'" class="flex flex-wrap items-center gap-2">
           <button type="button" class="rounded-lg border border-border px-3 py-2 font-medium text-sm" @click="togglePicker">
             <span class="i-fluent-image-20-regular inline-block w-4 h-4 align-middle mr-1" aria-hidden="true" />
             {{ t(picker ? 'inviteCard.hidePhotos' : 'inviteCard.choosePhoto') }}
@@ -35,7 +35,7 @@
           <button v-if="selectedPhoto" type="button" class="text-sm text-muted" @click="clearPhoto">{{ t('inviteCard.removePhoto') }}</button>
         </div>
         <p v-if="photoLoading" class="m-0 text-sm text-muted">{{ t('inviteCard.loading') }}</p>
-        <div v-if="picker" class="grid gap-2 rounded-lg border border-border p-3">
+        <div v-if="picker && theme !== 'mosaic'" class="grid gap-2 rounded-lg border border-border p-3">
           <label class="grid gap-1 text-sm">
             {{ t('inviteCard.album') }}
             <select v-model="album" :aria-label="t('inviteCard.album')" class="rounded-lg border border-border p-2 bg-surface text-text">
@@ -74,16 +74,13 @@ import { requestJson } from '../api/http';
 import { useBrandingStore } from '../stores/branding';
 import type { FeedItem, FolderSummary } from '../types/api';
 import { localPhotoUrl, renderInvitationCard, type CardTheme } from '../utils/invitation-card';
-import mountainArtUrl from '../assets/invitation-mountain-art.webp';
 
 const props = defineProps<{ link: string; recipient: string; expiresAt: number }>();
 const { t, locale } = useI18n();
 const branding = useBrandingStore();
 const canvas = ref<HTMLCanvasElement|null>(null);
 const theme = ref<CardTheme>('mosaic');
-const artwork = shallowRef<HTMLImageElement|null>(null);
 const verified = ref(false);
-const inset = ref(false);
 const headline = ref(t('inviteCard.defaultHeadline'));
 const message = ref(t('inviteCard.defaultMessage'));
 const ready = ref(false);
@@ -108,6 +105,7 @@ let clock: ReturnType<typeof setInterval>|undefined;
 function draw() {
   if (!canvas.value || !alive) return;
   ready.value = false;
+  verified.value = false;
   if (expired.value) {
     canvas.value.getContext('2d')?.clearRect(0,0,canvas.value.width,canvas.value.height);
     return;
@@ -119,20 +117,16 @@ function draw() {
       headline: headline.value, message: message.value,
       action: t('inviteCard.scan'), instruction: t('inviteCard.instructions'),
       expires: t('inviteCard.expires', { date: new Date(props.expiresAt).toLocaleDateString(locale.value, { year:'numeric', month:'short', day:'numeric' }) }),
-      photo: photo.value,
-      artwork: artwork.value
+      photo: photo.value
     });
-    verified.value = result?.verified ?? false;
-    inset.value = result?.artworkInset ?? false;
-    ready.value = true;
+    verified.value = result.verified;
+    ready.value = result.verified;
+    error.value = '';
   } catch { error.value = t('inviteCard.renderError'); }
 }
-watch(() => [props.link, props.recipient, props.expiresAt, theme.value, headline.value, message.value, photo.value, artwork.value, branding.value.name, locale.value, expired.value], draw, { flush: 'post' });
+watch(() => [props.link, props.recipient, props.expiresAt, theme.value, headline.value, message.value, photo.value, branding.value.name, locale.value, expired.value], draw, { flush: 'post' });
+watch(theme, value => { if (value === 'mosaic') picker.value = false; });
 onMounted(() => {
-  const image=new Image();
-  image.onload=()=>{if(alive)artwork.value=image;};
-  image.onerror=()=>{if(alive)draw();};
-  image.src=mountainArtUrl;
   draw();
   clock=setInterval(()=>{now.value=Date.now();},15000);
 });

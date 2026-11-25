@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { createArtQr } from './art-qr';
+import jsQR from 'jsqr';
 
 export const CARD_WIDTH = 1200;
 export const CARD_HEIGHT = 1800;
@@ -61,7 +61,6 @@ interface CardInput {
   action: string;
   expires: string;
   photo?: HTMLImageElement | null;
-  artwork?: HTMLImageElement | null;
 }
 
 function drawFit(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, maxWidth: number, size: number, font: string, minSize = 28) {
@@ -129,48 +128,73 @@ function illustratedLandscape(ctx: CanvasRenderingContext2D, x: number, y: numbe
   ctx.restore();
 }
 
-function renderMosaicCard(canvas:HTMLCanvasElement,input:CardInput){
-  const url=invitationUrl(input.link);
-  const art=input.photo??input.artwork;
-  const qr=createArtQr(url.href,art,928);
-  canvas.width=CARD_WIDTH;canvas.height=CARD_HEIGHT;
-  const ctx=canvas.getContext('2d')!;
-  ctx.fillStyle='#f5eddb';ctx.fillRect(0,0,CARD_WIDTH,CARD_HEIGHT);
-  ctx.strokeStyle='#ba9d71';ctx.lineWidth=2;ctx.strokeRect(33,33,1134,1734);
-  ctx.textBaseline='alphabetic';
-  ctx.fillStyle='#254332';
-  ctx.textAlign='center';
-  drawFit(ctx,input.galleryName.toUpperCase(),600,105,1000,31,'600 %px system-ui, sans-serif',22);
-  drawFit(ctx,input.recipient,600,209,1060,102,'italic %px Georgia, serif',46);
-  paragraph(ctx,input.headline.replace(/\n/g,' '),600,300,1010,58,2,'normal %px Georgia, serif',38);
-  ctx.textAlign='left';
-  // The QR is the centerpiece. Keep the entire light quiet zone undisturbed.
-  const left=(1200-qr.canvas.width)/2;
-  const top=396;
-  ctx.save();ctx.shadowColor='rgba(43,58,36,.16)';ctx.shadowBlur=24;ctx.shadowOffsetY=8;
-  ctx.fillStyle='#fffdf6';ctx.fillRect(left-12,top-12,qr.canvas.width+24,qr.canvas.height+24);ctx.restore();
-  ctx.drawImage(qr.canvas,left,top);
-  ctx.textAlign='center';
-  ctx.fillStyle='#274735';
-  paragraph(ctx,input.action,600,1389,1050,46,1,'600 %px system-ui,sans-serif',33);
-  paragraph(ctx,input.instruction,600,1444,1010,32,2,'normal %px system-ui,sans-serif',25);
-  ctx.fillStyle='#52604c';
-  paragraph(ctx,input.message,600,1527,1010,33,2,'italic %px Georgia,serif',25);
-  drawFit(ctx,url.hostname+'  ·  '+input.expires,600,1617,1070,25,'500 %px system-ui,sans-serif',20);
-  // The landscape is extracted from the ImageGen artwork, never its fake QR.
-  if(art?.naturalWidth&&art.naturalHeight){
-    const w=1132,h=132,x=34,y=1634;
-    const scale=Math.max(w/art.naturalWidth,h/art.naturalHeight);
-    const sw=w/scale,sh=h/scale;
-    ctx.drawImage(art,(art.naturalWidth-sw)/2,(art.naturalHeight-sh)/2,sw,sh,x,y,w,h);
+function verifyRaster(raster: ReturnType<typeof invitationQrRaster>, expected: string) {
+  if (jsQR(raster.pixels, raster.width, raster.width, { inversionAttempts: 'dontInvert' })?.data !== expected) {
+    throw new Error('Invitation QR could not be verified');
   }
-  ctx.textAlign='left';
-  return {verified:true,artworkInset:qr.artworkInset,mode:qr.mode};
+}
+
+function renderGeometricCard(canvas: HTMLCanvasElement, input: CardInput) {
+  const url = invitationUrl(input.link);
+  const qr = invitationQrRaster(url.href, 900);
+  verifyRaster(qr, url.href);
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas unavailable');
+  ctx.fillStyle = '#f4efe5';
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  // Flat geometric accents stay entirely outside the code and its quiet zone.
+  ctx.fillStyle = '#b8c6b0';
+  ctx.fillRect(0, 0, 90, 180);
+  ctx.fillStyle = '#d99a79';
+  ctx.beginPath(); ctx.arc(1150, 55, 110, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ded0a3';
+  ctx.fillRect(0, 1700, 1200, 100);
+  ctx.fillStyle = '#98ad9b';
+  ctx.beginPath(); ctx.arc(84, 1750, 84, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d99a79';
+  ctx.fillRect(1080, 1700, 120, 100);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#273c33';
+  drawFit(ctx, input.galleryName.toUpperCase(), 600, 100, 920, 32, '600 %px system-ui, sans-serif', 22);
+  drawFit(ctx, input.recipient, 600, 210, 1000, 76, 'normal %px Georgia, serif', 38);
+  paragraph(ctx, input.headline.replace(/\n/g, ' '), 600, 293, 990, 52, 2, 'normal %px Georgia, serif', 34);
+
+  // Render the genuine QR, not an illustration. Integer modules, no damage.
+  const left = Math.floor((CARD_WIDTH - qr.width) / 2);
+  const top = 400;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(left - 20, top - 20, qr.width + 40, qr.width + 40);
+  const pixels = ctx.createImageData(qr.width, qr.width);
+  pixels.data.set(qr.pixels);
+  ctx.putImageData(pixels, left, top);
+  // Also verify a reduced sample of the code that will appear on the card.
+  const small = document.createElement('canvas');
+  small.width = small.height = 384;
+  const smallContext = small.getContext('2d', { willReadFrequently: true })!;
+  smallContext.drawImage(canvas, left, top, qr.width, qr.width, 0, 0, 384, 384);
+  const reduced = smallContext.getImageData(0, 0, 384, 384);
+  if (jsQR(reduced.data, 384, 384, { inversionAttempts: 'dontInvert' })?.data !== url.href) {
+    throw new Error('Reduced invitation QR could not be verified');
+  }
+
+  ctx.fillStyle = '#273c33';
+  paragraph(ctx, input.action, 600, 1378, 1030, 44, 1, '600 %px system-ui, sans-serif', 32);
+  paragraph(ctx, input.instruction, 600, 1437, 1010, 31, 2, 'normal %px system-ui, sans-serif', 24);
+  ctx.fillStyle = '#53665a';
+  paragraph(ctx, input.message, 600, 1530, 1010, 32, 2, 'italic %px Georgia, serif', 24);
+  drawFit(ctx, url.host + '  ·  ' + input.expires, 600, 1640, 1070, 26, '500 %px system-ui, sans-serif', 19);
+  ctx.textAlign = 'left';
+  return { verified: true };
 }
 export function renderInvitationCard(canvas: HTMLCanvasElement, input: CardInput) {
-  if(input.theme==='mosaic') return renderMosaicCard(canvas,input);
+  if (input.theme === 'mosaic') return renderGeometricCard(canvas, input);
   const url = invitationUrl(input.link);
   const qr = invitationQrRaster(url.href);
+  verifyRaster(qr, url.href);
   canvas.width = CARD_WIDTH; canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas unavailable');
@@ -209,6 +233,7 @@ export function renderInvitationCard(canvas: HTMLCanvasElement, input: CardInput
   ctx.fillStyle=ink;
   paragraph(ctx,input.instruction,572,1478,540,35,4,'normal %px system-ui, sans-serif',28);
   ctx.fillStyle=muted;
-  drawFit(ctx,url.hostname,572,1671,540,28,'600 %px system-ui, sans-serif',22);
+  drawFit(ctx,url.host,572,1671,540,28,'600 %px system-ui, sans-serif',22);
   paragraph(ctx,input.expires,572,1713,540,25,2,'normal %px system-ui, sans-serif',20);
+  return { verified: true };
 }

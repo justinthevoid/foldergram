@@ -157,8 +157,7 @@
     "updated": "Se actualizaron {count} publicaciones."
   },
   "inviteCard": {
-    "mosaic": "Mosaico de montaña · QR artístico",
-    "artVerified": "QR artístico con imagen verificado",
+    "mosaic": "Geométrico · QR limpio",
     "verified": "Código QR verificado",
     "title": "Tarjeta de invitación",
     "description": "Un pequeño recuerdo con una invitación QR privada. Personalízalo.",
