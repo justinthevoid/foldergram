@@ -600,6 +600,7 @@ async function openFeedFolderStory(slug: string) {
   feedStoryError.value = null;
 
   await folderStoriesStore.fetchStories(slug, folderStoriesStore.currentFolderSlug !== slug);
+  if (feedStoryRetrySlug.value !== slug || folderStoriesStore.currentFolderSlug !== slug) return;
   if (folderStoriesStore.listError) {
     feedStoryError.value = folderStoriesStore.listError;
     return;

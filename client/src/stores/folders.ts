@@ -13,6 +13,7 @@ import {
   updateFolderProfile
 } from '../api/gallery';
 import { i18n } from '../locales';
+import { RequestError } from '../api/http';
 import type {
   CreateFolderShareLinkInput,
   FeedItem,
@@ -39,6 +40,9 @@ interface FoldersState {
   currentFolder: FolderSummary | null;
   currentImages: FeedItem[];
   currentFilter: FolderMediaFilter;
+  requestedFolderSlug: string | null;
+  folderLoadGeneration: number;
+  folderPageError: string | null;
   currentPage: number;
   currentLimit: number;
   currentHasMore: boolean;
@@ -67,6 +71,9 @@ export const useFoldersStore = defineStore('folders', {
     currentFolder: null,
     currentImages: [],
     currentFilter: 'all',
+    requestedFolderSlug: null,
+    folderLoadGeneration: 0,
+    folderPageError: null,
     currentPage: 1,
     currentLimit: 24,
     currentHasMore: true,
@@ -134,11 +141,16 @@ export const useFoldersStore = defineStore('folders', {
       useFolderSearchStore().removeSummary(slug);
       this.items = this.items.filter((folder) => folder.slug !== slug);
 
-      if (this.currentFolder?.slug === slug) {
+      if (this.currentFolder?.slug === slug || this.requestedFolderSlug === slug) {
+        this.folderLoadGeneration++;
+        this.requestedFolderSlug = null;
         this.currentFolder = null;
         this.currentImages = [];
         this.currentPage = 1;
         this.currentHasMore = false;
+        this.loadingFolder = false;
+        this.folderError = null;
+        this.folderPageError = null;
       }
     },
 
@@ -161,6 +173,9 @@ export const useFoldersStore = defineStore('folders', {
       this.currentFolder = null;
       this.currentImages = [];
       this.currentFilter = 'all';
+      this.requestedFolderSlug = null;
+      this.folderLoadGeneration++;
+      this.folderPageError = null;
       this.currentPage = 1;
       this.currentHasMore = true;
       this.loadingFolder = false;
@@ -251,38 +266,57 @@ export const useFoldersStore = defineStore('folders', {
     },
 
     async loadFolder(slug: string, reset = true, mediaType?: FeedItem['mediaType']) {
-      if (this.loadingFolder) {
-        return;
-      }
-
       const nextFilter: FolderMediaFilter = mediaType === 'video' ? 'video' : 'all';
-      const filterChanged = this.currentFilter !== nextFilter;
+      const sameRequest = this.requestedFolderSlug === slug && this.currentFilter === nextFilter;
+      const startOver = reset || !sameRequest;
+      // A new album or filter supersedes an outstanding request. Duplicate
+      // requests for the same page are suppressed while it is loading.
+      if (this.loadingFolder && sameRequest && (!reset || this.currentPage === 1)) return;
+      if (!startOver && !this.currentHasMore) return;
 
-      if (reset || filterChanged) {
+      if (startOver) {
         this.currentFolder = null;
         this.currentImages = [];
         this.currentFilter = nextFilter;
+        this.requestedFolderSlug = slug;
         this.currentPage = 1;
         this.currentHasMore = true;
       }
 
+      const generation = ++this.folderLoadGeneration;
+      const page = this.currentPage;
       this.loadingFolder = true;
       this.folderError = null;
-      const generation = this.listGeneration;
+      this.folderPageError = null;
 
       try {
-        const payload = await fetchFolderImages(slug, this.currentPage, this.currentLimit, mediaType);
-        if (generation !== this.listGeneration) return;
+        const payload = await fetchFolderImages(slug, page, this.currentLimit, mediaType);
+        if (generation !== this.folderLoadGeneration) return;
         this.currentFolder = payload.folder;
-        this.currentImages.push(...payload.items);
-        this.currentPage += 1;
+        const seen = new Set(this.currentImages.map(item => item.id));
+        for (const item of payload.items) {
+          if (seen.has(item.id)) continue;
+          this.currentImages.push(item);
+          seen.add(item.id);
+        }
+        this.currentPage = page + 1;
         this.currentHasMore = payload.hasMore;
       } catch (error) {
-        if (generation !== this.listGeneration) return;
-        this.currentFolder = null;
-        this.folderError = error instanceof Error ? error.message : i18n.global.t('errors.loadFolder');
+        if (generation !== this.folderLoadGeneration) return;
+        const message = error instanceof Error ? error.message : i18n.global.t('errors.loadFolder');
+        // Never preserve protected content if the album is now inaccessible.
+        const unavailable = error instanceof RequestError && [401, 403, 404].includes(error.status);
+        if (!unavailable && page > 1 && this.currentFolder) {
+          this.folderPageError = message;
+        } else {
+          this.currentFolder = null;
+          this.currentImages = [];
+          this.currentPage = 1;
+          this.currentHasMore = true;
+          this.folderError = message;
+        }
       } finally {
-        if (generation === this.listGeneration) this.loadingFolder = false;
+        if (generation === this.folderLoadGeneration) this.loadingFolder = false;
       }
     },
 

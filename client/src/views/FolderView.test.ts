@@ -115,6 +115,19 @@ describe('FolderView Likes tab', () => {
   enableAutoUnmount(afterEach);
   beforeEach(() => vi.restoreAllMocks());
 
+  it('preserves the current grid and offers a manual retry after a later page fails', async () => {
+    const {wrapper}=await mountFolder([], '/f/animal-planet');
+    const folders=useFoldersStore();
+    folders.currentHasMore=true;
+    folders.folderPageError='Temporary network error';
+    await flushPromises();
+    expect(wrapper.get('[data-test="folder-grid"]').text()).toBe('11,12,13,99');
+    expect(wrapper.text()).toContain("Couldn't load more photos.");
+    expect(wrapper.find('infinite-loader-stub').exists()).toBe(false);
+    await wrapper.get('[role="alert"] button').trigger('click');
+    expect(folders.loadFolder).toHaveBeenLastCalledWith('animal-planet',false,undefined);
+  });
+
   it('shows connection guidance only for the unavailable folder source and automatically recovers', async () => {
     const { wrapper } = await mountFolder([], '/f/animal-planet');
     useFoldersStore().currentFolder = { ...folder, sourceId: 1 };

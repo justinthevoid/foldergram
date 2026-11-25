@@ -1279,6 +1279,7 @@
       "emptyPostsTitle": "No posts in this folder",
       "emptyReelsDescription": "Drop supported videos into this folder and rescan to see them in the reels tab.",
       "emptyPostsDescription": "Drop supported photos or videos into this folder and rescan to see them here.",
+      "morePhotosError": "Couldn't load more photos. Your current photos are still here.",
       "noDirectPostsTitle": "No direct posts in this app folder",
       "noDirectPostsDescription": "This source folder no longer has direct photos or videos. Browse the library to continue."
     }

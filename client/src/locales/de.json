@@ -1279,6 +1279,7 @@
       "emptyPostsTitle": "Keine Beiträge in diesem Ordner",
       "emptyReelsDescription": "Lege unterstützte Videos in diesen Ordner und scanne erneut, um sie im Reels-Tab zu sehen.",
       "emptyPostsDescription": "Lege unterstützte Fotos oder Videos in diesen Ordner und scanne erneut, um sie hier zu sehen.",
+      "morePhotosError": "Weitere Fotos konnten nicht geladen werden. Deine bisherigen Fotos bleiben sichtbar.",
       "noDirectPostsTitle": "Keine direkten Beiträge in diesem App-Ordner",
       "noDirectPostsDescription": "Dieser Quellordner enthält keine direkten Fotos oder Videos mehr. Stöbere in der Bibliothek weiter."
     }

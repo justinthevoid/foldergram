@@ -1279,6 +1279,7 @@
       "emptyPostsTitle": "此文件夹中没有帖子",
       "emptyReelsDescription": "将受支持的视频放入此文件夹并重新扫描，即可在短片标签页中看到它们。",
       "emptyPostsDescription": "将受支持的照片或视频放入此文件夹并重新扫描，即可在这里看到它们。",
+      "morePhotosError": "无法加载更多照片。已加载的照片仍然可见。",
       "noDirectPostsTitle": "此应用文件夹中没有直接帖子",
       "noDirectPostsDescription": "此源文件夹中已没有直接的照片或视频。请浏览图库继续。"
     }

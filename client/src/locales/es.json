@@ -1279,6 +1279,7 @@
       "emptyPostsTitle": "No hay publicaciones en esta carpeta",
       "emptyReelsDescription": "Coloca videos compatibles en esta carpeta y vuelve a escanear para verlos en la pestaña de reels.",
       "emptyPostsDescription": "Coloca fotos o videos compatibles en esta carpeta y vuelve a escanear para verlos aquí.",
+      "morePhotosError": "No se pudieron cargar más fotos. Las fotos anteriores siguen aquí.",
       "noDirectPostsTitle": "No hay publicaciones directas en esta carpeta de la app",
       "noDirectPostsDescription": "Esta carpeta de origen ya no tiene fotos ni videos directos. Explora la biblioteca para continuar."
     }

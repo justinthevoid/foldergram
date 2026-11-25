@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as galleryApi from '../api/gallery';
-import type { FeedItem, FolderStoriesPayload } from '../types/api';
+import type { FeedItem, FolderStoriesPayload, FolderStoryFeedPayload } from '../types/api';
 import { useFolderStoriesStore } from './folder-stories';
 
 function createFeedItem(id: number): FeedItem {
@@ -57,6 +57,52 @@ describe('folder stories store', () => {
     vi.restoreAllMocks();
   });
 
+  it('discards late story rails from another album and after logout reset', async () => {
+    let resolveOld!: (value:FolderStoriesPayload)=>void;
+    let resolveReset!: (value:FolderStoriesPayload)=>void;
+    const old=new Promise<FolderStoriesPayload>(resolve=>{resolveOld=resolve;});
+    const resetting=new Promise<FolderStoriesPayload>(resolve=>{resolveReset=resolve;});
+    const fresh={...createStoriesPayload(),avatarStoryId:'next-story',items:[]};
+    vi.spyOn(galleryApi,'fetchFolderStories').mockReturnValueOnce(old).mockResolvedValueOnce(fresh).mockReturnValueOnce(resetting);
+    const store=useFolderStoriesStore();
+    const loading=store.fetchStories('old');
+    await store.fetchStories('next');
+    resolveOld(createStoriesPayload());
+    await loading;
+    expect(store.currentFolderSlug).toBe('next');
+    expect(store.avatarStoryId).toBe('next-story');
+    expect(store.items).toEqual([]);
+    const pending=store.fetchStories('next',true);
+    store.reset();
+    resolveReset(createStoriesPayload());
+    await pending;
+    expect(store.currentFolderSlug).toBeNull();
+    expect(store.items).toEqual([]);
+    expect(store.loadingList).toBe(false);
+  });
+
+  it('ignores a late capsule page after a different story is selected', async () => {
+    const store=useFolderStoriesStore();
+    const rail=createStoriesPayload();
+    const story=rail.items[0]!;
+    vi.spyOn(galleryApi,'fetchFolderStories').mockResolvedValue(rail);
+    await store.fetchStories('beach-club');
+    let resolveOld!: (value:FolderStoryFeedPayload)=>void;
+    const pending=new Promise<FolderStoryFeedPayload>(resolve=>{resolveOld=resolve;});
+    const response=(id:string,imageId:number):FolderStoryFeedPayload=>({
+      railKind:'stories',railTitle:rail.railTitle,railDescription:rail.railDescription,
+      railSingularLabel:rail.railSingularLabel,story:{...story,id},items:[createFeedItem(imageId)],
+      page:1,limit:18,total:1,hasMore:false
+    });
+    vi.spyOn(galleryApi,'fetchFolderStoryFeed').mockReturnValueOnce(pending).mockResolvedValueOnce(response('second',42));
+    const old=store.loadCapsule('first');
+    await store.loadCapsule('second');
+    resolveOld(response('first',31));
+    await old;
+    expect(store.currentStory?.id).toBe('second');
+    expect(store.currentImages.map(item=>item.id)).toEqual([42]);
+    expect(store.loadingStory).toBe(false);
+  });
   it('retries the same folder after a previous fetch failure', async () => {
     const fetchFolderStoriesSpy = vi
       .spyOn(galleryApi, 'fetchFolderStories')

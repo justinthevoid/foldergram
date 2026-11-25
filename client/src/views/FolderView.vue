@@ -15,12 +15,10 @@
         {{ t('folder.view.rebuilding') }}
       </p>
     </section>
-    <ErrorState
-      v-else-if="foldersStore.folderError"
-      class="mx-auto w-[min(100%,56rem)]"
-      :title="t('folder.view.loadErrorTitle')"
-      :message="foldersStore.folderError"
-    />
+    <div v-else-if="foldersStore.folderError" class="mx-auto grid gap-3 w-[min(100%,56rem)]">
+      <ErrorState :title="t('folder.view.loadErrorTitle')" :message="foldersStore.folderError" />
+      <button type="button" class="btn-ghost justify-self-center min-h-11" @click="loadFolder">{{ t('common.retry') }}</button>
+    </div>
     <template v-else-if="foldersStore.currentFolder">
       <div class="mx-auto grid w-full max-w-[69rem] gap-[0.15rem]">
         <div class="mx-auto w-[min(100%,54rem)]">
@@ -170,8 +168,12 @@
               :variant="activeTab === 'reels' ? 'reels' : 'posts'"
             />
             <div class="pt-6">
+              <div v-if="activeTab !== 'likes' && foldersStore.folderPageError" class="flex flex-wrap items-center justify-center gap-3 py-3 text-sm text-muted" role="alert">
+                <span>{{ t('folder.view.morePhotosError') }}</span>
+                <button type="button" class="btn-ghost min-h-11" @click="loadMore">{{ t('common.retry') }}</button>
+              </div>
               <InfiniteLoader
-                v-if="activeTab !== 'likes'"
+                v-else-if="activeTab !== 'likes'"
                 :loading="foldersStore.loadingFolder"
                 :has-more="foldersStore.currentHasMore"
                 :show-end="!familyPresentation"
@@ -260,6 +262,8 @@
       return
     }
 
+    const requestedSlug = props.slug
+    const requestedTab = activeTab.value
     await Promise.all([
       foldersStore.loadFolder(
         props.slug,
@@ -269,7 +273,8 @@
       folderStoriesStore.fetchStories(props.slug, folderStoriesStore.currentFolderSlug !== props.slug),
     ])
 
-    if (activeTab.value === "reels" && !hasReelsTab.value) {
+    if (requestedSlug !== props.slug || requestedTab !== activeTab.value) return
+    if (activeTab.value === "reels" && foldersStore.currentFolder && !hasReelsTab.value) {
       await router.replace({
         name: "folder",
         params: { slug: props.slug },

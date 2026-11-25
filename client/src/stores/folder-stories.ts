@@ -7,6 +7,9 @@ import { updateCaptionInItems } from '../utils/caption';
 
 interface FolderStoriesState {
   currentFolderSlug: string | null;
+  railGeneration: number;
+  capsuleGeneration: number;
+  requestedCapsuleId: string | null;
   railTitle: string;
   railDescription: string;
   railSingularLabel: string;
@@ -51,6 +54,8 @@ function applyStoryRailPayload(state: FolderStoriesState, payload: FolderStories
 }
 
 function resetCurrentStoryState(state: FolderStoriesState) {
+  state.capsuleGeneration++;
+  state.requestedCapsuleId = null;
   state.currentStory = null;
   state.currentImages = [];
   state.currentPage = 1;
@@ -62,6 +67,9 @@ function resetCurrentStoryState(state: FolderStoriesState) {
 export const useFolderStoriesStore = defineStore('folderStories', {
   state: (): FolderStoriesState => ({
     currentFolderSlug: null,
+    railGeneration: 0,
+    capsuleGeneration: 0,
+    requestedCapsuleId: null,
     ...createEmptyStoryRail(),
     loadingList: false,
     listError: null,
@@ -79,6 +87,7 @@ export const useFolderStoriesStore = defineStore('folderStories', {
   },
   actions: {
     reset() {
+      this.railGeneration++;
       this.currentFolderSlug = null;
       Object.assign(this, createEmptyStoryRail());
       this.loadingList = false;
@@ -87,47 +96,50 @@ export const useFolderStoriesStore = defineStore('folderStories', {
     },
 
     async fetchStories(slug: string, force = false) {
-      if (this.loadingList) {
-        return;
-      }
+      if (this.loadingList && this.currentFolderSlug === slug) return;
 
       if (!force && this.currentFolderSlug === slug && this.items.length > 0 && this.listError === null) {
         return;
       }
 
+      const generation = ++this.railGeneration;
       this.currentFolderSlug = slug;
+      Object.assign(this, createEmptyStoryRail());
       resetCurrentStoryState(this);
       this.loadingList = true;
       this.listError = null;
 
       try {
         const payload = await fetchFolderStories(slug);
+        if (generation !== this.railGeneration) return;
         applyStoryRailPayload(this, payload);
       } catch (error) {
+        if (generation !== this.railGeneration) return;
         Object.assign(this, createEmptyStoryRail());
         this.listError = error instanceof Error ? error.message : i18n.global.t('errors.loadFolderStories');
       } finally {
-        this.loadingList = false;
+        if (generation === this.railGeneration) this.loadingList = false;
       }
     },
 
     async loadCapsule(id: string, reset = true) {
-      if (this.loadingStory || !this.currentFolderSlug) {
-        return;
-      }
+      if (!this.currentFolderSlug || (this.loadingStory && this.requestedCapsuleId === id)) return;
 
-      if (reset) {
+      if (reset || this.requestedCapsuleId !== id) {
         this.currentStory = null;
         this.currentImages = [];
         this.currentPage = 1;
         this.currentHasMore = true;
       }
 
+      this.requestedCapsuleId = id;
+      const generation = ++this.capsuleGeneration;
       this.loadingStory = true;
       this.storyError = null;
 
       try {
         const payload = await fetchFolderStoryFeed(this.currentFolderSlug, id, this.currentPage, this.currentLimit);
+        if (generation !== this.capsuleGeneration) return;
         this.railTitle = payload.railTitle;
         this.railDescription = payload.railDescription;
         this.railSingularLabel = payload.railSingularLabel;
@@ -136,9 +148,9 @@ export const useFolderStoriesStore = defineStore('folderStories', {
         this.currentPage += 1;
         this.currentHasMore = payload.hasMore;
       } catch (error) {
-        this.storyError = error instanceof Error ? error.message : i18n.global.t('errors.loadStoryCapsule');
+        if (generation === this.capsuleGeneration) this.storyError = error instanceof Error ? error.message : i18n.global.t('errors.loadStoryCapsule');
       } finally {
-        this.loadingStory = false;
+        if (generation === this.capsuleGeneration) this.loadingStory = false;
       }
     },
 
