@@ -29,12 +29,15 @@ import { videoPreviewReclamation } from '../services/video-preview-reclamation.j
 import { familyCommentsRouter } from './family-comments.js';
 import { publicationRouter } from './publication.js';
 import { familyActivityRouter } from './family-activity.js';
+import { familyPushRouter } from './family-push.js';
+import { familyPush } from '../services/family-push.js';
 import { externalFamilyOrigin } from '../middleware/external-family-access.js';
 
 const router = express.Router();
 router.use(familyCommentsRouter);
 router.use(publicationRouter);
 router.use(familyActivityRouter);
+router.use(familyPushRouter);
 router.get('/branding', (_request, response) => {
   response.json(getPublicBranding());
 });
@@ -491,6 +494,8 @@ router.post('/auth/unlock-admin', authRateLimiter, (request, response) => {
 });
 
 router.post('/auth/logout', (request, response) => {
+  const familySession = authService.getFamilyPushSession(request);
+  if (familySession) familyPush.removeSession(familySession);
   authService.setNoStoreHeaders(response);
   authService.clearAuthenticatedSession(response, request);
   response.json({

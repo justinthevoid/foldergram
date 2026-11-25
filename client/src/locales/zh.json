@@ -1,4 +1,18 @@
 {
+  "push": {
+    "title": "新照片提醒",
+    "description": "新照片发布时接收私人通知，无需电子邮件。",
+    "enable": "开启通知",
+    "disable": "关闭通知",
+    "preparing": "正在准备通知…",
+    "unavailable": "此浏览器不支持通知。",
+    "installHelp": "在 iPhone 或 iPad 上，选择共享 → 添加到主屏幕，然后从图标打开图库。",
+    "denied": "设备已阻止通知。请在浏览器或设备设置中允许通知。",
+    "on": "已在此设备开启通知。",
+    "off": "已在此设备关闭通知。",
+    "failed": "无法更改通知，请重试。",
+    "refresh": "刷新通知设置"
+  },
   "activity": {
     "title": "家庭动态",
     "back": "返回图库",

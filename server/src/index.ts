@@ -1,4 +1,5 @@
 import { startSources, stopSources } from './immich/source-service.js';
+import { familyPush } from './services/family-push.js';
 /*
     Foldergram - Local-only photo and video gallery
     Copyright (C) 2026 Sajjad Ali
@@ -86,6 +87,7 @@ async function bootstrap(): Promise<void> {
 
   server.listen(appConfig.port, () => {
     logServerReady();
+    familyPush.start();
     void hlsCache.recover().catch(() => log.info("HLS cache startup failed. Check its storage configuration."));
     void startSources().catch(() => log.info("Immich source startup failed; local content remains available. Check source configuration."));
     const startupAction = scannerService.handleStartup("startup");
@@ -105,7 +107,7 @@ async function bootstrap(): Promise<void> {
     log.info(`Received ${signal}, shutting down`);
     stopSources();
     scannerService.stopActiveOperationForShutdown();
-    await Promise.all([watcherService.stop(), stopHeicProcessing(), hlsCache.stop()]);
+    await Promise.all([watcherService.stop(), stopHeicProcessing(), hlsCache.stop(), familyPush.stop()]);
     server.close(() => {
       databaseManager.close();
       process.exit(0);

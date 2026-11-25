@@ -78,7 +78,8 @@ export function restrictExternalFamilyAccess(request: express.Request, response:
     const comment = (method === 'POST' && /^\/api\/family\/posts\/\d+\/comments$/.test(path)) ||
       (['PATCH', 'DELETE'].includes(method) && /^\/api\/family\/posts\/\d+\/comments\/\d+$/.test(path));
     const playback = path.startsWith('/api/videos/') && isPlaybackSessionMutation(method, path.slice(4));
-    if (ownReaction || comment || playback) { next(); return; }
+    const push = path === '/api/family/push' && ['GET','HEAD','PUT','DELETE'].includes(method);
+    if (ownReaction || comment || playback || push) { next(); return; }
     deny(); return;
   }
   // The public bootstrap serves only the compiled client and known navigation

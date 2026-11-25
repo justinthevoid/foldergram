@@ -1,4 +1,18 @@
 {
+  "push": {
+    "title": "New-photo alerts",
+    "description": "Get a private notification when new photographs are released. No email required.",
+    "enable": "Enable notifications",
+    "disable": "Turn off notifications",
+    "preparing": "Preparing notifications…",
+    "unavailable": "Notifications aren't supported in this browser.",
+    "installHelp": "On iPhone or iPad, use Share → Add to Home Screen, then open the gallery from its icon.",
+    "denied": "Notifications are blocked by your device. Allow them in your browser or device settings.",
+    "on": "Notifications enabled on this device.",
+    "off": "Notifications are off on this device.",
+    "failed": "Could not change notifications. Please try again.",
+    "refresh": "Refresh notification settings"
+  },
   "activity": {
     "title": "Family activity",
     "back": "Back to gallery",

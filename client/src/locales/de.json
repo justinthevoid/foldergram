@@ -1,4 +1,18 @@
 {
+  "push": {
+    "title": "Neue Fotos",
+    "description": "Erhalte eine private Benachrichtigung bei neuen Fotos. Keine E-Mail erforderlich.",
+    "enable": "Benachrichtigungen aktivieren",
+    "disable": "Benachrichtigungen deaktivieren",
+    "preparing": "Benachrichtigungen werden vorbereitet…",
+    "unavailable": "Dieser Browser unterstützt keine Benachrichtigungen.",
+    "installHelp": "Auf iPhone oder iPad: Teilen → Zum Home-Bildschirm, dann die Galerie über ihr Symbol öffnen.",
+    "denied": "Benachrichtigungen sind blockiert. Erlaube sie in den Browser- oder Geräteeinstellungen.",
+    "on": "Benachrichtigungen auf diesem Gerät aktiviert.",
+    "off": "Benachrichtigungen auf diesem Gerät deaktiviert.",
+    "failed": "Benachrichtigungen konnten nicht geändert werden. Bitte erneut versuchen.",
+    "refresh": "Benachrichtigungseinstellungen aktualisieren"
+  },
   "activity": {
     "title": "Familienaktivität",
     "back": "Zurück zur Galerie",

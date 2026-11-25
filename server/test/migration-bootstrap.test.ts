@@ -168,6 +168,7 @@ SELECT 1;
     await fs.rm(path.join(legacyMigrations, '000014_post_publications.sql'));
     await fs.rm(path.join(legacyMigrations, '000015_album_import_policies.sql'));
     await fs.rm(path.join(legacyMigrations, '000016_family_activity.sql'));
+    await fs.rm(path.join(legacyMigrations, '000017_family_push.sql'));
 
     const { databasePath } = runStartupMigrations({ migrationsDirectory: legacyMigrations });
     const legacy = new DatabaseSync(databasePath);
@@ -191,7 +192,7 @@ SELECT 1;
     try {
       for (let boot = 0; boot < 2; boot++) {
         const database = databaseManager.connection;
-        expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+        expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
         expect(tableExists(database, 'video_preview_reclamation_items')).toBe(true);
         const source = database.prepare("SELECT id FROM media_sources WHERE kind='local' AND managed_by='environment'").all();
         expect(source).toHaveLength(1);
@@ -228,7 +229,7 @@ SELECT 1;
       expect(tableHasColumn(database, 'collection_items', 'post_id')).toBe(true);
       expect(tableHasColumn(database, 'scan_runs', 'warning_count')).toBe(true);
       expect(tableHasColumn(database, 'scan_runs', 'warning_text')).toBe(true);
-      expect(listAppliedVersions(database)).toEqual([BASELINE_MIGRATION_VERSION, '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(database)).toEqual([BASELINE_MIGRATION_VERSION, '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
     } finally {
       database.close();
     }
@@ -263,7 +264,7 @@ SELECT 1;
       // No runtime connection has been opened yet. This must wait in the
       // migration bootstrap, before the runtime connection is configured.
       const database = databaseManager.connection;
-      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
       expect(database.prepare('SELECT value FROM cold_start_probe').get()).toEqual({ value: 'preserved' });
     } finally {
       databaseManager.close();
@@ -315,7 +316,7 @@ SELECT 1;
 
         const database = new DatabaseSync(databasePath);
         try {
-          expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+          expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
         } finally {
           database.close();
         }
@@ -414,7 +415,7 @@ SELECT 1;
     const database = new DatabaseSync(databasePath);
 
     try {
-      expect(listAppliedVersions(database)).toEqual([BASELINE_MIGRATION_VERSION, '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(database)).toEqual([BASELINE_MIGRATION_VERSION, '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
       expect(tableExists(database, 'collections')).toBe(true);
       expect(tableHasColumn(database, 'folders', 'avatar_image_id')).toBe(true);
       expect(tableHasColumn(database, 'folders', 'avatar_source')).toBe(true);
@@ -526,7 +527,7 @@ SELECT 1;
       expect(tableExists(database, 'folder_share_links')).toBe(true);
       expect(tableExists(database, 'folder_share_passwords')).toBe(true);
       expect(tableHasColumn(database, 'folders', 'share_password_version')).toBe(true);
-      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
     } finally {
       database.close();
     }
@@ -544,6 +545,7 @@ SELECT 1;
     await fs.rm(path.join(previousMigrations, '000014_post_publications.sql'));
     await fs.rm(path.join(previousMigrations, '000015_album_import_policies.sql'));
     await fs.rm(path.join(previousMigrations, '000016_family_activity.sql'));
+    await fs.rm(path.join(previousMigrations, '000017_family_push.sql'));
     const { databasePath } = runStartupMigrations({ migrationsDirectory: previousMigrations });
     const previous = new DatabaseSync(databasePath);
     try {
@@ -626,7 +628,7 @@ ALTER TABLE images ADD COLUMN migration_note TEXT NULL;
 
     try {
       expect(tableHasColumn(database, 'images', 'migration_note')).toBe(true);
-      expect(listAppliedVersions(database)).toEqual([BASELINE_MIGRATION_VERSION, '000002', '000004', '000005', '000006', '000007', '000008', '000009', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(database)).toEqual([BASELINE_MIGRATION_VERSION, '000002', '000004', '000005', '000006', '000007', '000008', '000009', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
     } finally {
       database.close();
     }
@@ -734,7 +736,7 @@ ALTER TABLE images ADD COLUMN migration_note TEXT NULL;
     const database = new DatabaseSync(databasePath);
 
     try {
-      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000009', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000009', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
       expect(tableHasColumn(database, 'images', 'migration_note')).toBe(true);
       expect(tableHasColumn(database, 'images', 'caption')).toBe(true);
       expect(database.prepare('SELECT playback_strategy AS playbackStrategy FROM images WHERE id = 1').get()).toEqual({
@@ -769,8 +771,8 @@ ALTER TABLE images ADD COLUMN migration_note TEXT NULL;
     const database = new DatabaseSync(databasePath);
 
     try {
-      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000003', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
-      expect(database.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get()).toEqual({ count: 15 });
+      expect(listAppliedVersions(database)).toEqual(['000001', '000002', '000003', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
+      expect(database.prepare('SELECT COUNT(*) AS count FROM schema_migrations').get()).toEqual({ count: 16 });
     } finally {
       database.close();
     }
@@ -801,7 +803,7 @@ ALTER TABLE images ADD COLUMN migration_note TEXT NULL;
       expect(tableExists(repairedDatabase, 'folder_share_links')).toBe(true);
       expect(tableExists(repairedDatabase, 'folder_share_passwords')).toBe(true);
       expect(tableHasColumn(repairedDatabase, 'folders', 'share_password_version')).toBe(true);
-      expect(listAppliedVersions(repairedDatabase)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(repairedDatabase)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
     } finally {
       repairedDatabase.close();
     }
@@ -823,6 +825,7 @@ ALTER TABLE images ADD COLUMN migration_note TEXT NULL;
     await fs.rm(path.join(throughFolderSharesMigrations, '000014_post_publications.sql'));
     await fs.rm(path.join(throughFolderSharesMigrations, '000015_album_import_policies.sql'));
     await fs.rm(path.join(throughFolderSharesMigrations, '000016_family_activity.sql'));
+    await fs.rm(path.join(throughFolderSharesMigrations, '000017_family_push.sql'));
 
     runStartupMigrations({
       databasePath,
@@ -851,7 +854,7 @@ ALTER TABLE images ADD COLUMN migration_note TEXT NULL;
       expect(tableHasColumn(repairedDatabase, 'folders', 'carousel_owner_folder_id')).toBe(true);
       expect(tableHasColumn(repairedDatabase, 'scan_runs', 'warning_count')).toBe(true);
       expect(tableHasColumn(repairedDatabase, 'scan_runs', 'warning_text')).toBe(true);
-      expect(listAppliedVersions(repairedDatabase)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016']);
+      expect(listAppliedVersions(repairedDatabase)).toEqual(['000001', '000002', '000004', '000005', '000006', '000007', '000008', '000010', '000011', '000012', '000013', '000014', '000015', '000016', '000017']);
     } finally {
       repairedDatabase.close();
     }
@@ -1039,6 +1042,7 @@ THIS IS NOT VALID SQL;
     await fs.rm(path.join(throughFolderSharesMigrations, '000014_post_publications.sql'));
     await fs.rm(path.join(throughFolderSharesMigrations, '000015_album_import_policies.sql'));
     await fs.rm(path.join(throughFolderSharesMigrations, '000016_family_activity.sql'));
+    await fs.rm(path.join(throughFolderSharesMigrations, '000017_family_push.sql'));
     runStartupMigrations({ databasePath, migrationsDirectory: throughFolderSharesMigrations });
 
     const legacyDatabase = new DatabaseSync(databasePath);

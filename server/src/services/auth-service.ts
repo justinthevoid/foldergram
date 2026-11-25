@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 import type express from 'express';
@@ -360,6 +361,15 @@ export const authService = {
     return authConfig.enabled && authConfig.sessionSecret && authConfig.viewerAccessMode !== 'public'
       ? signValue('foldergram-family-invite-v1', authConfig.sessionSecret)
       : null;
+  },
+
+  getFamilyPushSession(request: express.Request) {
+    const session = getRequestSession(request);
+    const generation = this.getFamilyGeneration();
+    const token = parseCookieValue(request.get('cookie') ?? undefined, AUTH_SESSION_COOKIE_NAME);
+    if (!session?.familyMemberId || !generation || !token || !getFamilyIdentity(session.familyMemberId)) return null;
+    return {memberId:session.familyMemberId, expiresAt:session.exp, generation,
+      sessionKey:createHash('sha256').update(token).digest('hex')};
   },
 
   getFamilyStatus(identity: FamilyIdentity): AuthStatus {

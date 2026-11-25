@@ -301,6 +301,30 @@ BEGIN
   VALUES(NEW.post_id,'comment',NEW.author_key,NEW.id,NEW.created_at);
 END;
 
+CREATE TABLE IF NOT EXISTS family_push_subscriptions (
+  device_id TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  session_key TEXT NOT NULL,
+  generation TEXT NOT NULL,
+  origin TEXT NOT NULL,
+  endpoint TEXT NOT NULL,
+  p256dh TEXT NOT NULL,
+  auth_secret TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  subscribed_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_family_push_member ON family_push_subscriptions(member_id);
+CREATE INDEX IF NOT EXISTS idx_family_push_session ON family_push_subscriptions(session_key);
+CREATE TABLE IF NOT EXISTS family_push_ended_sessions (
+  session_key TEXT PRIMARY KEY,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_family_push_ended_expiry ON family_push_ended_sessions(expires_at);
+CREATE TABLE IF NOT EXISTS family_release_seen (
+  post_id INTEGER PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+  noticed_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS collections (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   slug TEXT NOT NULL UNIQUE,

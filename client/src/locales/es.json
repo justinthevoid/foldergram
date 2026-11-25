@@ -1,4 +1,18 @@
 {
+  "push": {
+    "title": "Avisos de fotos nuevas",
+    "description": "Recibe una notificación privada cuando se publiquen fotos nuevas. No necesitas correo.",
+    "enable": "Activar notificaciones",
+    "disable": "Desactivar notificaciones",
+    "preparing": "Preparando notificaciones…",
+    "unavailable": "Este navegador no admite notificaciones.",
+    "installHelp": "En iPhone o iPad, usa Compartir → Añadir a pantalla de inicio y abre la galería desde su icono.",
+    "denied": "Las notificaciones están bloqueadas. Permítelas en los ajustes del navegador o dispositivo.",
+    "on": "Notificaciones activadas en este dispositivo.",
+    "off": "Notificaciones desactivadas en este dispositivo.",
+    "failed": "No se pudieron cambiar las notificaciones. Inténtalo de nuevo.",
+    "refresh": "Actualizar ajustes de notificaciones"
+  },
   "activity": {
     "title": "Actividad familiar",
     "back": "Volver a la galería",
