@@ -1606,6 +1606,14 @@ img[data-loaded="true"] {
   height: 1.25rem;
 }
 
+.family-page-title {
+  margin: 0;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
 .collection-page__title-row {
   display: flex;
   align-items: center;

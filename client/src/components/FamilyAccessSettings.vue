@@ -12,7 +12,7 @@
           {{ t('family.name') }}
           <input v-model="name" maxlength="80" required class="border border-border rounded-lg p-3 bg-surface text-text" :disabled="disabled || !https" />
         </label>
-        <button class="btn-primary" :disabled="disabled || !enabled || !https || !name.trim()" type="submit">{{ t('family.create') }}</button>
+        <button class="btn-primary min-h-11" :disabled="disabled || !enabled || !https || !name.trim()" type="submit">{{ t('family.create') }}</button>
       </form>
       <div v-if="invite" class="grid gap-2 rounded-xl border border-border bg-surface-alt p-4">
         <p class="m-0 font-semibold">{{ t('family.linkFor', { name: invite.member.name }) }}</p>
@@ -27,9 +27,9 @@
         <p v-if="externalOrigin && inviteDestination === 'external'" class="m-0 text-sm text-muted">{{ t('family.externalHelp') }}</p>
         <input :value="link" readonly :aria-label="t('family.invitation')" class="min-w-0 border border-border rounded-lg p-2 bg-surface text-text text-sm" @focus="($event.target as HTMLInputElement).select()" />
         <div class="flex flex-wrap gap-2">
-          <button class="btn-primary" type="button" @click="copy">{{ t(copied ? 'family.copied' : 'family.copy') }}</button>
-          <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium" type="button" :aria-expanded="showCard" @click="showCard = !showCard">{{ t(showCard ? 'inviteCard.hide' : 'inviteCard.create') }}</button>
-          <button class="px-3 py-2 text-sm font-medium text-muted" type="button" @click="invite = null">{{ t('family.dismiss') }}</button>
+          <button class="btn-primary min-h-11" type="button" @click="copy">{{ t(copied ? 'family.copied' : 'family.copy') }}</button>
+          <button class="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 py-2 text-sm font-medium" type="button" :aria-expanded="showCard" @click="showCard = !showCard">{{ t(showCard ? 'inviteCard.hide' : 'inviteCard.create') }}</button>
+          <button class="inline-flex min-h-11 items-center justify-center px-3 py-2 text-sm font-medium text-muted" type="button" @click="invite = null">{{ t('family.dismiss') }}</button>
         </div>
       </div>
       <InvitationCard v-if="invite && showCard" :key="invite.token" :link="link" :recipient="invite.member.name" :expires-at="invite.expiresAt" />
@@ -41,9 +41,9 @@
           <p class="m-0 mt-1 text-sm text-muted">{{ t(member.revokedAt ? 'family.revoked' : member.inviteExpiresAt ? 'family.pending' : member.lastJoinedAt ? 'family.joined' : 'family.needsInvite') }}</p>
         </div>
         <div v-if="!member.revokedAt" class="flex flex-wrap gap-2">
-          <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium" type="button" :disabled="disabled || !enabled || !https" @click="renew(member)">{{ t('family.newLink') }}</button>
+          <button class="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 py-2 text-sm font-medium" type="button" :disabled="disabled || !enabled || !https" @click="renew(member)">{{ t('family.newLink') }}</button>
           <button class="btn-ghost min-h-11" type="button" :aria-expanded="devicesMemberId === member.id" :disabled="disabled" @click="devicesMemberId = devicesMemberId === member.id ? null : member.id">{{ t('devices.manage') }}</button>
-          <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium text-red-500" type="button" :disabled="disabled" @click="confirmId = member.id">{{ t('family.revoke') }}</button>
+          <button class="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 py-2 text-sm font-medium text-red-500" type="button" :disabled="disabled" @click="confirmId = member.id">{{ t('family.revoke') }}</button>
         </div>
         <div v-if="!member.revokedAt && devicesMemberId === member.id" :key="member.id" class="grid gap-4 w-full">
           <FamilyDeviceSessions :member-id="member.id" />
@@ -51,8 +51,8 @@
         </div>
         <div v-if="confirmId === member.id" class="w-full flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
           <p class="m-0 text-sm flex-1">{{ t('family.revokeHelp') }}</p>
-          <button type="button" class="px-3 py-2 rounded-lg border border-border text-sm" @click="confirmId = null">{{ t('family.cancel') }}</button>
-          <button type="button" class="btn-primary" :disabled="disabled" @click="revoke(member)">{{ t('family.confirmRevoke') }}</button>
+          <button type="button" class="inline-flex min-h-11 items-center justify-center px-3 py-2 rounded-lg border border-border text-sm" @click="confirmId = null">{{ t('family.cancel') }}</button>
+          <button type="button" class="btn-primary min-h-11" :disabled="disabled" @click="revoke(member)">{{ t('family.confirmRevoke') }}</button>
         </div>
       </div>
       <p v-if="error" role="alert" class="m-0 text-sm text-red-500">{{ error }}</p>

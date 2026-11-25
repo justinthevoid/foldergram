@@ -2,7 +2,7 @@
   <section class="centered-page flex flex-col gap-[1.4rem]" :class="{ 'family-library': familyPresentation }">
     <SourceUnavailable v-for="source in sourcesStore.unavailable" :key="source.id" :name="source.name" variant="banner" />
     <header v-if="familyPresentation" class="family-library__header">
-      <h1>{{ t('familyGallery.albums') }}</h1>
+      <h1 class="family-page-title">{{ t('familyGallery.albums') }}</h1>
 
     </header>
     <!-- Page header -->
@@ -588,7 +588,7 @@
 
 <style scoped>
 .family-library { width: min(100%, 1100px); max-width: 1100px; gap: 20px; }
-.family-library__header h1 { font-size: clamp(1.55rem, 3vw, 2rem); font-weight: 650; margin: 0; line-height: 1.2; letter-spacing: -.025em; }
+/* Family destination titles use the shared family-page-title token. */
 .family-library__header p { margin: 6px 0 0; color: var(--muted); font-size: .9rem; }
 .family-library__controls { border: 0; background: transparent; padding: 0; box-shadow: none; gap: 10px; }
 .family-library__controls input, .family-library__controls select { min-height: 44px; }

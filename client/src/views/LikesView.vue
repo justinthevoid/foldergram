@@ -11,7 +11,7 @@
     <ErrorState v-else-if="likesStore.error" :title="likesStore.errorTitle" :message="likesStore.error" />
     <template v-else>
       <header v-if="familyPresentation" class="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <h1 class="m-0 text-[clamp(1.55rem,3vw,2rem)] font-semibold">{{ t('familyGallery.favorites') }}</h1>
+        <h1 class="family-page-title">{{ t('familyGallery.favorites') }}</h1>
         <div class="flex flex-wrap items-center gap-2">
           <RouterLink v-if="authStore.canUseLocalCollections || authStore.canUseSharedCollections"
             :to="{ name: 'collections' }" class="btn-ghost min-h-11 inline-flex items-center gap-2">

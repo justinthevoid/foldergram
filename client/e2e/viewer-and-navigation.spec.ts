@@ -891,6 +891,66 @@ test('suggested folders is absent from General Settings and available in More fo
   await expect(page).toHaveURL('/settings#general');
 });
 
+test('family access actions share consistent mobile control heights', async ({ page }) => {
+  await mockGallery(page, 'light');
+  const admin = { ...adminAuthStatus, accessMode: 'off' };
+  await page.route('**/api/auth/status', route => route.fulfill({ json: admin }));
+  await page.route('**/api/admin/family', route => route.fulfill({ json: {
+    enabled: true, externalOrigin: 'https://gallery.example.test',
+    members: [{ id: 'a2f3e2f1-2a11-4a01-9d32-31d6a02dbb10', name: 'Shelbee',
+      revokedAt: null, inviteExpiresAt: null, lastJoinedAt: Date.UTC(2026, 10, 25) }]
+  }}));
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/settings#access');
+    const panel = page.locator('section.card').filter({ has: page.getByRole('heading', { name: 'Family access', exact: true }) }).first();
+    await expect(panel).toBeVisible();
+    for (const label of ['Create invitation', 'New link', 'Devices', 'Revoke']) {
+      const button = panel.getByRole('button', { name: label, exact: true });
+      await expect(button).toBeVisible();
+      const bounds = await button.boundingBox();
+      expect(bounds!.height, label + ' should share the 44px action height').toBeGreaterThanOrEqual(44);
+    }
+    const revoke = panel.getByRole('button', { name: 'Revoke', exact: true });
+    await revoke.click();
+    for (const label of ['Cancel', 'Revoke access']) {
+      const button = panel.getByRole('button', { name: label, exact: true });
+      const bounds = await button.boundingBox();
+      expect(bounds!.height, label + ' should share the 44px action height').toBeGreaterThanOrEqual(44);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});
+
+test('family destination titles share one typography scale', async ({ page }) => {
+  await mockGallery(page, 'light');
+  const viewer = { ...adminAuthStatus, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    externalFamilyAccess: true, familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  };
+  await page.route('**/api/auth/status', route => route.fulfill({ json: viewer }));
+  await page.route('**/api/family/likes**', route => route.fulfill({ json: { items: [panorama] } }));
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/library');
+    const albums = page.getByRole('heading', { name: 'Albums', exact: true });
+    await expect(albums).toBeVisible();
+    const albumsStyle = await albums.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { fontSize: style.fontSize, fontWeight: style.fontWeight, lineHeight: style.lineHeight, letterSpacing: style.letterSpacing };
+    });
+    await page.goto('/likes/posts');
+    const favorites = page.getByRole('heading', { name: 'Favorites', exact: true });
+    await expect(favorites).toBeVisible();
+    const favoritesStyle = await favorites.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { fontSize: style.fontSize, fontWeight: style.fontWeight, lineHeight: style.lineHeight, letterSpacing: style.letterSpacing };
+    });
+    expect(favoritesStyle).toEqual(albumsStyle);
+  }
+});
+
 async function mockPortraitFeed(page: Page, width = 600, height = 3000) {
   const clip = Buffer.from(await readFile(new URL('./fixtures/tall-feed-video.mp4.base64', import.meta.url), 'utf8'), 'base64');
   await page.route('**/previews/tall-feed-video.mp4', route => {

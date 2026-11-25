@@ -24,7 +24,7 @@ existing exact-revision Linux build gate and the private deployment runbook.
 | --- | --- | --- |
 | Q1. Mobile interaction and layout | Audit phone and desktop navigation; all existing controls remain reachable in portrait and landscape; no horizontal document overflow; safe-area-aware header/nav and overlays; keyboard focus remains coherent; gesture interactions preserve existing photo/reel behavior. Test installed Safari on a real iPhone separately. | In progress |
 | Q2. Perceived performance | Measure the existing feed, albums, viewer, and Reels under controlled latency; compare request counts, time to useful photo, layout shifts, and media decode; eliminate avoidable work and preserve photo quality. Keep bounded loading and private-cache rules. | In progress |
-| Q3. Visual consistency | Audit existing screens in light/dark mode; standardize typography, spacing, actions, dialogs and feedback using existing tokens; remove duplicate visual affordances without removing their functions. Review mobile and desktop screenshots. | Planned |
+| Q3. Visual consistency | Audit existing screens in light/dark mode; standardize typography, spacing, actions, dialogs and feedback using existing tokens; remove duplicate visual affordances without removing their functions. Review mobile and desktop screenshots. | In progress |
 | Q4. Accessibility and ease of use | Check keyboard and screen-reader names, focus, larger text, contrast, reduced motion, touch targets, simple language and error states. Test with a family member unfamiliar with the app when available. | Planned |
 | Q5. Invitation and return journey | Exercise existing one-time links, geometric QR verification, explicit redemption, expired/reused links, Home Screen installation, and session return. Verify no uninvited user can read protected content. Keep named identities and support independently revocable device sessions and self-service device linking. | In progress |
 | Q6. Reliability and release hygiene | Check source outage recovery, retry behavior, session revocation, service worker cache/update, actual production release build, database backup and rollback. Preserve the existing private gateway and tunnel restrictions. | Planned |
@@ -256,6 +256,27 @@ restoration test both passed. Focused provider/Reel tests passed (49),
 the full client suite passed (482 tests, 3 skipped), and the full
 production build passed. Real-device cellular and Safari playback timing
 remain Q2 validation items.
+
+## Family visual consistency pass (Q3)
+
+Reviewed actual synthetic-gallery screenshots for Home, Albums, album detail,
+Favorites, Search and More at 320×568, 390×844 and 1440×900 in light and
+dark modes, plus the photo viewer, Reels, recap and device-link dialog.
+The primary family navigation and destination layouts are consistent across
+the audited sizes and do not introduce horizontal overflow.
+
+A measurable mismatch remained in administrator Family access: its primary
+create button rendered at 37.2 px, and invite/revoke/cancel actions were
+shorter than the adjacent 44 px device-management controls. Standardized
+these actions to a 44 px minimum with consistent alignment, including the
+invitation and revoke-confirmation controls. A regression checks the actual
+rendered button heights at 390 and 320 px and checks document overflow.
+
+Albums and Favorites also used separate heading declarations. Both now use
+the same shared family-page-title token for font size, weight, line height,
+and tracking. A browser regression compares computed styles at 390 and
+1440 px. Both Q3 browser regressions passed. The broader Settings, collection,
+places and all dialog surfaces still need a complete pass.
 
 ### Remaining boundaries
 
