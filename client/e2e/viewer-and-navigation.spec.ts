@@ -165,6 +165,63 @@ test('family Home Shuffle requests a fresh random seed on repeated taps', async 
   expect(second).not.toBe(first);
 });
 
+for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  test(`family favorites print list selects and copies only chosen photographs at ${viewport.width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport);
+    await mockGallery(page, 'light');
+    await page.route('**/api/auth/status', route => route.fulfill({
+      json: {
+        enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family', defaultLocale: 'en',
+        publicDemoMode: false, externalFamilyAccess: true, familyMember: { id: 'fixture', name: 'Family' },
+        capabilities: {
+          canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false, canUseSharedLikes: false,
+          canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true
+        }
+      }
+    }));
+    const carousel = { ...panorama, id: 2, postType: 'carousel', itemCount: 2,
+      mediaItems: [
+        { imageId: 20, position: 0, filename: 'portrait.jpg', mediaType: 'image', width: 1000, height: 1500,
+          durationMs: null, thumbnailUrl: '/thumbnails/panorama.svg', previewUrl: '/previews/panorama.svg' },
+        { imageId: 21, position: 1, filename: 'clip.mp4', mediaType: 'video', width: 1000, height: 1500,
+          durationMs: 1000, thumbnailUrl: '/thumbnails/panorama.svg', previewUrl: '/previews/panorama.svg' }
+      ] };
+    await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [panorama, carousel] } }));
+    await page.addInitScript(() => {
+      const state = window as Window & { copiedPrintList?: string };
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+        writeText: async (value: string) => { state.copiedPrintList = value; }
+      } });
+    });
+    await page.goto('/likes/posts');
+    await expect(page.getByRole('link', { name: 'Collections', exact: true })).toBeVisible();
+    const launch = page.getByRole('button', { name: 'Print list', exact: true });
+    await launch.click();
+    const dialog = page.getByRole('dialog', { name: 'Print list' });
+    await expect(dialog.getByRole('checkbox')).toHaveCount(2);
+    const copy = dialog.getByRole('button', { name: 'Copy list' });
+    await expect(copy).toBeDisabled();
+    await dialog.getByRole('checkbox', { name: /portrait.jpg/ }).check();
+    const message = dialog.getByRole('textbox', { name: 'Your print request' });
+    await expect(message).toHaveValue("I'd love prints of these photographs:\n- Panoramas / portrait.jpg (post #2, photo 1)");
+    await expect(dialog.getByRole('status').first()).toHaveText('1 selected');
+    await copy.click();
+    await expect(dialog.getByText('List copied.', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => (window as Window & { copiedPrintList?: string }).copiedPrintList)).toBe(await message.inputValue());
+    const bounds = await dialog.boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height);
+    await page.screenshot({ path: testInfo.outputPath('print-list.png') });
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(launch).toBeFocused();
+    await launch.click();
+    await expect(dialog.getByRole('status').first()).toHaveText('0 selected');
+    await expect(copy).toBeDisabled();
+  });
+}
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

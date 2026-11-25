@@ -21,6 +21,23 @@
     "empty": "此相册没有照片。",
     "loadError": "无法加载更多照片。"
   },
+  "printList": {
+    "title": "照片冲印清单",
+    "description": "选择想要冲印或装框的收藏照片。",
+    "selected": "已选 {count} 张",
+    "clear": "清除选择",
+    "empty": "收藏中没有可冲印的照片。",
+    "messageLabel": "你的冲印请求",
+    "intro": "我想冲印以下照片：",
+    "entry": "{album} / {filename}（帖子 #{post}）",
+    "carouselEntry": "{album} / {filename}（帖子 #{post}，第 {slide} 张）",
+    "shareHint": "复制清单或分享给摄影师。不会自动下单或发送。",
+    "copy": "复制清单",
+    "share": "分享清单",
+    "copied": "已复制清单。",
+    "manualCopy": "请选择并复制上方文字。",
+    "shareFailed": "无法分享，你可以复制清单。"
+  },
   "familyGallery": {
     "feedMode": "动态排序",
     "shufflePhotos": "随机浏览",

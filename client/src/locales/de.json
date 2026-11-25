@@ -21,6 +21,23 @@
     "empty": "Keine Fotos in diesem Album.",
     "loadError": "Weitere Fotos konnten nicht geladen werden."
   },
+  "printList": {
+    "title": "Fotodruckliste",
+    "description": "Wähle deine Lieblingsfotos zum Drucken oder Einrahmen.",
+    "selected": "{count} ausgewählt",
+    "clear": "Auswahl löschen",
+    "empty": "Keine druckbaren Fotos in deinen Favoriten.",
+    "messageLabel": "Dein Fotodruckwunsch",
+    "intro": "Ich wünsche mir Abzüge dieser Fotos:",
+    "entry": "{album} / {filename} (Beitrag #{post})",
+    "carouselEntry": "{album} / {filename} (Beitrag #{post}, Foto {slide})",
+    "shareHint": "Kopiere oder teile diese Liste mit dem Fotografen. Nichts wird automatisch bestellt oder gesendet.",
+    "copy": "Liste kopieren",
+    "share": "Liste teilen",
+    "copied": "Liste kopiert.",
+    "manualCopy": "Markiere und kopiere den Text oben.",
+    "shareFailed": "Teilen ist nicht verfügbar. Du kannst die Liste stattdessen kopieren."
+  },
   "familyGallery": {
     "feedMode": "Feed-Reihenfolge",
     "shufflePhotos": "Mischen",

@@ -21,6 +21,23 @@
     "empty": "No photographs in this album.",
     "loadError": "Couldn't load more photographs."
   },
+  "printList": {
+    "title": "Print list",
+    "description": "Pick your favorite photographs to print or frame.",
+    "selected": "{count} selected",
+    "clear": "Clear selection",
+    "empty": "No printable photographs in your favorites.",
+    "messageLabel": "Your print request",
+    "intro": "I'd love prints of these photographs:",
+    "entry": "{album} / {filename} (post #{post})",
+    "carouselEntry": "{album} / {filename} (post #{post}, photo {slide})",
+    "shareHint": "Copy or share this list with the photographer. Nothing is ordered or sent automatically.",
+    "copy": "Copy list",
+    "share": "Share list",
+    "copied": "List copied.",
+    "manualCopy": "Select and copy the text above.",
+    "shareFailed": "Sharing is unavailable. You can copy the list instead."
+  },
   "familyGallery": {
     "feedMode": "Feed order",
     "shufflePhotos": "Shuffle",

@@ -21,6 +21,23 @@
     "empty": "No hay fotos en este álbum.",
     "loadError": "No se pudieron cargar más fotos."
   },
+  "printList": {
+    "title": "Lista de impresión",
+    "description": "Elige tus fotos favoritas para imprimir o enmarcar.",
+    "selected": "{count} seleccionadas",
+    "clear": "Borrar selección",
+    "empty": "No hay fotos imprimibles en tus favoritos.",
+    "messageLabel": "Tu solicitud de impresión",
+    "intro": "Me gustaría tener copias impresas de estas fotos:",
+    "entry": "{album} / {filename} (publicación #{post})",
+    "carouselEntry": "{album} / {filename} (publicación #{post}, foto {slide})",
+    "shareHint": "Copia o comparte esta lista con el fotógrafo. No se pide ni se envía nada automáticamente.",
+    "copy": "Copiar lista",
+    "share": "Compartir lista",
+    "copied": "Lista copiada.",
+    "manualCopy": "Selecciona y copia el texto de arriba.",
+    "shareFailed": "No se puede compartir. Puedes copiar la lista."
+  },
   "familyGallery": {
     "feedMode": "Orden de fotos",
     "shufflePhotos": "Mezclar",
