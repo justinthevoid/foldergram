@@ -23,9 +23,9 @@
   },
   "family": {
     "destination": "Dirección de invitación",
-    "externalLink": "Acceso por internet (código de correo)",
+    "externalLink": "Acceso por internet (solo invitación)",
     "privateLink": "Red privada (Tailscale)",
-    "externalHelp": "Solo las direcciones autorizadas en Cloudflare Access pueden usar el enlace de internet. Tras introducir el código, vuelve a abrir o pega la invitación.",
+    "externalHelp": "Envía este enlace privado directamente a tu familiar. No necesita correo electrónico, contraseña ni Tailscale. Comparte el enlace sin usar solo en privado.",
     "pasteInvite": "Pega tu enlace de invitación",
     "externalSignIn": "Usa tu invitación privada para entrar en la galería.",
     "anotherInvite": "Usar otra invitación",

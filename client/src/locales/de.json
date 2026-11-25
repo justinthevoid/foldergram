@@ -23,9 +23,9 @@
   },
   "family": {
     "destination": "Einladungsadresse",
-    "externalLink": "Internetzugang (E-Mail-Code)",
+    "externalLink": "Internetzugang (nur Einladung)",
     "privateLink": "Privates Netzwerk (Tailscale)",
-    "externalHelp": "Nur in Cloudflare Access freigegebene E-Mail-Adressen können den Internetlink nutzen. Öffne oder füge die Einladung nach Eingabe des E-Mail-Codes erneut ein.",
+    "externalHelp": "Sende diesen privaten Link direkt an dein Familienmitglied. Keine E-Mail-Adresse, kein Passwort und kein Tailscale erforderlich. Teile den unbenutzten Link nur privat.",
     "pasteInvite": "Einladungslink einfügen",
     "externalSignIn": "Verwende deine private Einladung für den Zugang zur Galerie.",
     "anotherInvite": "Andere Einladung verwenden",

@@ -23,9 +23,9 @@
   },
   "family": {
     "destination": "邀请地址",
-    "externalLink": "互联网访问（邮箱验证码）",
+    "externalLink": "互联网访问（仅邀请）",
     "privateLink": "私有网络（Tailscale）",
-    "externalHelp": "只有 Cloudflare Access 批准的邮箱才能使用互联网链接。输入验证码后，如有需要请重新打开或粘贴邀请链接。",
+    "externalHelp": "将私密链接直接发送给家庭成员。无需邮箱、密码或 Tailscale。未使用的链接可被收到链接的人接受，请私下分享。",
     "pasteInvite": "粘贴邀请链接",
     "externalSignIn": "使用私密邀请进入图库。",
     "anotherInvite": "使用其他邀请",
