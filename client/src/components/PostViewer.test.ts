@@ -246,6 +246,71 @@ describe('PostViewer', () => {
     expect(wrapper.emitted('close')).toHaveLength(1);
   });
 
+  it('preserves native wheel zoom and does not navigate while the visual viewport is magnified', async () => {
+    const wrapper = mount(PostViewer, {
+      attachTo: document.body,
+      props: { image: createImageDetail(31, { previousImageId: 30, nextImageId: 32 }), isModal: true },
+      global: { stubs: globalStubs }
+    });
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+    const wheel = (init: WheelEventInit = {}) => {
+      const event = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 150, ...init });
+      wrapper.element.dispatchEvent(event);
+      return event;
+    };
+    try {
+      expect(wheel({ ctrlKey: true }).defaultPrevented).toBe(false);
+      expect(wheel({ metaKey: true }).defaultPrevented).toBe(false);
+      Object.defineProperty(window, 'visualViewport', { configurable: true, value: { scale: 2 } });
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(mockRouterPush).not.toHaveBeenCalled();
+      Object.defineProperty(window, 'visualViewport', { configurable: true, value: { scale: 1 } });
+      expect(wheel().defaultPrevented).toBe(true);
+      expect(mockRouterPush).toHaveBeenCalledWith({ name: 'image', params: { id: '32' }, query: {} });
+    } finally {
+      if (descriptor) Object.defineProperty(window, 'visualViewport', descriptor);
+      else Reflect.deleteProperty(window, 'visualViewport');
+    }
+  });
+
+  it('cancels a photo swipe when a second finger joins or the viewport is magnified', async () => {
+    useAuthStore().applyStatus({
+      enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family', defaultLocale: null,
+      publicDemoMode: false, externalFamilyAccess: true, familyMember: { id: 'fixture', name: 'Family' },
+      capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+        canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+    });
+    const wrapper = mount(PostViewer, {
+      props: { image: createImageDetail(31, { previousImageId: 30, nextImageId: 32 }), isModal: true },
+      global: { stubs: globalStubs }
+    });
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+    const media = wrapper.get('.viewer__media').element;
+    async function pointer(type: string, x: number, primary = true, id = 1) {
+      media.dispatchEvent(Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
+        pointerId: id, pointerType: 'touch', isPrimary: primary, button: 0, clientX: x, clientY: 100
+      }));
+      await flushPromises();
+    }
+    try {
+      await pointer('pointerdown', 260);
+      await pointer('pointerdown', 120, false, 2);
+      await pointer('pointerup', 40);
+      expect(mockRouterPush).not.toHaveBeenCalled();
+      Object.defineProperty(window, 'visualViewport', { configurable: true, value: { scale: 2 } });
+      await pointer('pointerdown', 260);
+      await pointer('pointerup', 40);
+      expect(mockRouterPush).not.toHaveBeenCalled();
+      Object.defineProperty(window, 'visualViewport', { configurable: true, value: { scale: 1 } });
+      await pointer('pointerdown', 260);
+      await pointer('pointerup', 40);
+      expect(mockRouterPush).toHaveBeenCalledExactlyOnceWith({ name: 'image', params: { id: '32' }, query: {} });
+    } finally {
+      if (descriptor) Object.defineProperty(window, 'visualViewport', descriptor);
+      else Reflect.deleteProperty(window, 'visualViewport');
+    }
+  });
+
   it('collapses details in portrait desktop windows and docks them again in landscape', async () => {
     const originalWidth = window.innerWidth;
     const originalHeight = window.innerHeight;

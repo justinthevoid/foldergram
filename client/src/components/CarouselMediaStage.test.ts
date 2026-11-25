@@ -133,6 +133,38 @@ describe('CarouselMediaStage', () => {
     }finally{clock.mockRestore();wrapper.unmount();}
   });
 
+  it('does not change carousel slides while the browser viewport is magnified', async () => {
+    const items = [mockItems[1]!, { ...mockItems[1]!, imageId: 3, position: 3 }];
+    const wrapper = mount(CarouselMediaStage, { props: { items, modelValue: 0, doubleTapLike: true } });
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+    const scale = (value: number) => Object.defineProperty(window, 'visualViewport', { configurable: true, value: { scale: value } });
+    const dispatch = async (type: string, x: number) => {
+      wrapper.element.dispatchEvent(Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
+        pointerId: 1, pointerType: 'touch', isPrimary: true, button: 0, clientX: x, clientY: 100
+      }));
+      await wrapper.vm.$nextTick();
+    };
+    try {
+      scale(2);
+      await dispatch('pointerdown', 250);
+      await dispatch('pointerup', 50);
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+      scale(1);
+      await dispatch('pointerdown', 250);
+      scale(2);
+      await dispatch('pointerup', 50);
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+      scale(1);
+      await dispatch('pointerdown', 250);
+      await dispatch('pointerup', 50);
+      expect(wrapper.emitted('update:modelValue')).toEqual([[1]]);
+    } finally {
+      if (descriptor) Object.defineProperty(window, 'visualViewport', descriptor);
+      else Reflect.deleteProperty(window, 'visualViewport');
+      wrapper.unmount();
+    }
+  });
+
   it('shares explicit sound requests with other videos and persists them', async () => {
     const wrapper = mount(CarouselMediaStage, { props: { items: mockItems } });
     const player = wrapper.get('media-player');

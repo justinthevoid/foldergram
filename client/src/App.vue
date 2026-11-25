@@ -35,7 +35,7 @@
       :aria-label="showFamilyImageModal ? t('familyGallery.photoViewer') : undefined"
       :tabindex="showFamilyImageModal ? -1 : undefined"
       @keydown="handleFamilyImageModalKeys" @click.self="closeImageModal">
-      <button v-if="showFamilyImageModal && viewerStore.image?.id !== Number(route.params.id)" class="app__family-photo-close" type="button" :aria-label="t('post.viewer.close')" @click="closeImageModal">
+      <button v-if="showFamilyImageModal && (viewerStore.image?.id !== Number(route.params.id) || viewerStore.error || sourcesStore.isUnavailable(viewerStore.image?.sourceId))" class="app__family-photo-close" type="button" :aria-label="t('post.viewer.close')" @click="closeImageModal">
         <span class="i-fluent-dismiss-24-regular w-6 h-6" aria-hidden="true"/>
       </button>
       <PostView :key="sourcesStore.contentRevision" :id="String(route.params.id ?? '')" modal @close="closeImageModal" />

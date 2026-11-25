@@ -63,6 +63,32 @@ screenshots under `client/test-results/refinement-after/`. The production
 client build also passed. Q1 remains open for photo-viewer gesture, safe-area
 hardware and installed PWA checks.
 
+## Photo-viewer interaction pass (Q1)
+
+Two focused regression tests failed on the previous source revision: the
+modal prevented default Ctrl-wheel zoom and navigated on a touch swipe
+when the visual viewport was already magnified. The viewer now leaves
+modified wheel input and magnified viewport gestures to the browser,
+cancels pending swipe state on multi-pointer input, image changes and
+unmount, and avoids wheel navigation behind an open family details panel.
+Carousels likewise ignore navigation gestures while magnified. Existing
+ordinary swipe navigation, previous/next controls and carousel interactions
+are preserved.
+
+The 390×844 Chromium browser journey opened a photograph in a scrolled
+24-photo synthetic album, verified an unconsumed Ctrl-wheel event, swiped
+to the next post, simulated its source becoming unavailable, and closed
+the viewer back to the original album. Both the exact scroll position
+and focus on the original thumbnail were restored. An explicit close
+control remains available during source outages and failed/loading states.
+The screenshot is stored under the ignored `client/test-results/refinement-viewer/`
+directory. This is a simulated browser journey, not a physical pinch test.
+
+Native browser zoom is retained; no new custom zoom controls or gesture
+engine were introduced. Adjacent-photo preload and network measurements
+belong to Q2; verify real-device pinch/pan, safe areas and installation
+before marking Q1 complete.
+
 ### Remaining boundaries
 
 - Chromium viewport simulation is not physical Safari, installed PWA, or a

@@ -338,6 +338,68 @@ test('family refinement audit captures primary phone screens and measures menu r
   await page.screenshot({ path: testInfo.outputPath('landscape-more.png') });
 });
 
+test('family photo viewer preserves the browsing position and remains closable during a source outage', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockGallery(page, 'dark');
+  await page.route('**/api/auth/status', route => route.fulfill({ json: {
+    enabled: true, authenticated: true, role: 'viewer', accessMode: 'off', likesMode: 'family',
+    defaultLocale: 'en', publicDemoMode: false, externalFamilyAccess: true,
+    familyMember: { id: 'fixture', name: 'Family' },
+    capabilities: { canManageLibrary: false, canDeleteMedia: false, canAccessSettings: false,
+      canUseSharedLikes: false, canUseLocalFavorites: false, canUseSharedCollections: false, canUseLocalCollections: true }
+  }}));
+  let unavailable = false;
+  await page.route('**/api/sources/status*', route => route.fulfill({ json: {
+    items: [{ id: 77, kind: 'immich', name: 'Fixture source', enabled: 1, status: 'ready',
+      generation: 1, updated_at: 'fixture', available: !unavailable, syncing: false }],
+    hasLocalPosts: true, hasVisiblePosts: true
+  }}));
+  await page.route('**/api/family/likes?*', route => route.fulfill({ json: { items: [] } }));
+  const photos = Array.from({ length: 24 }, (_, i) => ({
+    ...panorama, id: i + 1, filename: 'photo-' + (i + 1) + '.jpg', width: 1200, height: 1200,
+    sourceId: 77, previousImageId: i > 0 ? i : null, nextImageId: i < 23 ? i + 2 : null
+  }));
+  await page.route('**/api/folders/panoramas/images?*', route => route.fulfill({
+    json: { folder: { ...folder, imageCount: 24 }, items: photos, page: 1, limit: 24, total: 24, hasMore: false }
+  }));
+  await page.route(/\/api\/posts\/\d+(?:\?.*)?$/, route => {
+    const id = Number(new URL(route.request().url()).pathname.split('/').pop());
+    return route.fulfill({ json: photos[id - 1] });
+  });
+  await page.goto('/f/panoramas');
+  const opener = page.locator('a[href="/post/19"]');
+  await opener.scrollIntoViewIfNeeded();
+  const previousScroll = await page.evaluate(() => scrollY);
+  expect(previousScroll).toBeGreaterThan(0);
+  await opener.click();
+  const dialog = page.getByRole('dialog', { name: 'Photo viewer' });
+  await expect(dialog.getByAltText('photo-19.jpg', { exact: true })).toBeVisible();
+  await expect(dialog.locator('.viewer__family-photo img[data-loaded="true"]')).toBeVisible();
+  const media = dialog.locator('.viewer__media');
+  const prevented = await media.evaluate(element => {
+    const event = new WheelEvent('wheel', { ctrlKey: true, deltaY: 180, bubbles: true, cancelable: true });
+    element.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  expect(prevented).toBe(false);
+  await expect(page).toHaveURL(/\/post\/19$/);
+  // Chromium pointer event simulation verifies the route interaction; a
+  // physical Safari pinch still needs testing separately.
+  await media.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true, clientX: 300, clientY: 200 });
+  await media.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true, clientX: 60, clientY: 200 });
+  await expect(page).toHaveURL(/\/post\/20$/);
+  await expect(dialog.getByAltText('photo-20.jpg', { exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('family-photo-viewer.png') });
+  unavailable = true;
+  await expect(dialog.locator('[data-test="source-unavailable"]')).toBeVisible({ timeout: 10000 });
+  await expect(dialog.getByRole('button', { name: 'Close post', exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Close post', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL(/\/f\/panoramas$/);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(previousScroll);
+  await expect(opener).toBeFocused();
+});
+
 async function expectReadableBetweenStickyBars(target: Locator) {
   await target.scrollIntoViewIfNeeded();
   const result = await target.evaluate(element => {

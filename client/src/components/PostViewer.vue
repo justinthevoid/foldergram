@@ -675,6 +675,7 @@
   import { useLikesStore } from "../stores/likes"
   import { useFoldersStore } from "../stores/folders"
   import { resolveDisplayCaption } from "../utils/caption"
+  import { isViewportZoomed } from "../utils/viewport-zoom"
   import { formatFolderTitle } from "../utils/folder-titles"
   import { getImageViewingFallback, getOriginalMediaDownloadUrl, getOriginalMediaUrl, isHeicMedia, needsWebpViewing } from "../utils/original-media"
   import { applyVideoMutePreference, createVideoMuteStorage } from "../utils/video-mute"
@@ -1369,7 +1370,7 @@
 
   function handleMediaPointerdown(event: PointerEvent) {
     if (isCarousel.value) return
-    if (familyViewer.value && !event.isPrimary) {
+    if (!event.isPrimary || isViewportZoomed() || (familyViewer.value && isSidebarExpanded.value)) {
       swipeNavigation.onPointercancel()
       resetMediaSheetRevealGesture()
       return
@@ -1380,12 +1381,22 @@
 
   function handleMediaPointermove(event: PointerEvent) {
     if (isCarousel.value) return
+    if (isViewportZoomed()) {
+      swipeNavigation.onPointercancel()
+      resetMediaSheetRevealGesture()
+      return
+    }
     swipeNavigation.onPointermove(event)
     handleMediaSheetRevealPointermove(event)
   }
 
   async function handleMediaPointerup(event: PointerEvent) {
     if (isCarousel.value) return
+    if (isViewportZoomed() || (familyViewer.value && isSidebarExpanded.value)) {
+      swipeNavigation.onPointercancel()
+      resetMediaSheetRevealGesture()
+      return
+    }
     await swipeNavigation.onPointerup(event)
     await handleMediaSheetRevealPointerup(event)
   }
@@ -1701,6 +1712,7 @@
     () => {
       wheelDeltaAccumulator.value = 0
       navigationLockedUntil.value = 0
+      swipeNavigation.onPointercancel()
       resetSidebarSheetGesture()
       resetMediaSheetRevealGesture()
       isPlayingHd.value = false
@@ -1756,6 +1768,14 @@
 
   function handleWheel(event: WheelEvent) {
     if (!props.isModal || !props.image) {
+      return
+    }
+
+    // Trackpad pinch is delivered as Ctrl+wheel in Chromium. Leave native
+    // zoom and panning alone rather than turning them into photo changes.
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || isViewportZoomed() ||
+        (familyViewer.value && isSidebarExpanded.value)) {
+      wheelDeltaAccumulator.value = 0
       return
     }
 
@@ -1892,6 +1912,7 @@
   })
 
   onUnmounted(() => {
+    swipeNavigation.onPointercancel()
     resetSidebarSheetGesture()
     resetMediaSheetRevealGesture()
     window.removeEventListener("resize", updateSidebarLayout)

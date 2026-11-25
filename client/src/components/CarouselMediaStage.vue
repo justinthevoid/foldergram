@@ -99,6 +99,7 @@ import type { PostMediaItem } from '../types/api';
 import { useAppStore } from '../stores/app';
 import { useAuthStore } from '../stores/auth';
 import { getImageViewingFallback, needsWebpViewing } from '../utils/original-media';
+import { isViewportZoomed } from '../utils/viewport-zoom';
 import ResilientImage from './ResilientImage.vue';
 import VideoMediaPlayer from './VideoMediaPlayer.vue';
 
@@ -193,7 +194,7 @@ function handleKeyRight(event: KeyboardEvent) {
 }
 
 function startPointer(event: PointerEvent) {
-  if (event.isPrimary === false || pointerId.value !== null) { cancelPointer(); return; }
+  if (event.isPrimary === false || pointerId.value !== null || isViewportZoomed()) { cancelPointer(); return; }
   if ((event.pointerType === 'mouse' && event.button !== 0) || isGestureIgnored(event.target)) { lastTap = null; return; }
   pointerId.value = event.pointerId;
   pointerStartX.value = event.clientX;
@@ -205,6 +206,7 @@ function startPointer(event: PointerEvent) {
 
 function finishPointer(event: PointerEvent) {
   if (pointerId.value !== event.pointerId) return;
+  if (isViewportZoomed()) { cancelPointer(); return; }
   pointerId.value = null;
   const dx = event.clientX - pointerStartX.value;
   const dy = event.clientY - pointerStartY;
